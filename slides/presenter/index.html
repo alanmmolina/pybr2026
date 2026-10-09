@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>dlt (data load tool) — Python Brasil 2026</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; background: #0a0a0a; overflow: hidden; }
+      hyperframes-slideshow { display: block; position: relative; width: 100vw; height: 100vh; }
+      hyperframes-player { position: absolute; inset: 0; }
+    </style>
+    <script src="player.js"></script>
+    <script src="slideshow.js"></script>
+  </head>
+  <body>
+    <!-- O shell do `hyperframes present`, servido estaticamente. Os dois custom
+         elements vêm do pacote (Apache-2.0, ver THIRD-PARTY.md) e a composition
+         entra em iframe, como no dev server. Caminhos RELATIVOS porque o site
+         é publicado num subcaminho (/pybr2026/), não na raiz do domínio. -->
+    <hyperframes-slideshow tabindex="0">
+      <hyperframes-player interactive src="composition/index.html"></hyperframes-player>
+      <script type="application/hyperframes-slideshow+json">
+{
+  "slides": [
+    { "sceneId": "cover" },
+    { "sceneId": "speaker" },
+    { "sceneId": "pessoal" },
+    { "sceneId": "pipeline-map" },
+    { "sceneId": "problem-sources" },
+    { "sceneId": "connector-costs" },
+    { "sceneId": "parallel-dialects" },
+    { "sceneId": "what-is-dlt" },
+    { "sceneId": "dlthub" },
+    { "sceneId": "anatomy" },
+    { "sceneId": "phases" },
+    { "sceneId": "rawg-architecture" },
+    { "sceneId": "source" },
+    { "sceneId": "resource" },
+    { "sceneId": "resource-games" },
+    { "sceneId": "transformer" },
+    { "sceneId": "schema-contracts" },
+    { "sceneId": "pipeline-destination" },
+    { "sceneId": "pipeline" },
+    { "sceneId": "real-example" },
+    { "sceneId": "dlt-state" },
+    { "sceneId": "closing" },
+    { "sceneId": "questions" }
+  ]
+}
+      </script>
+    </hyperframes-slideshow>
+    <!-- Sem o bloco de sfx do shell original: a palestra não tem composition/sfx/
+         e nada emite {type:"hf-sfx"} — eram 50 linhas pedindo 4 mp3 que nunca
+         existiram. Se um dia entrar áudio, o bloco volta e precisa de
+         composition/sfx/{advance,fragment,branch-enter,back}.mp3. -->
+  </body>
+</html>

@@ -24,11 +24,19 @@ precisa avançar sem pular nenhum deles.
 
 | Caminho | O que é |
 |---|---|
+| `presenter/index.html` | o shell que se publica: monta os custom elements em volta da composition |
+| `presenter/player.js`, `presenter/slideshow.js` | bundles do HyperFrames que trazem fullscreen e next/previous |
 | `composition/index.html` | slots dos slides e a timeline do deck |
 | `composition/compositions/NN.html` | um slide por arquivo, com markup e coreografia |
 | `composition/deck.css` | identidade visual, especificada em [`../DESIGN.md`](../DESIGN.md) |
 | `composition/deck.js` | helpers compartilhados e o registry `HW.scene` |
 | `composition/vendor/` | gsap, runtime, fontes, logos e fotos |
+
+O `presenter/` existe porque publicar `composition/` sozinho servia a ilha do
+slideshow sem o chrome: a primeira lâmina, fixa, sem botão nenhum. Quem desenha
+os controles é o player, que o `hyperframes present` injeta no servidor. Os dois
+bundles são capturados desse servidor e versionados aqui — ver
+[`../THIRD-PARTY.md`](../THIRD-PARTY.md) para a licença e como atualizá-los.
 
 O projeto não guarda notas de apresentação, áudio nem o editor do
 **HyperFrames**. Aqui fica somente o HTML servido pelo `present`. As notas de

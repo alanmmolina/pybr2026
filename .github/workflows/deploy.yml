@@ -24,11 +24,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # o deck é HTML estático e autocontido — não há build.
-      # composition/ vira a raiz do site do projeto (URL curta, sem /composition)
+      # Não há build, mas há montagem: o que se publica é o presenter do
+      # HyperFrames (presenter/index.html + player.js + slideshow.js) com a
+      # composition embaixo dele. Publicar composition/ sozinho servia a ilha
+      # do slideshow sem o chrome — sem fullscreen, sem next/previous.
+      - run: |
+          mkdir -p _site
+          cp -r slides/presenter/. _site/
+          cp -r slides/composition _site/composition
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: slides/composition
+          path: _site
 
       - id: deployment
         uses: actions/deploy-pages@v4

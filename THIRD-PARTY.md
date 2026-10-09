@@ -34,6 +34,16 @@ for all use including commercial. The copyright header stays in the file.
 Apache License 2.0. Vendored so the deck runs offline and in the room without
 a CDN.
 
+**HyperFrames presenter** (`slides/presenter/player.js` and
+`slides/presenter/slideshow.js`), from the same package and the same license.
+These are the browser bundles the `hyperframes present` server compiles from
+its ESM chunks on the fly — the package ships loaders, not these files — so
+they were captured from a `hyperframes@0.8.143` dev server. They define the
+`<hyperframes-player>` and `<hyperframes-slideshow>` custom elements: the
+fullscreen/next/previous chrome around the composition. To refresh them after
+a HyperFrames upgrade, run `npm run dev` and copy the two files it serves at
+`/player.js` and `/slideshow.js`.
+
 ## Python Brasil 2026 brand assets
 
 `slides/composition/vendor/pybr/` holds the event lockup and the sticker, from
