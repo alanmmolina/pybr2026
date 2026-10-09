@@ -1,0 +1,1521 @@
+  @font-face { font-family: "Roboto"; font-style: normal; font-weight: 400; font-display: swap; src: url("vendor/fonts/roboto-400.woff2") format("woff2"); }
+  @font-face { font-family: "Roboto"; font-style: normal; font-weight: 600; font-display: swap; src: url("vendor/fonts/roboto-600.woff2") format("woff2"); }
+  @font-face { font-family: "Roboto"; font-style: normal; font-weight: 700; font-display: swap; src: url("vendor/fonts/roboto-700.woff2") format("woff2"); }
+  @font-face { font-family: "Fira Code"; font-style: normal; font-weight: 400; font-display: swap; src: url("vendor/fonts/fira-code-400.woff2") format("woff2"); }
+  @font-face { font-family: "Fira Code"; font-style: normal; font-weight: 600; font-display: swap; src: url("vendor/fonts/fira-code-600.woff2") format("woff2"); }
+  @font-face { font-family: "Fragment Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("vendor/fonts/fragment-mono-400.woff2") format("woff2"); }
+  @font-face { font-family: "Excalifont"; font-style: normal; font-weight: 400; font-display: swap; src: url("vendor/fonts/Excalifont-Regular.woff2") format("woff2"); }
+  @font-face { font-family: "Montserrat"; font-style: normal; font-weight: 900; font-display: swap; src: url("vendor/fonts/montserrat-900.woff2") format("woff2"); }
+  @font-face { font-family: "Comic Sans MS"; font-style: normal; font-weight: 400; font-display: swap; src: local("Comic Sans MS"); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    margin: 0; padding: 0;
+    background: #0F0F0F;
+    overflow: hidden;
+  }
+  body {
+    font-family: "Roboto", system-ui, sans-serif;
+    color: #fafafa;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; background: #292929; padding: 2px 10px; border-radius: 5px; font-size: 0.92em; }
+
+  /* ---- sub-composition slots (fill the deck root) ---- */
+  #deck-root > [data-composition-src] {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1920px; height: 1080px;
+  }
+
+  /* ---- scene frames (stacked; visibility controller shows the active one) ---- */
+  .scene-frame {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden;
+    background: #0F0F0F;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .slide-inner {
+    position: relative;
+    width: 100%; height: 100%;
+    padding: 100px 140px 120px;
+    display: flex;
+    flex-direction: column;
+  }
+  /* o bloco lockup→sublinhado fica centrado no vão entre o topo e o rodapé
+     (201px acima e 201px abaixo). isso pousa o título quase no centro
+     vertical do slide (centro em y=532 contra os 540 dele). */
+  .cover-inner { justify-content: flex-start; align-items: center; text-align: center; padding-top: 201px; }
+
+  h1.headline {
+    font-family: "Roboto", system-ui, sans-serif;
+    font-size: 72px;
+    font-weight: 700;
+    line-height: 1.14;
+    color: #fafafa;
+    max-width: 1560px;
+    flex-shrink: 0;
+  }
+  .cover-title { font-size: 118px; line-height: 1.05; font-weight: 700; }
+
+  .sub {
+    font-size: 42px;
+    line-height: 1.45;
+    color: #eaeaea;
+    max-width: 1500px;
+    margin-top: 40px;
+    flex-shrink: 0;
+  }
+  /* position:relative para o sublinhado se ancorar no subtítulo */
+  .cover-sub { font-size: 54px; color: #eaeaea; position: relative; }
+
+  .accent { color: #fafafa; background: rgba(100, 100, 100, 0.1); border-radius: 5px; padding: 0 0.1em; }
+  .muted  { color: #ABABAB; }
+
+  /* ---- cards ---- */
+
+  /* ---- platform black box (connector-costs) ---- */
+  .connector-grid { display: flex; gap: 48px; margin-top: 56px; flex: 1; flex-shrink: 0; align-items: stretch; min-height: 0; }
+  .platform { position: relative; flex: 1; }
+  .platform-body {
+    position: absolute; inset: 44px 26px;
+    background: transparent;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .logo-cell {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-width: 0;
+    border-radius: 5px;
+  }
+  .logo-cell img { height: 56px; width: auto; max-width: 100%; object-fit: contain; filter: brightness(0) invert(1); }
+  .logo-cell img.lg { height: 84px; }
+  .logo-cell .logo-name { font-family: "Roboto", system-ui, sans-serif; font-size: 22px; font-weight: 600; color: #ffffff; }
+  .logo-cell-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .platform-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .costs { display: flex; flex-direction: column; gap: 24px; width: 460px; flex-shrink: 0; }
+  .cost-item {
+    position: relative; flex: 1;
+    background: #dba64210;
+    border-radius: 10px;
+    padding: 32px 36px;
+    display: flex; flex-direction: column; justify-content: center;
+    min-height: 0;
+  }
+  .cost-item h3 { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 36px; font-weight: 400; color: #dba642; margin-bottom: 14px; }
+  .cost-item p { font-size: 34px; line-height: 1.4; color: #eaeaea; }
+  .cost-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+
+  /* ---- bullets ---- */
+
+  /* ---- code ---- */
+  .code-box {
+    background: transparent;
+    border: 1px solid #3A3A3A;
+    border-radius: 5px;
+    padding: 40px 48px;
+    margin-top: 60px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  pre {
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 40px;
+    line-height: 1.5;
+    color: #CCCCCC;
+    white-space: pre;
+  }
+  .syn-kw  { color: #FF7878; }
+  .syn-fn  { color: #9696FF; }
+  .syn-str { color: #9ECBFF; }
+  .syn-num { color: #F8F8F8; }
+  .syn-cmt { color: #6B737C; }
+  .syn-type { color: #9696FF; }
+  .syn-brk  { color: #FED85B; }
+  .syn-param { color: #FF9933; }
+
+  /* ---- callout ---- */
+  .callout {
+    position: relative;
+    margin-top: 56px;
+    border: 1px solid #448aff44;
+    border-radius: 5px;
+    padding: 32px 40px;
+    background: #448aff10;
+    flex-shrink: 0;
+  }
+  .callout .t {
+    font-family: "Roboto", system-ui, sans-serif;
+    font-size: 36px;
+    color: #448aff;
+    font-weight: 600;
+  }
+  .callout p { font-size: 40px; color: #eaeaea; line-height: 1.42; margin-top: 12px; }
+  .callout.warn { border-color: #dba64244; background: #dba64210; }
+  .callout.warn .t { color: #dba642; }
+  .callout.sloppy { border: none; border-radius: 10px; }
+  .callout.sloppy .t { font-family: "Excalifont", "Comic Sans MS", cursive; font-weight: 400; }
+  .callout.sloppy p { font-size: 36px; }
+  .callout-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .callout-frame path { fill: none; stroke: #448aff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .uline { text-decoration: underline; text-decoration-color: #fafafa; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+
+  /* ---- flow diagram ---- */
+
+  /* ---- pipeline map (slide 4) ---- */
+  .pmap { position: relative; width: 100%; height: 560px; margin-top: auto; margin-bottom: auto; flex-shrink: 0; }
+  .pmap-node {
+    position: absolute;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+  .pmap-frame {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .pmap-node .pmap-ic { width: 108px; height: 108px; display: block; }
+  .pmap-node .pmap-lbl { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 32px; color: #eaeaea; text-align: center; line-height: 1.2; }
+  .pmap-node .pmap-t {
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 44px;
+    font-weight: 400;
+    color: #fafafa;
+    text-align: center;
+  }
+  /* node destacado (hl): engrenagem e título em lima, a cor de marca */
+  .pmap-node.hl .pmap-t { color: #B7FF06; }
+  .pmap-node .pmap-d { font-size: 28px; color: #ABABAB; text-align: center; line-height: 1.3; }
+  .pmap-conns { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+
+  /* ---- problem-sources constellation ---- */
+  .srcs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 56px; margin-top: 56px; flex-shrink: 0; }
+  .src-col { display: flex; flex-direction: column; align-items: center; }
+  .src-hub { position: relative; width: 100%; height: 700px; }
+  .src-ic {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px; height: 120px;
+    display: block;
+  }
+  .src-conn { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .src-chip {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 14px 20px;
+    max-width: 220px;
+    text-align: center;
+    opacity: 0;
+  }
+  .src-chip-frame { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .chip-t { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 28px; color: #fafafa; line-height: 1.1; }
+  .chip-v { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 21px; color: #b0b0b0; line-height: 1.3; }
+  .src-lbl {
+    position: absolute;
+    left: 50%; top: calc(50% + 68px);
+    transform: translateX(-50%);
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 30px;
+    color: #fafafa;
+    white-space: nowrap;
+  }
+
+  /* ---- mini code stubs (parallel dialects) ---- */
+  /* ---- milestones ---- */
+
+  /* ---- split (json vs tables) ---- */
+  .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; margin-top: 52px; flex-shrink: 0; }
+  .split .code-box { margin-top: 0; padding: 40px 28px; }
+  .split pre { font-size: 38px; }
+
+  /* ---- write disposition columns ---- */
+  /* ---- fragment reveal ---- */
+
+  /* ---- footer ---- */
+  .footer {
+    margin-top: auto;
+    padding-top: 36px;
+    flex-shrink: 0;
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 30px;
+    color: #ABABAB;
+    display: flex;
+    justify-content: space-between;
+  }
+  .site { display: inline-flex; align-items: center; gap: 14px; color: #fafafa; }
+  .logo { width: 48px; height: 48px; color: #fafafa; display: block; }
+  /* capa: site centralizado por cima, nome e cargo centralizados embaixo */
+  .cover-footer {
+    position: absolute; left: 120px; right: 120px; bottom: 56px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    text-align: center;
+    padding-top: 0;
+  }
+  .cover-footer .who { font-size: 32px; color: #b0b0b0; }
+  /* nome e cargo num cinza mais claro que o do "(data load tool)", só em
+     negrito; o site encolhe e uma hairline separa os dois blocos. */
+  .cover-footer .who strong { color: #b0b0b0; font-weight: 600; }
+  /* a régua do site é mais curta que as da coluna do lockup (240 vs 340):
+     ela separa nome de contato, e não entra na coluna do logo. */
+  .cover-rule { width: 240px; height: 1px; background: #3A3A3A; flex: none; }
+  .cover-footer .logo { width: 32px; height: 32px; }
+  .cover-footer .site { font-size: 24px; gap: 10px; }
+
+  /* ---- identidade da Python Brasil 2026 (peças de assets/brand) ----
+     Regra do manual: usar as peças como estão — sem distorcer, sem recolorir
+     fora da paleta e sem efeitos. Uma figurinha por slide costuma bastar. */
+  .pybr-lockup {
+    width: 340px;
+    height: auto;
+    display: block;
+    flex: none;
+    margin-bottom: 56px;
+  }
+  /* hairline centrado na largura do lockup, logo abaixo dele: fecha a coluna
+     do logo antes do bloco da palestra. */
+  .cover-rule-lock {
+    width: 340px;
+    height: 1px;
+    background: #3A3A3A;
+    flex: none;
+    margin-bottom: 64px;
+  }
+
+  /* sublinhado sloppy em lima sob "do jeito Pythônico". cor de marca só em
+     elemento desenhado à mão. filho do subtítulo: top:100% o pendura logo
+     abaixo da linha, e left/width vêm do offsetLeft do trecho. */
+  .cover-underline {
+    position: absolute;
+    margin-top: 1px;
+    height: 12px;
+    overflow: visible;
+    display: block;
+    pointer-events: none;
+  }
+  /* ---- whoami horizontal proportional timeline ---- */
+  .cmd-title { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 72px; font-weight: 600; }
+  .cmd-chip {
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 72px;
+    font-weight: 600;
+    color: #fafafa;
+    background: rgba(100,100,100,0.1);
+    border-radius: 5px;
+    padding: 8px 28px;
+    display: inline-block;
+  }
+  .title-chip {
+    background: rgba(100,100,100,0.1);
+    border-radius: 5px;
+    padding: 8px 28px;
+    display: inline-block;
+  }
+  .htimeline { position: relative; margin-top: auto; margin-bottom: auto; height: 400px; flex-shrink: 0; }
+  .ht-year { position: absolute; top: 232px; font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 26px; color: #ABABAB; }
+  .ht-tick { position: absolute; top: 188px; width: 5px; height: 32px; background: #727272; }
+  .ht-spine { position: absolute; top: 201px; left: 0; width: 1640px; height: 14px; display: block; }
+  .ht-logo { position: absolute; top: 30px; height: 160px; width: auto; display: block; }
+  .ht-cap { position: absolute; top: 278px; text-align: center; }
+  .ht-who { font-size: 34px; font-weight: 600; color: #fafafa; }
+  .ht-role { margin-top: 6px; font-size: 28px; color: #ABABAB; }
+  .ht-arrow { position: absolute; top: 188px; left: 1640px; width: 24px; height: 32px; display: block; }
+
+  /* ---- pessoal photo mural ---- */
+  .pf-strip { margin-top: auto; margin-bottom: auto; display: flex; gap: 32px; flex-shrink: 0; }
+  .pf-item { position: relative; width: 302px; height: 450px; flex-shrink: 0; }
+  .pf-frame { position: absolute; left: 0; top: 0; width: 302px; height: 374px; overflow: visible; }
+  .pf-border { fill: none; stroke: #fafafa; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .pf-photo { position: absolute; left: 8px; top: 8px; width: 286px; height: 358px; object-fit: cover; filter: grayscale(1) contrast(1.08) brightness(0.94); border-radius: 2px; }
+  .pf-cap { position: absolute; top: 390px; left: 0; width: 100%; text-align: center; font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 28px; line-height: 1; color: #fafafa; }
+  .pf-file { position: absolute; top: 432px; left: 0; width: 100%; text-align: center; font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 22px; line-height: 1; color: #ABABAB; }
+
+  /* ---- dlt brand layer ---- */
+  /* Premissa: cor de marca só na camada desenhada à mão (Excalifont/sloppy).
+     A base monocromática é anotada com a identidade do dlt; o chrome nunca leva cor.
+     #57c1d4 teal · #B7FF06 lime · #191836 navy e #4b4897 indigo: reservados.
+     Regra: toda menção de dlt leva .brand na prosa (Fragment Mono + lime)
+     e .brand-code no código (lime, mantendo o mono). */
+  .hand { font-family: "Excalifont", "Comic Sans MS", cursive; }
+  .brand { font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; letter-spacing: -0.02em; color: #B7FF06; }
+  .brand-hub { font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; letter-spacing: -0.02em; color: #57c1d4; }
+  .brand-code { color: #B7FF06; }
+
+  /* ---- dialects (script caseiro → convenção) ---- */
+  .dialects { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 44px; flex-shrink: 0; }
+  /* três colunas de código pedem mais largura que as lâminas de uma coluna:
+     o padding lateral do slide-inner abre de 140 para 100 só aqui. */
+  #scene-parallel-dialects .slide-inner { padding-left: 100px; padding-right: 100px; }
+  .dialect-col { display: flex; flex-direction: column; }
+  /* mesmo padrão de code box do slide 13 em diante: fundo transparente,
+     hairline #3A3A3A, raio 5px. sem moldura wobbly. */
+  .dialect {
+    position: relative;
+    background: transparent;
+    border: 1px solid #3A3A3A;
+    border-radius: 5px;
+    padding: 32px 20px;
+  }
+  .dialect pre { font-size: 21px; line-height: 1.5; white-space: pre; }
+  .dialect-col .d-fname {
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 24px;
+    color: #ABABAB;
+    margin-bottom: 10px;
+  }
+  .dialect-col .d-tag {
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 26px;
+    color: #fafafa;
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  /* ---- what-is-dlt: intro (title + stacked cards + star chart) ---- */
+  .dlt-prompt { color: #ABABAB; font-weight: 400; }
+  .dlt-body { display: flex; gap: 64px; margin-top: 48px; flex: 1; align-items: stretch; }
+  .dlt-cards { display: flex; flex-direction: column; gap: 28px; flex: 0 0 560px; justify-content: center; }
+  .dlt-card {
+    position: relative;
+    background: #00bfa510;
+    border-radius: 10px;
+    padding: 30px 32px;
+  }
+  .dlt-card h3 { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 34px; font-weight: 400; color: #00bfa5; margin-bottom: 12px; }
+  .dlt-card p { font-size: 30px; line-height: 1.35; color: #eaeaea; }
+  .dlt-card-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .dlt-card-frame path { fill: none; stroke: #00bfa5; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .dlt-chart { position: relative; flex: 1; display: flex; flex-direction: column; }
+  .dlt-nums { display: flex; gap: 28px; flex-shrink: 0; }
+  .dlt-num { position: relative; display: flex; align-items: center; gap: 16px; padding: 20px 24px; }
+  .dlt-num-ico { width: 44px; height: 44px; flex-shrink: 0; }
+  .dlt-num-ico path { fill: #eaeaea; }
+  .dlt-num-body { display: flex; flex-direction: column; gap: 5px; }
+  .dlt-num-v { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 40px; font-weight: 600; color: #fafafa; line-height: 1; }
+  .dlt-num-l { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 23px; color: #808080; line-height: 1.2; }
+  .dlt-num-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .dlt-num-frame path { fill: none; stroke: #727272; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .dlt-plot-box { position: relative; flex: 1; margin-top: 24px; }
+  .dlt-plot { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .dlt-plot path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .dlt-plot .dlt-line { stroke: #B7FF06; stroke-width: 4; }
+  .dlt-plot .dlt-point { fill: #B7FF06; }
+  .dlt-tick { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 26px; fill: #ABABAB; }
+  .dlt-legend { position: absolute; top: 12px; left: 110px; display: flex; align-items: center; gap: 12px; font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 28px; color: #eaeaea; z-index: 2; }
+  .dlt-plot .dlt-star { fill: #dba642; }
+
+  /* ---- dlthub: two layers (agentic + managed infra) — blue = hub (paid fronts) ---- */
+  .hub-layers { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: 1fr; gap: 48px; margin-top: 64px; flex: 1; align-items: stretch; min-height: 0; }
+  .hub-divider { width: 12px; align-self: stretch; display: block; overflow: visible; }
+  .hub-divider path { fill: none; stroke: #727272; stroke-linecap: round; stroke-linejoin: round; }
+  .hub-col { display: flex; flex-direction: column; justify-content: center; }
+  .hub-head { display: flex; align-items: center; gap: 20px; margin-bottom: 32px; }
+  .hub-ico { width: 64px; height: 64px; flex-shrink: 0; }
+  .hub-ico path { fill: none; stroke: #fafafa; stroke-linecap: round; stroke-linejoin: round; }
+  .hub-t { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 40px; font-weight: 400; color: #fafafa; line-height: 1.1; }
+  .hub-legend { display: flex; flex-direction: column; gap: 16px; margin-top: 28px; flex-shrink: 0; }
+  .hub-note { display: flex; align-items: center; gap: 14px; font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 30px; font-weight: 400; line-height: 1.15; white-space: nowrap; }
+  .hub-note.oss { color: #B7FF06; }
+  .hub-note.co { color: #57c1d4; }
+  .hub-arrow { width: 40px; height: 40px; flex-shrink: 0; }
+  .hub-arrow path { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 4; }
+  .hub-box {
+    position: relative;
+    background: #57c1d410;
+    border-radius: 8px;
+    padding: 30px 34px;
+  }
+  .hub-box + .hub-box { margin-top: 20px; }
+  .hub-box-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .hub-box-frame path { fill: none; stroke: #57c1d4; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .hub-k { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 32px; font-weight: 400; color: #57c1d4; }
+  .hub-d { font-size: 28px; line-height: 1.4; color: #eaeaea; margin-top: 10px; }
+
+  /* ---- anatomy: pipeline ⊃ (source ⊃ resource) → destination ---- */
+  .anat { position: relative; width: 100%; height: 740px; margin-top: 40px; flex-shrink: 0; }
+  .anat .mk { color: #B7FF06; }
+  .anat-pipe { position: absolute; left: 0; top: 0; width: 1640px; height: 740px; }
+  .anat-pipe-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .anat-pipe-frame path { fill: none; stroke: #B7FF06; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .anat-pipe-tag {
+    position: absolute; left: 56px; top: -22px;
+    font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace;
+    font-size: 40px; letter-spacing: -0.02em; color: #fafafa;
+    background: #0F0F0F; padding: 0 18px; white-space: nowrap;
+  }
+  .anat-pipe-state {
+    position: absolute; right: 56px; top: -22px;
+    font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace;
+    font-size: 32px; letter-spacing: -0.02em; color: #fafafa;
+    background: #0F0F0F; padding: 0 16px; white-space: nowrap;
+  }
+  .anat-loop-lbl {
+    position: absolute; right: 56px; top: 20px;
+    text-align: right;
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 24px; color: #b0b0b0; white-space: nowrap;
+  }
+  .anat-node { position: absolute; top: 140px; width: 560px; height: 560px; }
+  .anat-node.source { left: 80px; }
+  .anat-node.dest { left: 1000px; width: 560px; height: 160px; top: 320px; }
+  .anat-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .anat-frame path { fill: none; stroke: #727272; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .anat-tag {
+    position: absolute; left: 40px; top: -20px;
+    font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace;
+    font-size: 36px; letter-spacing: -0.02em; color: #fafafa;
+    background: #0F0F0F; padding: 0 14px; white-space: nowrap;
+  }
+  .anat-res { position: absolute; left: 40px; width: 480px; height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .anat-res.transformer { height: 220px; }
+  .anat-res-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .anat-res-frame path { fill: none; stroke: #4c4c55; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .anat-code { font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; font-size: 32px; letter-spacing: -0.02em; color: #fafafa; white-space: nowrap; }
+  .anat-desc { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 24px; line-height: 1.25; color: #b0b0b0; white-space: nowrap; }
+  .anat-pipe > .anat-desc { position: absolute; left: 56px; top: 32px; }
+  .anat-node > .anat-desc { position: absolute; left: 0; top: 36px; width: 100%; text-align: center; white-space: normal; line-height: 1.3; }
+  .anat-node.dest > .anat-desc { top: 52px; padding: 0 28px; }
+  .anat-res > .anat-desc { white-space: normal; max-width: 100%; text-align: center; }
+  .anat-nested { position: relative; width: 360px; height: 64px; display: flex; align-items: center; justify-content: center; margin-top: 12px; }
+  .anat-nested-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .anat-nested-frame path { fill: none; stroke: #4c4c55; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .anat-arrow { position: absolute; left: 640px; top: 370px; width: 360px; height: 60px; overflow: visible; pointer-events: none; }
+  .anat-arrow path { fill: none; stroke: #B7FF06; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+  .anat-run {
+    position: absolute; left: 640px; top: 348px; width: 360px;
+    text-align: center;
+    font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace;
+    font-size: 30px; letter-spacing: -0.02em; color: #B7FF06;
+  }
+  .anat-pipe > .anat-desc.anat-run-desc { position: absolute; left: 640px; top: 440px; width: 360px; text-align: center; white-space: normal; line-height: 1.3; }
+
+  /* ---- rawg architecture (map ⊃ ingestão ⊃ dlt anatomy) ---- */
+  .ra { display: flex; align-items: center; gap: 0; margin-top: 40px; flex: 1; min-height: 0; }
+  .ra-col { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+  .ra-col.api { flex: 0 0 390px; }
+  .ra-col.src { flex: 1; min-width: 0; }
+  .ra-col.out { flex: 0 0 380px; }
+  .ra-arr { width: 124px; height: 36px; flex: 0 0 auto; align-self: center; overflow: visible; }
+  .ra-arr path { fill: none; stroke: #B7FF06; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+  .ra > .ra-arr path { stroke: #79b8ff; }
+  /* margin-top: a tag .ra-pipe-tag fica em top:-15px e quase encostava no título */
+  .ra-pipe { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; padding: 56px 40px 40px; margin-top: 30px; }
+  .ra-pipe-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .ra-pipe-frame path { fill: none; stroke: #B7FF06; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .ra-pipe-tag { position: absolute; left: 44px; top: -15px; z-index: 2; font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; font-size: 26px; letter-spacing: -0.02em; line-height: 1.15; color: #fafafa; background: #0F0F0F; padding: 0 14px; white-space: nowrap; }
+  .ra-pipe-inner { display: flex; align-items: center; gap: 0; width: 100%; min-width: 0; }
+  .ra-pipe-mid { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 0 0 auto; }
+  .ra-pipe-mid .ra-arr { width: 128px; }
+  .ra-box { position: relative; padding: 32px 30px; display: flex; flex-direction: column; gap: 14px; }
+  .ra-box-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .ra-box-frame path { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  /* a source precisa de mais respiro vertical que as irmãs: os três
+     resources empilhados ficam apertados com o padding padrão do .ra-box */
+  .ra-src { gap: 56px; padding-top: 48px; padding-bottom: 48px; }
+  .ra-db-head { display: flex; align-items: center; gap: 12px; }
+  .ra-db-logo { height: 30px; width: auto; filter: brightness(0) invert(1); }
+  .ra-tag { position: absolute; left: 28px; top: -14px; z-index: 2; font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; font-size: 26px; letter-spacing: -0.02em; line-height: 1.15; color: #fafafa; background: #0F0F0F; padding: 0 12px; white-space: nowrap; }
+  .ra-res-tag { position: absolute; left: 16px; top: -11px; z-index: 2; font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; font-size: 22px; letter-spacing: -0.02em; line-height: 1.15; color: #fafafa; background: #0F0F0F; padding: 0 10px; white-space: nowrap; }
+  .ra-title { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 34px; color: #fafafa; }
+  .ra-title.mono { font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; letter-spacing: -0.02em; font-size: 28px; color: #fafafa; }
+  .ra-brand { display: flex; align-items: baseline; gap: 12px; }
+  .ra-logo { font-family: "Montserrat", "Roboto", system-ui, sans-serif; font-weight: 900; font-size: 46px; line-height: 1; letter-spacing: 0.1em; color: #fafafa; }
+  .ra .mk { color: #B7FF06; }
+  .ra-sub { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 22px; color: #ABABAB; }
+  .ra-line { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 24px; line-height: 1.5; color: #eaeaea; }
+  .ra-line .verb { color: #79b8ff; font-weight: 600; }
+  .ra-note { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 23px; color: #b0b0b0; line-height: 1.3; margin-top: 6px; }
+  .ra-out .ra-note { text-align: right; }
+  .ra-res { position: relative; padding: 20px 22px; display: flex; flex-direction: column; gap: 6px; }
+  .ra-res-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .ra-res-frame path { fill: none; stroke: #4c4c55; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .ra-rname { font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; font-size: 28px; letter-spacing: -0.02em; color: #fafafa; }
+  .ra-hint { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 24px; color: #8a8a8a; }
+  .ra-subt { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 23px; letter-spacing: -0.02em; color: #8a8a8a; line-height: 1.3; }
+  .ra-tbl { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 23px; letter-spacing: -0.02em; color: #8a8a8a; }
+  .ra-run { font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; font-size: 23px; letter-spacing: -0.02em; color: #B7FF06; }
+  .ra-phases { display: flex; flex-direction: column; align-items: center; gap: 3px; font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 23px; line-height: 1.1; color: #b0b0b0; }
+
+  /* ---- phases: extract → normalize → load (hand-drawn) ---- */
+  .phases { display: flex; align-items: stretch; margin-top: 32px; flex: 1; min-height: 0; }
+  .phases-pipe { position: relative; flex: 1; min-width: 0; padding: 60px 44px 48px; }
+  .phases-pipe-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .phases-pipe-frame path { fill: none; stroke: #B7FF06; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .phases-pipe-tag {
+    position: absolute; left: 44px; top: -15px; z-index: 2;
+    font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace;
+    font-size: 26px; letter-spacing: -0.02em; line-height: 1.15;
+    color: #fafafa; background: #0F0F0F; padding: 0 14px; white-space: nowrap;
+  }
+  .phases .mk { color: #B7FF06; }
+  .phases-flow { display: flex; align-items: stretch; gap: 0; width: 100%; height: 100%; }
+  .phases-node { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 0 28px;}
+  .phases-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .phases-frame path { fill: none; stroke: #727272; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .phases-n { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 32px; color: #B7FF06; line-height: 1; }
+  .phases-name { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 52px; color: #fafafa; line-height: 1; }
+  .phases-desc { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 25px; line-height: 1.32; color: #b0b0b0; text-align: center; }
+  .phases-arr { width: 120px; height: 40px; flex: 0 0 auto; align-self: center; overflow: visible; }
+  .phases-arr path { fill: none; stroke: #B7FF06; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---- resource: @dlt.resource (dois resources empilhados, anotações à esquerda) ---- */
+  .res-split { grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 0; align-items: start; }
+  .res-split .code-box { padding: 16px 28px; }
+  .res-split pre { font-size: 13px; line-height: 1.18; }
+  .res-code { position: relative; display: flex; min-width: 0; }
+  .res-code .code-box { flex: 1; margin-left: 30px; }
+  .res-code pre { font-size: 23px; line-height: 1.35; }
+  .res-notes { position: relative; flex: 0 0 240px; }
+  .res-note { position: absolute; right: 0; max-width: 240px; text-align: right; font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 23px; line-height: 1.2; color: #b0b0b0; }
+  .res-json { position: relative; display: flex; min-width: 0; }
+  .res-json .code-box { flex: 1; margin-right: 20px; }
+  .res-notes-r { position: relative; flex: 0 0 190px; }
+  .res-note-r { position: absolute; left: 0; max-width: 190px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 15px; line-height: 1.2; color: #b0b0b0; white-space: nowrap; }
+  .res-note-r .ri { width: 16px; height: 16px; display: block; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .res-note-r.root { font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; font-size: 18px; letter-spacing: -0.02em; color: #eaeaea; }
+  .res-note-r.col { color: #8a8a8a; }
+  .res-json pre { font-size: 16px; line-height: 1.22; }
+  #scene-resource-games .res-notes { flex: 0 0 200px; }
+  #scene-resource-games .res-note { max-width: 200px; }
+  #scene-resource-games .res-notes-r { flex: 0 0 170px; }
+  #scene-resource-games .res-note-r { max-width: 170px; }
+  #scene-resource-games .res-split .code-box { padding: 16px 16px; }
+  /* ---- dlt.state: o ciclo — o dict viaja no load package e volta no run seguinte.
+     Valores reais do rawg.duckdb (load_id, last_value, blob comprimido). ---- */
+  #scene-dlt-state .state-cycle {
+    /* sem flex:1 — o ciclo e o arco formam um bloco de altura natural,
+       centrado no espaço sob o título pelos margins auto abaixo */
+    flex: 0 0 auto;
+    display: grid;
+    /* minmax(0,1fr): com white-space:pre o conteúdo empurra a coluna */
+    grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr) 68px minmax(0, 1.06fr);
+    /* start: as legendas alinham no topo. A altura igual das caixas vem do
+       prep (mede o pre mais alto). */
+    align-items: start;
+    margin-top: auto;
+  }
+  #scene-dlt-state .sc-node { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+  /* min-height reserva a linha da legenda mesmo quando ela está vazia
+     (a 1ª estação ficou sem rótulo) — sem isso as caixas desalinham */
+  #scene-dlt-state .sc-cap {
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 38px; line-height: 1.15; color: #b0b0b0; margin-left: 4px;
+    min-height: 44px;
+  }
+  #scene-dlt-state .sc-pkg .sc-cap { color: #B7FF06; }
+  #scene-dlt-state .sc-dest .sc-cap { color: #B7FF06; }
+  /* conteúdo centralizado na caixa, que o prep iguala em altura.
+     padding horizontal 14 e não 22: cada px aqui vira largura de texto,
+     que é o que trava o tamanho da fonte (a linha de _dlt_load_id). */
+  #scene-dlt-state .sc-box {
+    margin-top: 0; padding: 16px 12px;
+    display: flex; align-items: center;
+  }
+  #scene-dlt-state .sc-box pre { font-size: 25px; line-height: 1.5; }
+  /* colunas de rótulo dentro do pre: apagadas, mas legíveis (#808088 = 5.1:1) */
+  #scene-dlt-state .sc-lead { color: #b8b8b8; }
+  /* align-self:center — com align-items:start no grid a seta subiria para a
+     linha das legendas; assim ela fica na altura do meio das caixas */
+  #scene-dlt-state .sc-arr { width: 100%; height: 40px; overflow: visible; align-self: center; }
+  #scene-dlt-state .sc-arr path {
+    fill: none; stroke: #B7FF06; stroke-width: 4;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* o arco fecha o ciclo: destino → dict, na próxima execução.
+     margin-bottom:auto divide o espaço livre com o margin-top:auto do ciclo,
+     então as caixas + arco ficam juntos e centrados sob o título.
+     altura 116 = 66 do arco + 50 do rótulo embaixo (antes o rótulo ficava
+     POR CIMA do traço e, a 35px, cobria o arco de ponta a ponta). */
+  #scene-dlt-state .state-return {
+    position: relative; height: 132px;
+    flex: 0 0 auto; margin-top: 16px; margin-bottom: auto;
+  }
+  #scene-dlt-state .sc-ret {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 82px; overflow: visible;
+  }
+  #scene-dlt-state .sc-ret path {
+    fill: none; stroke: #B7FF06; stroke-width: 4;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  /* o corpo do arco É o tracejado em fluxo — não é overlay. a cor é a mesma
+     do arco, então não há segunda linha: só o traço andando. o período
+     24+16 = 40 bate com o -40 do tween, o loop fecha sem emenda. */
+  #scene-dlt-state .sc-ret .sc-ret-flow {
+    fill: none; stroke: #B7FF06; stroke-width: 4;
+    stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 8 12;
+  }
+  /* rótulo EMBAIXO do traço, não mascarado por cima dele: a 35px ele tinha a
+     mesma largura do traço horizontal e tapava o arco inteiro. cinza, como as
+     outras anotações em Excalifont — o teal fica só no arco. */
+  #scene-dlt-state .sc-ret-label {
+    position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 33px; line-height: 1.2; color: #b0b0b0;
+    white-space: nowrap;
+  }
+
+  #scene-dlt-state .callout { margin-top: 18px; padding: 20px 30px; }
+  #scene-dlt-state .callout .t { font-family: "Excalifont", "Comic Sans MS", cursive; font-weight: 400; font-size: 38px; }
+  #scene-dlt-state .callout p { font-size: 30px; line-height: 1.38; margin-top: 8px; }
+
+  /* ---- dlt.Schema: API à esquerda → o doc inferido em _dlt_version à direita ---- */
+
+  /* ---- schema contracts: A SIMETRIA é o slide.
+          em cima  = o slice do resource, com os dois parâmetros acesos
+          embaixo  = DOIS PAPEIS tintados, 4 caixas cada
+                       a FORMA    · columns=        · note #448aff · 4 jeitos de declarar
+                       a POLÍTICA · schema_contract= · warn #dba642 · 4 jeitos de agir
+          o par é informativo × cautela. nada de marca aqui — os parâmetros
+          não são o dlt.
+          sem sub, sem rodapé — só o slice, a simetria e a ponte. ---- */
+  #scene-schema-contracts .contract-stage {
+    position: relative; flex: 1; min-height: 0;
+    margin-top: 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px;
+    padding: 2px 0 0;
+  }
+
+  /* título do papel, FORA da caixa — mesmo papel do .phases-name: nome em
+     Excalifont sobre a moldura desenhada. é o nome do parâmetro, não o conceito
+     (o conceito — a forma / a política — fica nas anotações do slice, em cima). */
+  #scene-schema-contracts .role-cap {
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 34px; line-height: 1.15; color: #b0b0b0;
+    margin-left: 4px;
+  }
+
+  /* o slice: contexto apagado, as DUAS linhas que importam acesas —
+     lime = a forma, teal = a política (mesma cor dos painéis abaixo) */
+  /* o slice abraça o próprio código, centrado — a simetria começa aqui */
+  #scene-schema-contracts .contract-where {
+    width: 100%; max-width: 760px; align-self: center;
+    display: flex; flex-direction: column;
+  }
+  #scene-schema-contracts .contract-code .code-box { padding: 16px 20px; margin-top: 0; flex: 1; }
+  /* base do pre é o branco de código do deck (#CCCCCC, igual a todo <pre>).
+     o highlight de sintaxe colore os tokens com as mesmas cores .syn-*;
+     pontuação e nomes de parâmetro ficam no branco, como em qualquer bloco
+     de código — as duas linhas-chave continuam dominantes pela cor de
+     identidade + o fundo tingido. */
+  #scene-schema-contracts .contract-code pre { font-size: 21px; line-height: 1.55; color: #CCCCCC; }
+  #scene-schema-contracts .contract-code .syn-fn  { color: #9696FF; }
+  #scene-schema-contracts .contract-code .syn-kw  { color: #FF7878; }
+  #scene-schema-contracts .contract-code .syn-str { color: #9ECBFF; }
+  /* as duas linhas que importam: cor de sinalização + fundo tingido da MESMA
+     cor, para continuarem legíveis como "a forma" (note) e "a política" (warn)
+     contra o código já colorido. vermelho foi testado aqui e não serve: lê
+     como "incorreto", e as quatro políticas são válidas. raio 3px = o mesmo
+     do .tf-hl/.id-hl. */
+  #scene-schema-contracts .contract-code .hl-shape {
+    color: #B7FF06; background: rgba(183, 255, 6, 0.10); border-radius: 3px;
+  }
+  /* os dois papéis saem do par azul/âmbar e entram no mesmo lima dos slides
+     14–16: o que separa forma de política é a LINHA marcada, não a cor. */
+  #scene-schema-contracts .contract-code .hl-policy {
+    color: #B7FF06; background: rgba(183, 255, 6, 0.10); border-radius: 3px;
+  }
+  #scene-schema-contracts .contract-code .res-notes { flex: 0 0 130px; }
+  #scene-schema-contracts .contract-code .res-note { max-width: 130px; font-size: 22px; }
+  /* o par de marca é o LIMA, e o marcado é o próprio trecho de código
+     anotado: mesma mecânica do hl-shape/hl-policy aqui embaixo. o fundo
+     tingido é o marca-texto; .hl-green * herda a cor para os tokens de
+     sintaxe não brigarem com ela. vale para todo .res-code (14, 15, 16). */
+  .res-code .hl-green {
+    color: #B7FF06;
+    background: rgba(183, 255, 6, 0.10);
+    border-radius: 3px;
+  }
+  .res-code .hl-green * { color: inherit; }
+  .res-code .res-note.n-green { color: #B7FF06; }
+
+  #scene-schema-contracts .contract-code .res-note.n-shape   { color: #B7FF06; }
+  #scene-schema-contracts .contract-code .res-note.n-policy  { color: #B7FF06; }
+
+  /* ── os dois blocos de papel. mesma anatomia, 4 caixas cada. a simetria é o
+        ensino; a cor diz qual dos dois lados tem consequência.
+        rótulo do papel FORA da caixa (Excalifont); dentro, só o nome do parâmetro.
+        moldura sloppy no painel (border: none + SVG hwWobbleRect), caixas internas
+        no padrão limpo dos diagramas anteriores. ── */
+  #scene-schema-contracts .roles {
+    display: flex; gap: 36px; width: 100%; align-items: stretch;
+  }
+  #scene-schema-contracts .role-block {
+    flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  #scene-schema-contracts .role-cap.n-shape  { color: #B7FF06; }
+  #scene-schema-contracts .role-cap.n-policy { color: #B7FF06; }
+
+  #scene-schema-contracts .role-panel {
+    position: relative; flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 16px 22px;
+    border-radius: 12px;
+  }
+  /* mesmo idioma do .callout.sloppy: sem borda CSS, a moldura é desenhada */
+  #scene-schema-contracts .role-frame {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    overflow: visible; pointer-events: none;
+  }
+  #scene-schema-contracts .role-frame path {
+    fill: none; stroke-width: 3;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  /* sem fundo: só o traço desenhado, como o .phases-node.
+     (.rp-shape/.rp-policy seguem porque as caixas internas herdâm a cor deles) */
+  #scene-schema-contracts .rp-shape,
+  #scene-schema-contracts .rp-policy { background: transparent; }
+
+  /* 4 caixas em grade 2×2 — o mesmo ritmo dos dois lados.
+     flex:1 + grid-auto-rows:1fr igualiza as linhas: as caixas da forma têm 1
+     linha de detalhe e as da política 2, mas todas ficam com a mesma altura. */
+  /* minmax(0,1fr) e não 1fr: com white-space:pre o conteúdo empurra a coluna
+     e as caixas dos dois lados ficavam com larguras diferentes. */
+  #scene-schema-contracts .rp-grid {
+    flex: 1;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px;
+    grid-auto-rows: 1fr;
+  }
+  /* caixas internas também sloppy — cinza, subordinado às molduras de cor dos
+     painéis. #4c4c55 e não o #3A3A3A da borda CSS do .code-box: como traço
+     desenhado, aquele tom ficaria invisível. */
+  #scene-schema-contracts .role-box {
+    position: relative;
+    display: flex; flex-direction: column; gap: 7px; justify-content: center;
+    min-height: 0; min-width: 0;
+    padding: 14px 18px;
+    background: transparent;
+    border: none; border-radius: 8px;
+  }
+  #scene-schema-contracts .role-box-frame {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    overflow: visible; pointer-events: none;
+  }
+  #scene-schema-contracts .role-box-frame path {
+    fill: none; stroke: #4c4c55; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* títulos em branco (mesmo #fafafa do .phases-name) — o conteúdo é neutro,
+     quem carrega a cor do papel é a moldura e o rótulo de fora. */
+  /* títulos das caixinhas com a MESMA formatação de código dos títulos do slide:
+     o chip do .title-chip (rgba(100,100,100,0.1) + radius 5px), só com o padding
+     reduzido para o tamanho 27px. são identificadores que se escrevem. */
+  #scene-schema-contracts .rb-name {
+    align-self: flex-start;
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 27px; font-weight: 600; line-height: 1.15;
+    color: #fafafa;
+    background: rgba(100, 100, 100, 0.1);
+    border-radius: 5px;
+    padding: 4px 14px;
+  }
+
+  /* white-space: pre — sem isto a indentação dos exemplos colapsava (é uma div,
+     não um <pre>), e o recuo das linhas de continuação sumia no render. */
+  #scene-schema-contracts .rb-detail {
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 17px; line-height: 1.35; color: #b8b8b8;
+    white-space: pre; overflow: hidden;
+  }
+  /* a política diz só o que importa em cada modo, com o MESMO wording:
+     "schema muda/não muda" + "X é/não é carregado(a)". o sujeito da 2ª linha
+     (dados → linha → valor) é a diferença entre os modos.
+     Excalifont — a voz de prosa do .phases-desc; o columns segue em Fira Code. */
+  #scene-schema-contracts .rp-policy .rb-detail {
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 24px; line-height: 1.25; color: #b0b0b0;
+  }
+  /* ---- fluxos com seta sloppy + chip (16 transformer · 17 destination) ---- */
+  #scene-transformer { --tf: #dba642; --tf-soft: #dba64244; --tf-tint: rgba(219, 166, 66, 0.12); }
+  #scene-pipeline { --tf: #57c1d4; --tf-soft: #57c1d444; --tf-tint: rgba(87, 193, 212, 0.12); }
+  /* trigger: [RAWG] ⇢ código do pipeline ⇢ [🦆 rawg.duckdb] = fonte e destino
+     em caixas iguais, ligadas por conector de fluxo (tracejado marchando);
+     caixa do código vertical (REPL do load_id abaixo), largura fixa nas pontas */
+  #scene-pipeline .trig-row { display: flex; align-items: center; justify-content: center; gap: 0; margin-top: 60px; }
+  #scene-pipeline .trig-side { flex: 0 0 230px; align-self: stretch; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+  /* caixas das pontas: moldura sloppy (desenhada no JS), o resto do slide é limpo */
+  #scene-pipeline .flow-end { position: relative; margin: 0; padding: 22px; }
+  #scene-pipeline .trig-flow { flex: none; width: 84px; height: 36px; align-self: center; overflow: visible; }
+  #scene-pipeline .trig-flow path { fill: none; stroke: #B7FF06; stroke-linecap: round; stroke-linejoin: round; }
+  #scene-pipeline .trig-box { flex: none; margin: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 28px; }
+  #scene-pipeline .flow-row { display: flex; align-items: center; margin: 10px 0 0; flex: 1; min-height: 0; }
+  #scene-pipeline .slide-inner { padding-bottom: 72px; }
+  #scene-pipeline .flow-station { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 0; }
+  #scene-pipeline .flow-arr { flex: none; width: 84px; height: 36px; align-self: center; margin: 0; overflow: visible; }
+  /* retorno como sessão REPL do Python: prompt + comando, valor impresso abaixo */
+  #scene-pipeline .trig-ret { text-align: left; width: 100%; border-top: 1px solid #3A3A3A; padding-top: 12px; }
+  #scene-pipeline .trig-ret-label { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 18px; color: #b0b0b0; }
+  #scene-pipeline .repl-ps { color: #ABABAB; }
+  #scene-pipeline .trig-ret-val { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 24px; color: #57c1d4; margin-top: 2px; }
+  /* título (path) acima da caixa · legenda da fase (extract/normalize/load) abaixo */
+  #scene-pipeline .flow-title { margin: 0 0 2px 2px; }
+  #scene-pipeline .flow-phase { margin: 2px 0 0; text-align: center; font-size: 26px; }
+  /* caixa do pacote: estilo code-box limpo (igual aos slides de código) */
+  #scene-pipeline .flow-box { padding: 20px; margin: 0; }
+  #scene-pipeline .flow-file { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 21px; line-height: 1.35; color: #fafafa; }
+  #scene-pipeline .flow-path { font-size: 14px; line-height: 1.4; color: #ABABAB; }
+  #scene-pipeline .flow-code { margin: 0; font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 19px; line-height: 1.65; color: #CCCCCC; white-space: pre; }
+  #scene-pipeline-destination { --tf: #57c1d4; --tf-soft: #57c1d444; --tf-tint: rgba(87, 193, 212, 0.12); }
+  #scene-transformer .res-code pre { font-size: 24px; line-height: 1.6; }
+  /* gap 0: a folga caixa↔seta vem do inset HW_ARROW_GAP do traço, igual ao
+     slide dlt.pipeline. com gap, a seta flutuava 14px da caixa de cima. */
+  #scene-transformer .res-stacks { gap: 0; }
+  #scene-pipeline-destination .dest-codes { display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
+  #scene-pipeline-destination .dest-codes pre { font-size: 24px; line-height: 1.5; }
+  #scene-pipeline-destination .res-split { flex: 1; align-content: stretch; align-items: stretch; }
+  #scene-pipeline-destination .dest-side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  #scene-pipeline-destination .dest-wall {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 18px;
+    min-height: 0;
+  }
+  #scene-pipeline-destination .dest-wall .logo-cell img { height: 80px; filter: brightness(0) invert(1); }
+  #scene-pipeline-destination .dest-wall .logo-cell img.raw { filter: none; }
+  #scene-pipeline-destination .dest-wall .logo-cell img.black { filter: brightness(0); }
+  #scene-pipeline-destination .dest-wall .logo-cell .logo-name { font-size: 26px; }
+  #scene-pipeline-destination .dest-wall .logo-cell .logo-name.hand { font-family: "Excalifont", "Comic Sans MS", cursive; font-weight: 400; font-size: 32px; }
+  #scene-pipeline-destination .wall-code {
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 17px;
+    color: #eaeaea;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .tf-arrow {
+    position: relative;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tf-arrow.short { height: 48px; }
+  .tf-arr {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .tf-arr path {
+    fill: none;
+    stroke: var(--tf);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .tf-chip {
+    position: relative;
+    z-index: 1;
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 19px;
+    line-height: 1.2;
+    color: #b0b0b0;
+    background: rgba(100, 100, 100, 0.1);
+    border: 1px solid var(--tf-soft);
+    border-radius: 5px;
+    padding: 5px 16px;
+  }
+  .tf-hl {
+    color: var(--tf);
+    background: var(--tf-tint);
+    border-radius: 3px;
+  }
+  /* legendas de identidade no slide pipeline: rawg (pipeline) = tf-hl teal ·
+     id do registro = âmbar · resource (games) = roxo (cor de nome de função) */
+  .id-hl {
+    color: #dba642;
+    background: rgba(219, 166, 66, 0.12);
+    border-radius: 3px;
+  }
+  .res-hl {
+    color: #B392F0;
+    background: rgba(179, 146, 240, 0.12);
+    border-radius: 3px;
+  }
+  .res-stacks { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 24px; align-self: stretch; justify-content: center; }
+  .stack { display: flex; flex-direction: column; min-width: 0; }
+  .res-stacks .code-box { margin-top: 0; }
+  .res-stacks pre { font-size: 17px; line-height: 1.35; }
+  .stack-cap { margin: 0 0 2px 4px; line-height: 1.15; }
+  .stack-cap.file { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 19px; color: #b0b0b0; }
+  .stack-cap.hand { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 21px; line-height: 1.25; color: #b0b0b0; }
+  /* as anotações sobre as caixas do 18 pedem mais corpo que as dos 13/16 */
+  #scene-pipeline-destination .stack-cap.hand { font-size: 23px; }
+
+  /* ---- real-example: ERD full-bleed (tipo database-schema do diagram-design).
+     Sem título. Linhas de coluna fixas (nome · chip · tipo), FK ancorada no
+     centro da linha da coluna, chaves destacadas. Sem wobble: é schema técnico. ---- */
+  #scene-real-example { --tf: #57c1d4; --tf-soft: #57c1d444; --tf-tint: rgba(87, 193, 212, 0.12); }
+  #scene-real-example .slide-inner.erd-slide { padding: 60px 140px 72px; }
+  #scene-real-example .erd-title {
+    display: flex; align-items: center; gap: 14px;
+    flex-shrink: 0;
+    margin-bottom: 22px;
+  }
+  #scene-real-example .erd-duck {
+    height: 72px; width: auto;
+    filter: brightness(0) invert(1);
+    flex-shrink: 0;
+  }
+  /* no tamanho padrão dos títulos de slide, e com o mesmo chip do título do 19 */
+  #scene-real-example .erd-file {
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 72px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #fafafa;
+    background: rgba(100, 100, 100, 0.1);
+    border-radius: 5px;
+    padding: 8px 28px;
+  }
+  #scene-real-example .erd-full {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+  }
+  #scene-real-example .erd-wires {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    overflow: visible; pointer-events: none;
+    z-index: 0;
+  }
+  #scene-real-example .erd-wires path {
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* grupo (containment) das tabelas internas */
+  #scene-real-example .erd-group {
+    position: relative;
+    flex: 0 0 424px;
+    display: flex; align-items: center;
+    min-width: 0;
+    margin-left: 24px;
+    margin-right: 180px;   /* gap do rótulo _dlt_load_id */
+  }
+  #scene-real-example .erd-int {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    padding: 0;
+  }
+
+  #scene-real-example .erd-mid {
+    flex: 0 0 388px;
+    display: flex; align-items: center;
+    min-width: 0;
+    margin-right: 172px;   /* gap do rótulo _dlt_parent_id + espinha */
+  }
+  #scene-real-example .erd-kids {
+    flex: 1;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    z-index: 1;
+  }
+
+  /* ── caixa-tabela ── */
+  #scene-real-example .erd-box {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    border: 1px solid rgba(250, 250, 250, 0.16);
+    border-radius: 6px;
+    background: #0d0d10;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+
+  /* header band: nome · tag TABLE · contagem */
+  #scene-real-example .erd-head {
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+    height: 30px;
+    padding: 0 12px 0 14px;
+    background: rgba(250, 250, 250, 0.045);
+    border-bottom: 1px solid rgba(250, 250, 250, 0.13);
+  }
+  #scene-real-example .erd-head .name {
+    font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace;
+    letter-spacing: -0.02em;
+    font-size: 18px;
+    color: #fafafa;
+    white-space: nowrap;
+  }
+  #scene-real-example .erd-head .tag {
+    flex-shrink: 0;
+    font-family: "Fira Code", ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: rgba(250, 250, 250, 0.5);
+    border: 1px solid rgba(250, 250, 250, 0.22);
+    border-radius: 2px;
+    padding: 1px 6px;
+  }
+  #scene-real-example .erd-rows {
+    margin-left: auto;
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 15px;
+    color: #8a8a8a;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── linha de coluna: nome · chip · tipo (à direita) ── */
+  #scene-real-example .erd-row {
+    display: flex; align-items: center; gap: 7px;
+    flex-shrink: 0;
+    height: 22px;
+    padding: 0 12px 0 14px;
+    border-top: 1px solid rgba(250, 250, 250, 0.045);
+  }
+  #scene-real-example .erd-row:nth-child(odd) { background: rgba(250, 250, 250, 0.018); }
+  #scene-real-example .erd-row .cname {
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 15px;
+    color: #d6d6d6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #scene-real-example .erd-row .ctyp {
+    margin-left: auto;
+    font-family: "Fira Code", ui-monospace, monospace;
+    font-size: 11.5px;
+    color: #6a6a6a;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  #scene-real-example .erd-row .chip {
+    flex-shrink: 0;
+    font-family: "Fira Code", ui-monospace, monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    color: rgba(250, 250, 250, 0.62);
+    border: 1px solid rgba(250, 250, 250, 0.22);
+    border-radius: 2px;
+    padding: 0 4px;
+    line-height: 1.55;
+  }
+
+  /* ── linhas-chave destacadas: o olho segue a conexão ── */
+  /* par normalização: games._dlt_id ↔ child._dlt_parent_id */
+  #scene-real-example .erd-row.k-link {
+    background: rgba(179, 146, 240, 0.11);
+    box-shadow: inset 2px 0 0 #B392F0;
+  }
+  #scene-real-example .erd-row.k-link .cname { color: #cdb6f5; }
+  #scene-real-example .erd-row.k-link .chip { color: #B392F0; border-color: rgba(179, 146, 240, 0.45); }
+  /* par versão do schema: version_hash ↔ schema_version_hash — sem cor,
+     só o fio cinza conta a relação (accent em 2 pares já basta) */
+  #scene-real-example .erd-row.k-hash {
+    background: rgba(250, 250, 250, 0.035);
+    box-shadow: inset 2px 0 0 rgba(250, 250, 250, 0.22);
+  }
+  #scene-real-example .erd-row.k-hash .cname { color: #b8b8c0; }
+
+  /* par linhagem: load_id ↔ _dlt_load_id */
+  #scene-real-example .erd-row.k-load {
+    background: rgba(219, 166, 66, 0.11);
+    box-shadow: inset 2px 0 0 #dba642;
+  }
+  #scene-real-example .erd-row.k-load .cname { color: #e8c68a; }
+  #scene-real-example .erd-row.k-load .chip { color: #dba642; border-color: rgba(219, 166, 66, 0.45); }
+
+  /* rodapé: colunas omitidas — nunca truncar em silêncio */
+  #scene-real-example .erd-foot {
+    flex-shrink: 0;
+    height: 21px;
+    display: flex; align-items: center;
+    padding: 0 12px 0 14px;
+    border-top: 1px solid rgba(250, 250, 250, 0.09);
+    background: rgba(250, 250, 250, 0.028);
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    color: #5f5f66;
+  }
+
+  /* overflow: nunca truncar em silêncio */
+
+  /* linha real da tabela (data preview) */
+
+  /* rótulos das relações */
+  #scene-real-example .erd-link-label {
+    position: absolute;
+    z-index: 3;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 16px;
+    line-height: 1.15;
+    color: #b0b0b0;
+    white-space: nowrap;
+    pointer-events: none;
+    text-align: center;
+  }
+  #scene-real-example .erd-link-label .val {
+    font-family: "Fira Code", ui-monospace, monospace;
+    font-size: 13px;
+    letter-spacing: 0.01em;
+    color: #dba642;
+  }
+  #scene-real-example .erd-link-label .to {
+    color: #7a7a84;
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 15px;
+    line-height: 1.1;
+  }
+  #scene-real-example .erd-link-label .mono {
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    background: #141417;
+    border: 1px solid #2c2c31;
+    padding: 2px 9px;
+    border-radius: 3px;
+    color: #b0b0b0;
+  }
+
+  /* ---- slide 22 · a plataforma de dados moderna ----
+     o diagrama se explica: nomes de ferramentas, sem prosa.
+     dlt -> destino -> transformação -> consumo, e a branch mostra que o T
+     é opcional. as células seguem o idioma do slide 18: fundo na cor da
+     marca, silhueta branca, nome dentro e moldura sloppy branca. */
+  #scene-closing .slide-inner {
+    justify-content: center;
+    padding: 0 100px;
+  }
+
+  #scene-closing .logo-defs {
+    position: absolute;
+    width: 0; height: 0;
+    overflow: hidden;
+  }
+  #scene-closing .smap {
+    height: 820px;
+    margin-top: 50px;
+    margin-bottom: 0;
+  }
+
+  /* envelope da orquestração: mesmo quadrado sloppy cinza das caixas de estágio.
+     1280px para envolver a transformação (880..1240) com a mesma margem de 40px
+     que a caixa do dlt tem à esquerda. */
+  #scene-closing .orch-layer {
+    position: absolute;
+    left: 0; top: 0;
+    width: 1280px; height: 730px;
+  }
+  #scene-closing .orch-frame {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+  #scene-closing .orch-frame path {
+    fill: none;
+    stroke: #4c4c55;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  /* legenda centrada no topo, sobre os ícones; as 4 células centradas embaixo */
+  #scene-closing .orch-cap {
+    position: absolute;
+    top: 4px; left: 0; right: 0;
+    text-align: center;
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 32px;
+    line-height: 1.15;
+    color: #b0b0b0;
+  }
+  #scene-closing .orch-cells {
+    position: absolute;
+    top: 52px; left: 0; right: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 156px);
+    grid-auto-rows: 158px;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  /* a branch: destino -> consumo, contornando a transformação */
+  #scene-closing .bypass {
+    position: absolute;
+    left: 0; top: 730px;
+    width: 100%; height: 90px;
+  }
+  #scene-closing .bypass-arc {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+  #scene-closing .bypass-arc path {
+    fill: none;
+    stroke: #B7FF06;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 8 12;
+  }
+
+  /* ── célula de ferramenta: o idioma do slide 18 ── */
+  #scene-closing .cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    border-radius: 5px;
+    color: #ffffff;
+  }
+  #scene-closing .cell.cell-dark { color: #0F0F0F; }
+  #scene-closing .logo-cell-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+  /* overflow hidden: a marca do marimo vem do Inkscape e extrapola o viewBox */
+  #scene-closing .cell .pmap-logo {
+    display: block;
+    overflow: hidden;
+    width: 82px; height: 82px;
+  }
+  /* o herói é só a marca: sem fundo, sem moldura de célula. a caixa que a
+     envolve é a do estágio (contorno lima, como pedido). */
+  #scene-closing .cell.cell-hero {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: auto; height: auto;
+    padding: 0;
+  }
+  /* wordmark dlt (extraído do dlthub-dark.svg, sem o "hub") — mesma altura
+     dos outros logos (82px) */
+  #scene-closing .dlt-mark {
+    display: block;
+    height: 82px;
+    width: auto;
+    flex: none;
+    overflow: hidden;
+  }
+  /* o ibis é uma silhueta achatada; ganha slot maior para ter presença */
+  #scene-closing .cell .pmap-logo.lg-big { width: 112px; height: 112px; }
+  #scene-closing .cell-n {
+    font-family: "Roboto", system-ui, sans-serif;
+    font-size: 25px;
+    font-weight: 600;
+    color: currentColor;
+    text-align: center;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── as caixas grandes ── */
+  #scene-closing .grid {
+    display: grid;
+    justify-content: center;
+    align-items: stretch;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  #scene-closing .grid-2 { grid-template-columns: repeat(2, 158px); grid-auto-rows: 158px; gap: 18px; }
+  #scene-closing .grid { margin-bottom: 0; }
+  /* a legenda fica FORA da caixa, na parte inferior */
+  #scene-closing .stage-cap {
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    margin-top: 16px;
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 32px;
+    font-weight: 400;
+    color: #b0b0b0;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  /* ---- questions (fechamento · obrigado + perguntas + links) ---- */
+  /* Livro de capa, mas mais baixo: "obrigado" na camada de marca (Fragment
+     Mono, lima) e "perguntas?" na camada de canada (Excalifont, branco). Sem
+     sublinhado e sem rótulos — o que sobra são os endereços. */
+  #scene-questions .slide-inner {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 72px 110px;
+  }
+  /* o dragão é a única figurinha, no topo centrado e no fluxo: ele ocupa o
+     lugar que o lockup tem na capa, e o slide fecha com a mesma estrutura. */
+  #scene-questions .q-sticker {
+    width: 210px;
+    height: auto;
+    display: block;
+    flex: none;
+    margin: 0 auto 20px;
+    pointer-events: none;
+  }
+  #scene-questions .q-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: none;
+    margin-bottom: 52px;
+  }
+  /* a camada de marca: mesma família, mesma cor e o MESMO peso do "dlt" da
+     capa. lá o 700 chega herdado do h1.headline; aqui o elemento é um div e
+     não herda de ninguém, então o peso vai explícito. o Fragment Mono só tem
+     face 400 — o negrito é sintético nos dois lugares, e é assim que o "dlt"
+     já sai na capa. 64px o mantém como um bilhete de encerramento: o olho
+     cai em "perguntas?" primeiro, que é o convite.
+
+     O left corrige o centro ótico: o "!" ocupa uma célula de mono inteira e
+     pinta só parte dela, então a caixa centrada deixa a TINTA 6px à esquerda
+     (sobra 15px de vão à direita do glifo contra 3px à esquerda, e a diferença
+     se divide pelos dois los). 6/64 = 0,094em, e a em acompanha o corpo. Se o
+     texto mudar (sem o "!", por exemplo), recalcular medindo a tinta. */
+  #scene-questions .q-thanks {
+    font-size: 64px;
+    line-height: 1.02;
+    font-weight: 700;
+    position: relative;
+    left: 0.094em;
+  }
+  /* a camada de caneta, em branco. medido: 96px de Fragment Mono e 88px de
+     Excalifont dão ~460px de largura cada, então as duas linhas empilham
+     com as mesmas margens. */
+  #scene-questions .q-title {
+    font-family: "Excalifont", "Comic Sans MS", cursive;
+    font-size: 88px;
+    line-height: 1.02;
+    font-weight: 400;
+    color: #fafafa;
+    /* o "g" de obrigado desce e o "t" de perguntas? sobe na mesma faixa:
+       2px de margem deixavam só 5px de tinta entre as duas linhas. */
+    margin: 12px 0 0;
+    white-space: nowrap;
+  }
+  #scene-questions .q-cols {
+    display: flex;
+    align-items: stretch;
+    gap: 64px;
+    flex: none;
+  }
+  #scene-questions .q-vrule {
+    width: 1px;
+    background: #3A3A3A;
+    flex: none;
+    align-self: stretch;
+  }
+  /* as duas colunas têm a MESMA largura de propósito: com larguras iguais o
+     hairline do meio cai sempre em x=960, o eixo de simetria do slide — que é
+     por onde passam o dragão e o título. com 340 e 440 o divisor saía em 910. */
+  #scene-questions .q-col {
+    width: 440px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 22px;
+    text-align: left;
+    flex: none;
+  }
+  /* o QR encosta no divider pelo mesmo vão que os contatos têm do outro lado
+     (64px). centrado na coluna ele ficava 149px do fio contra 64px do texto. */
+  #scene-questions .q-col-qr {
+    align-items: flex-end;
+  }
+  /* 230px de caixa faz a TINTA do QR ter 200px de altura, que é a altura da
+     tinta do bloco de contatos — o QR e os contatos passam a ocupar o mesmo
+     vão vertical. o lado encolhe junto: 29 módulos por ~6,9px cada. */
+  #scene-questions .q-qr {
+    width: 230px;
+    height: 230px;
+    display: block;
+    flex: none;
+    /* o SVG do QR tem a zona de silêncio desenhada dentro do viewBox (19/300
+       de cada lado), e ela encolhe junto com a caixa. sem o empurrão, o
+       último módulo fica longe do divider enquanto o texto do outro lado
+       encosta — e a régua visível são os módulos, não a caixa. a 270px a
+       correção era 17px; a 230px são 15px. */
+    position: relative;
+    left: 15px;
+  }
+  /* o bloco de links é o MESMO componente do site no rodapé da capa
+     (.cover-footer .site): ícone 32px, endereço 24px em Fira Code, gap 10px,
+     tudo branco. os quatro saem assim para a lista inteira ler como uma peça. */
+  #scene-questions .q-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    flex: none;
+  }
+  /* slot fixo para os quatro ícones: cada desenho se acomoda por
+     object-fit/preserveAspectRatio dentro dessa caixa e o texto sempre começa
+     no mesmo x. os três de contorno são Lucide (os mesmos paths do blog), em
+     viewBox 24; o logo do site é a malha wired 94×72. */
+  /* slot fixo em largura para o texto sempre começar no mesmo x. a ALTURA vai
+     por ícone: os desenhos não têm a mesma proporção (o mail do Lucide ocupa
+     16/24 da caixa, o github e o linkedin 19/24, o logo é 94×72) e num slot
+     único as alturas de tinta divergiam 4px. medidos, estes valores trazem os
+     quatro para ~30px de altura e 960-1036px2 de área. */
+  #scene-questions .q-icon {
+    width: 44px;
+    flex: none;
+    display: block;
+    color: #fafafa;
+    object-fit: contain;
+  }
+  #scene-questions .q-mail { height: 36px; }
+  #scene-questions .q-in,
+  #scene-questions .q-gh { height: 35px; }
+  /* o logo é uma malha larga (94×72): solto no slot ele rendia o dobro da
+     área de qualquer glifo. 30px de altura o põe na mesma régua de altura
+     dos três de contorno. */
+  #scene-questions .q-logo {
+    height: 32px;
+  }
+  #scene-questions .q-value {
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 24px;
+    line-height: 1.2;
+    color: #fafafa;
+    white-space: nowrap;
+  }

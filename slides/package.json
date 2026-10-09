@@ -1,0 +1,10 @@
+{
+  "name": "dlt-python-brasil-2026-slides",
+  "private": true,
+  "description": "Palestra: dlt (data load tool) — Python Brasil 2026 (HyperFrames slideshow)",
+  "scripts": {
+    "dev": "npx hyperframes present ./composition",
+    "lint": "npx hyperframes lint ./composition",
+    "check": "npx hyperframes check ./composition"
+  }
+}

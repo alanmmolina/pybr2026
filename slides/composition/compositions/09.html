@@ -1,0 +1,156 @@
+<template>
+  <div data-composition-id="dlthub" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline" data-anim=""><span class="brand">dlt</span><span class="brand-hub">Hub</span></h1>
+      <div class="hub-legend" data-anim="">
+        <div class="hub-note oss">
+          <svg class="hub-arrow" viewBox="0 0 40 40" data-color="#B7FF06" aria-hidden="true"></svg>
+          <span>open source · licença Apache 2.0</span>
+        </div>
+        <div class="hub-note co">
+          <svg class="hub-arrow" viewBox="0 0 40 40" data-color="#57c1d4" aria-hidden="true"></svg>
+          <span>a empresa · duas camadas adicionais</span>
+        </div>
+      </div>
+      <div class="hub-layers">
+        <div class="hub-col">
+          <div class="hub-head">
+            <svg class="hub-ico" viewBox="0 0 120 120" data-icon="ml" aria-hidden="true"></svg>
+            <span class="hub-t">Agentic Layer</span>
+          </div>
+          <div class="hub-box">
+            <div class="hub-k">AI Harness</div>
+            <div class="hub-d">a interface entre o coding agent e o dltHub. Skills, comandos, regras e MCP que mantêm o agente nas melhores práticas</div>
+          </div>
+          <div class="hub-box">
+            <div class="hub-k">Context Graph</div>
+            <div class="hub-d">a memória de longo prazo do agente: traces, logs e schema de cada pipeline. Se algo quebra, ele sabe o que mudou e onde</div>
+          </div>
+        </div>
+        <svg class="hub-divider" aria-hidden="true"></svg>
+        <div class="hub-col">
+          <div class="hub-head">
+            <svg class="hub-ico" viewBox="0 0 120 120" data-icon="rack" aria-hidden="true"></svg>
+            <span class="hub-t">Managed Infrastructure Layer</span>
+          </div>
+          <div class="hub-box">
+            <div class="hub-k">execução + orquestração</div>
+            <div class="hub-d">o cliente é responsável somente por escrever o código. O dltHub agenda, executa e gerencia a infraestrutura</div>
+          </div>
+          <div class="hub-box">
+            <div class="hub-k">observabilidade</div>
+            <div class="hub-d">logs, métricas, alertas de cada execução já embutidos na infraestrutura gerenciada pelo dltHub</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var dltHubPrepped = false;
+function fireDltHub() {
+  var scene = document.getElementById("scene-dlthub");
+  if (!scene) return;
+  var icons = scene.querySelectorAll(".hub-ico path");
+  var heads = scene.querySelectorAll(".hub-head");
+  var boxes = scene.querySelectorAll(".hub-box");
+  var frames = scene.querySelectorAll(".hub-box-frame path");
+  var div = scene.querySelector(".hub-divider path");
+  var annots = scene.querySelectorAll(".hub-arrow path");
+  for (var i = 0; i < icons.length; i++) icons[i].style.strokeDashoffset = icons[i].getAttribute("data-hideoff");
+  for (var f = 0; f < frames.length; f++) frames[f].style.strokeDashoffset = frames[f].getAttribute("data-hideoff");
+  for (var a = 0; a < annots.length; a++) annots[a].style.strokeDashoffset = annots[a].getAttribute("data-hideoff");
+  if (div) div.style.strokeDashoffset = div.getAttribute("data-hideoff");
+
+  var tl = gsap.timeline();
+  gsap.set(heads, { opacity: 0, y: 20 });
+  gsap.set(boxes, { opacity: 0, y: 24 });
+  if (div) gsap.set(div, { opacity: 0 });
+  tl.to(heads, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.12 }, 0.15);
+  tl.to(icons, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out", stagger: 0.12 }, 0.2);
+  if (div) tl.to(div, { opacity: 1, strokeDashoffset: 0, duration: 0.6, ease: "power2.out" }, 0.35);
+  tl.to(annots, { strokeDashoffset: 0, duration: 0.4, ease: "power2.out", stagger: 0.12 }, 0.3);
+  tl.to(boxes, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", stagger: 0.14 }, 0.5);
+  tl.to(frames, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out", stagger: 0.14 }, 0.5);
+}
+
+function prepDltHub() {
+  if (dltHubPrepped) return;
+  var scene = document.getElementById("scene-dlthub");
+  if (!scene) return;
+  var SVGN = "http://www.w3.org/2000/svg";
+
+  var icons = scene.querySelectorAll(".hub-ico[data-icon]");
+  for (var i = 0; i < icons.length; i++) {
+    var type = icons[i].getAttribute("data-icon");
+    var shapes = pmapIconPaths(type, 20 + i * 17);
+    for (var s = 0; s < shapes.length; s++) {
+      var sh = shapes[s];
+      var el = document.createElementNS(SVGN, "path");
+      el.setAttribute("d", sh.d);
+      el.setAttribute("fill", "none");
+      el.setAttribute("stroke", "#fafafa");
+      el.setAttribute("stroke-width", sh.sw ? String(sh.sw) : "7");
+      el.setAttribute("stroke-linecap", "round");
+      el.setAttribute("stroke-linejoin", "round");
+      setDrawHidden(el, sh.sw ? parseFloat(sh.sw) : 7);
+      icons[i].appendChild(el);
+    }
+  }
+
+  var boxes = scene.querySelectorAll(".hub-box");
+  for (var b = 0; b < boxes.length; b++) {
+    var w = boxes[b].offsetWidth, h = boxes[b].offsetHeight;
+    var fsvg = document.createElementNS(SVGN, "svg");
+    fsvg.setAttribute("class", "hub-box-frame");
+    fsvg.setAttribute("viewBox", "0 0 " + w + " " + h);
+    fsvg.setAttribute("aria-hidden", "true");
+    makeStrokedPath(fsvg, hwWobbleRect(w, h, 8, 80 + b * 11, 2.5), 2.5, "#57c1d4");
+    boxes[b].appendChild(fsvg);
+  }
+
+  var arrows = scene.querySelectorAll(".hub-arrow");
+  for (var ar = 0; ar < arrows.length; ar++) {
+    var color = arrows[ar].getAttribute("data-color") || "#fafafa";
+    var p = document.createElementNS(SVGN, "path");
+    p.setAttribute("d", hwArrowDownRight(55 + ar * 23));
+    p.setAttribute("fill", "none");
+    p.setAttribute("stroke", color);
+    p.setAttribute("stroke-width", "4");
+    p.setAttribute("stroke-linecap", "round");
+    p.setAttribute("stroke-linejoin", "round");
+    setDrawHidden(p, 4);
+    arrows[ar].appendChild(p);
+  }
+
+  var divider = scene.querySelector(".hub-divider");
+  if (divider) {
+    var dh = scene.querySelector(".hub-layers").offsetHeight;
+    if (dh > 0) {
+      divider.setAttribute("viewBox", "0 0 12 " + dh);
+      var steps = 5, pts = [];
+      for (var k = 0; k <= steps; k++) {
+        pts.push([6, 10 + (dh - 20) * (k / steps)]);
+      }
+      var dp = document.createElementNS(SVGN, "path");
+      dp.setAttribute("d", hwWobblePoly(pts, 50, 3));
+      dp.setAttribute("fill", "none");
+      dp.setAttribute("stroke", "#727272");
+      dp.setAttribute("stroke-width", "2");
+      dp.setAttribute("stroke-linecap", "round");
+      dp.setAttribute("stroke-linejoin", "round");
+      setDrawHidden(dp, 2);
+      divider.appendChild(dp);
+    }
+  }
+
+  dltHubPrepped = true;
+}
+
+    HW.scene("dlthub", {
+      prep: function () {
+        prepDltHub();
+      },
+      fire: fireDltHub
+    });
+  </script>
+</template>

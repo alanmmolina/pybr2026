@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>dlt (data load tool) — Python Brasil 2026</title>
+<script src="vendor/gsap.min.js"></script>
+<!-- runtime local: monta os sub-compositions (compositions/NN.html) sem depender
+     da injeção via CDN do player — e o deck fica usável offline, inclusive na sala -->
+<script src="vendor/hyperframe.runtime.iife.js"></script>
+<link rel="stylesheet" href="deck.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+  <defs>
+    <symbol id="hf-arr" viewBox="0 0 120 64">
+      <path d="M 6 42 L 48 34 Q 62 30 76 31 L 94 28" fill="none" stroke="#57c1d4" stroke-width="6" stroke-linecap="round" />
+      <path d="M 62 9 L 97 27 L 64 50" fill="none" stroke="#57c1d4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+    </symbol>
+  </defs>
+</svg>
+<script type="application/hyperframes-slideshow+json">
+{
+  "slides": [
+    {
+      "sceneId": "cover"
+    },
+    {
+      "sceneId": "speaker"
+    },
+    {
+      "sceneId": "pessoal"
+    },
+    {
+      "sceneId": "pipeline-map"
+    },
+    {
+      "sceneId": "problem-sources"
+    },
+    {
+      "sceneId": "connector-costs"
+    },
+    {
+      "sceneId": "parallel-dialects"
+    },
+    {
+      "sceneId": "what-is-dlt"
+    },
+    {
+      "sceneId": "dlthub"
+    },
+    {
+      "sceneId": "anatomy"
+    },
+    {
+      "sceneId": "phases"
+    },
+    {
+      "sceneId": "rawg-architecture"
+    },
+    {
+      "sceneId": "source"
+    },
+    {
+      "sceneId": "resource"
+    },
+    {
+      "sceneId": "resource-games"
+    },
+    {
+      "sceneId": "transformer"
+    },
+    {
+      "sceneId": "schema-contracts"
+    },
+    {
+      "sceneId": "pipeline-destination"
+    },
+    {
+      "sceneId": "pipeline"
+    },
+    {
+      "sceneId": "real-example"
+    },
+    {
+      "sceneId": "dlt-state"
+    },
+    {
+      "sceneId": "closing"
+    },
+    {
+      "sceneId": "questions"
+    }
+  ]
+}
+</script>
+
+<div id="deck-root" data-composition-id="deck" data-start="0" data-duration="230" data-width="1920" data-height="1080" style="position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #0F0F0F;">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ri-table" viewBox="0 0 16 16">
+    <path d="M2.2 3.1 C5.5 2.6 10.8 2.7 13.8 3.2 C14.3 6.2 14.2 10.8 13.7 13.1 C10.2 13.6 5.2 13.5 2.3 13 C1.8 9.8 1.8 5.6 2.2 3.1 Z"/>
+    <path d="M2.4 6.2 C5.5 6.5 10.5 6.4 13.8 6.1"/>
+    <path d="M8.1 3.0 C8.25 6.2 8.2 10.2 8.0 13.2"/>
+  </symbol>
+  <symbol id="ri-col" viewBox="0 0 16 16">
+    <path d="M5.1 2.7 C7.8 2.4 10.8 2.5 11.2 2.9 C11.5 6.1 11.4 10.8 11 13.2 C8.1 13.6 5.3 13.5 4.9 13 C4.5 9.6 4.6 5.4 5.1 2.7 Z"/>
+    <path d="M5.0 6.3 C7.0 6.5 9.4 6.4 11.2 6.1"/>
+    <path d="M5.0 9.9 C7.0 10.1 9.4 10.0 11.2 9.7"/>
+  </symbol>
+</svg>
+
+<!-- 01 · cover -->
+<div id="scene-cover" class="scene-frame" data-composition-id="cover" data-start="0" data-duration="10" data-width="1920" data-height="1080" data-label="Capa" data-composition-src="compositions/01.html"></div>
+<!-- 02 · speaker -->
+<div id="scene-speaker" class="scene-frame" data-composition-id="speaker" data-start="10" data-duration="10" data-width="1920" data-height="1080" data-label="Palestrante" data-composition-src="compositions/02.html"></div>
+<!-- 03 · pessoal -->
+<div id="scene-pessoal" class="scene-frame" data-composition-id="pessoal" data-start="20" data-duration="10" data-width="1920" data-height="1080" data-label="Pessoal" data-composition-src="compositions/03.html"></div>
+<!-- 04 · pipeline-map -->
+<div id="scene-pipeline-map" class="scene-frame" data-composition-id="pipeline-map" data-start="30" data-duration="10" data-width="1920" data-height="1080" data-label="O mapa" data-composition-src="compositions/04.html"></div>
+<!-- 05 · problem-sources -->
+<div id="scene-problem-sources" class="scene-frame" data-composition-id="problem-sources" data-start="40" data-duration="10" data-width="1920" data-height="1080" data-label="Problema: fontes" data-composition-src="compositions/05.html"></div>
+<!-- 06 · connector-costs -->
+<div id="scene-connector-costs" class="scene-frame" data-composition-id="connector-costs" data-start="50" data-duration="10" data-width="1920" data-height="1080" data-label="Conectores" data-composition-src="compositions/06.html"></div>
+<!-- 07 · parallel-dialects -->
+<div id="scene-parallel-dialects" class="scene-frame" data-composition-id="parallel-dialects" data-start="60" data-duration="10" data-width="1920" data-height="1080" data-label="Dialetos e convenção" data-composition-src="compositions/07.html"></div>
+<!-- 08 · what-is-dlt -->
+<div id="scene-what-is-dlt" class="scene-frame" data-composition-id="what-is-dlt" data-start="70" data-duration="10" data-width="1920" data-height="1080" data-label="O que é dlt" data-composition-src="compositions/08.html"></div>
+<!-- 09 · dlthub -->
+<div id="scene-dlthub" class="scene-frame" data-composition-id="dlthub" data-start="80" data-duration="10" data-width="1920" data-height="1080" data-label="O que é dltHub" data-composition-src="compositions/09.html"></div>
+<!-- 10 · anatomy -->
+<div id="scene-anatomy" class="scene-frame" data-composition-id="anatomy" data-start="90" data-duration="10" data-width="1920" data-height="1080" data-label="Anatomia" data-composition-src="compositions/10.html"></div>
+<!-- 11 · phases -->
+<div id="scene-phases" class="scene-frame" data-composition-id="phases" data-start="100" data-duration="10" data-width="1920" data-height="1080" data-label="As três fases" data-composition-src="compositions/11.html"></div>
+<!-- 12 · rawg-architecture -->
+<div id="scene-rawg-architecture" class="scene-frame" data-composition-id="rawg-architecture" data-start="110" data-duration="10" data-width="1920" data-height="1080" data-label="Arquitetura RAWG" data-composition-src="compositions/12.html"></div>
+<!-- 13 · source -->
+<div id="scene-source" class="scene-frame" data-composition-id="source" data-start="120" data-duration="10" data-width="1920" data-height="1080" data-label="Source" data-composition-src="compositions/13.html"></div>
+<!-- 14 · resource -->
+<div id="scene-resource" class="scene-frame" data-composition-id="resource" data-start="130" data-duration="10" data-width="1920" data-height="1080" data-label="Resource" data-composition-src="compositions/14.html"></div>
+<!-- 15 · resource-games -->
+<div id="scene-resource-games" class="scene-frame" data-composition-id="resource-games" data-start="140" data-duration="10" data-width="1920" data-height="1080" data-label="Resource · games" data-composition-src="compositions/15.html"></div>
+<!-- 16 · transformer -->
+<div id="scene-transformer" class="scene-frame" data-composition-id="transformer" data-start="150" data-duration="10" data-width="1920" data-height="1080" data-label="Transformer" data-composition-src="compositions/16.html"></div>
+<!-- 17 · schema-contracts -->
+<div id="scene-schema-contracts" class="scene-frame" data-composition-id="schema-contracts" data-start="160" data-duration="10" data-width="1920" data-height="1080" data-label="Schema contracts" data-composition-src="compositions/17.html"></div>
+<!-- 18 · pipeline-destination -->
+<div id="scene-pipeline-destination" class="scene-frame" data-composition-id="pipeline-destination" data-start="170" data-duration="10" data-width="1920" data-height="1080" data-label="Pipeline e destination" data-composition-src="compositions/18.html"></div>
+<!-- 19 · pipeline -->
+<div id="scene-pipeline" class="scene-frame" data-composition-id="pipeline" data-start="180" data-duration="10" data-width="1920" data-height="1080" data-label="Pipeline" data-composition-src="compositions/19.html"></div>
+<!-- 20 · real-example -->
+<div id="scene-real-example" class="scene-frame" data-composition-id="real-example" data-start="190" data-duration="10" data-width="1920" data-height="1080" data-label="Schema no DuckDB" data-composition-src="compositions/20.html"></div>
+<!-- 21 · dlt-state -->
+<div id="scene-dlt-state" class="scene-frame" data-composition-id="dlt-state" data-start="200" data-duration="10" data-width="1920" data-height="1080" data-label="dlt.state" data-composition-src="compositions/21.html"></div>
+<!-- 22 · state -->
+<!-- 23 · closing -->
+<div id="scene-closing" class="scene-frame" data-composition-id="closing" data-start="210" data-duration="10" data-width="1920" data-height="1080" data-label="Plataforma" data-composition-src="compositions/22.html"></div>
+<!-- 23 · questions -->
+<div id="scene-questions" class="scene-frame" data-composition-id="questions" data-start="220" data-duration="10" data-width="1920" data-height="1080" data-label="Perguntas" data-composition-src="compositions/23.html"></div>
+
+</div><!-- /deck-root -->
+
+<script>
+  window.__timelines = window.__timelines || {};
+</script>
+<script src="deck.js"></script>
+
+</body>
+</html>

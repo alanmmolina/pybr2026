@@ -1,0 +1,121 @@
+<template>
+  <div data-composition-id="phases" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline" data-anim="">Três fases distintas</h1>
+      <div class="phases">
+        <div class="phases-pipe">
+          <svg class="phases-pipe-frame" aria-hidden="true"></svg>
+          <div class="phases-pipe-tag"><span class="mk">dlt</span>.pipeline</div>
+          <div class="phases-flow">
+            <div id="frag-phases-0" class="phases-node fragment">
+              <svg class="phases-frame" aria-hidden="true"></svg>
+              <div class="phases-n">1</div>
+              <div class="phases-name">extract</div>
+              <div class="phases-desc">extrai para o disco<br>limites, cursores, paralelização, pseudonimização</div>
+            </div>
+            <svg class="phases-arr" aria-hidden="true"></svg>
+            <div id="frag-phases-1" class="phases-node fragment">
+              <svg class="phases-frame" aria-hidden="true"></svg>
+              <div class="phases-n">2</div>
+              <div class="phases-name">normalize</div>
+              <div class="phases-desc">computa e evolui schema<br>achata aninhados em tabelas filhas</div>
+            </div>
+            <svg class="phases-arr" aria-hidden="true"></svg>
+            <div id="frag-phases-2" class="phases-node fragment">
+              <svg class="phases-frame" aria-hidden="true"></svg>
+              <div class="phases-n">3</div>
+              <div class="phases-name">load</div>
+              <div class="phases-desc">migra schema e carrega<br>chunks paralelizáveis</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout sloppy">
+        <svg class="callout-frame" aria-hidden="true"></svg>
+        <div class="t">por que isso importa</div>
+        <p><span class="mono">extract</span> é a única fase que conversa com a <span class="accent">fonte</span>; <span class="mono">load</span>, a única com o <span class="accent">destino</span>. Entre elas, tudo é <span class="accent">persistido em disco</span>: <span class="uline">fonte lenta não trava o destino</span>, <span class="uline">falha de rede no meio do load não perde o que já foi extraído</span>, cada fase pode ser reprocessada sozinha.</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    var phasesPrepped = false;
+function firePhases() {
+  var scene = document.getElementById("scene-phases");
+  if (!scene) return;
+  var pipeFrame = scene.querySelector(".phases-pipe-frame path");
+  var pipeTag = scene.querySelector(".phases-pipe-tag");
+  var nodeFrames = scene.querySelectorAll(".phases-frame path");
+  var nodes = scene.querySelectorAll(".phases-node");
+  var arrBodies = scene.querySelectorAll(".phases-arr .flow-dash");
+  var arrHeads = scene.querySelectorAll(".phases-arr .flow-head");
+  var callout = scene.querySelector(".callout");
+  var calloutFrame = callout ? callout.querySelector(".callout-frame path") : null;
+
+  if (pipeFrame) pipeFrame.style.strokeDashoffset = pipeFrame.getAttribute("data-hideoff");
+  for (var i = 0; i < nodeFrames.length; i++) nodeFrames[i].style.strokeDashoffset = nodeFrames[i].getAttribute("data-hideoff");
+  for (var a = 0; a < arrBodies.length; a++) { arrBodies[a].style.strokeDashoffset = "0"; arrBodies[a].style.strokeDasharray = "8 12"; }
+  gsap.set(arrBodies, { opacity: 0 });
+  gsap.set(arrHeads, { opacity: 0 });
+  if (calloutFrame) calloutFrame.style.strokeDashoffset = calloutFrame.getAttribute("data-hideoff");
+
+  var tl = gsap.timeline();
+  gsap.set(pipeTag, { opacity: 0 });
+  gsap.set(nodes, { opacity: 0, y: 20 });
+  gsap.set(callout, { opacity: 0, y: 24 });
+
+  tl.to(pipeFrame, { strokeDashoffset: 0, duration: 0.7, ease: "power2.out" }, 0.1);
+  tl.to(pipeTag, { opacity: 1, duration: 0.35, ease: "power2.out" }, 0.3);
+  tl.to(nodeFrames, { strokeDashoffset: 0, duration: 0.55, ease: "power2.out", stagger: 0.18 }, 0.4);
+  tl.to(nodes, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.18 }, 0.5);
+  /* as setas entre as fases viram fluxo: corpo tracejado que marcha */
+  tl.to(arrBodies, { opacity: 1, duration: 0.35, ease: "power2.out", stagger: 0.18 }, 0.6);
+  tl.to(arrHeads, { opacity: 1, duration: 0.3, ease: "power2.out", stagger: 0.18 }, 0.6);
+  hwFlowMarch(arrBodies);
+  if (calloutFrame) tl.to(calloutFrame, { strokeDashoffset: 0, duration: 0.6, ease: "power2.out" }, 1.0);
+  tl.to(callout, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, 1.05);
+}
+
+function prepPhases() {
+  if (phasesPrepped) return;
+  var scene = document.getElementById("scene-phases");
+  if (!scene) return;
+  phasesPrepped = true;
+
+  var pipe = scene.querySelector(".phases-pipe");
+  var pw = pipe.offsetWidth, ph = pipe.offsetHeight;
+  var pfsvg = scene.querySelector(".phases-pipe-frame");
+  pfsvg.setAttribute("viewBox", "0 0 " + pw + " " + ph);
+  makeStrokedPath(pfsvg, hwWobbleRect(pw, ph, 14, 12, 3), 3, "#B7FF06");
+
+  var nodes = scene.querySelectorAll(".phases-node");
+  for (var n = 0; n < nodes.length; n++) {
+    var w = nodes[n].offsetWidth, h = nodes[n].offsetHeight;
+    var fsvg = nodes[n].querySelector(".phases-frame");
+    fsvg.setAttribute("viewBox", "0 0 " + w + " " + h);
+    makeStrokedPath(fsvg, hwWobbleRect(w, h, 12, 30 + n * 13, 3), 3, "#727272");
+  }
+
+  var arrs = scene.querySelectorAll(".phases-arr");
+  for (var a = 0; a < arrs.length; a++) {
+    var aw = Math.round(arrs[a].getBoundingClientRect().width);
+    arrs[a].setAttribute("viewBox", "0 0 " + aw + " 40");
+    hwFlowArrow(arrs[a], HW_ARROW_GAP, 20, aw - HW_ARROW_GAP, 40 + a * 13, "#B7FF06");
+  }
+
+  var callout = scene.querySelector(".callout");
+  if (callout) {
+    var cw = callout.offsetWidth, ch = callout.offsetHeight;
+    var cfsvg = callout.querySelector(".callout-frame");
+    cfsvg.setAttribute("viewBox", "0 0 " + cw + " " + ch);
+    makeStrokedPath(cfsvg, hwWobbleRect(cw, ch, 10, 150, 3), 2.5, "#448aff");
+  }
+}
+
+    HW.scene("phases", {
+      prep: function () {
+        prepPhases();
+      },
+      fire: firePhases
+    });
+  </script>
+</template>

@@ -1,0 +1,78 @@
+<template>
+  <div data-composition-id="pessoal" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline cmd-title" data-anim=""><span class="cmd-chip">whoami</span></h1>
+      <div class="pf-strip">
+        <div class="pf-item" style="transform: rotate(-1.6deg);">
+          <svg class="pf-frame" viewBox="0 0 302 374" aria-hidden="true"><path class="pf-border" /></svg>
+          <img class="pf-photo" src="vendor/photos/esposa.svg" alt="">
+          <div class="pf-cap">a parceira de tudo</div>
+          <div class="pf-file">esposa.jpg</div>
+        </div>
+        <div class="pf-item" style="transform: rotate(1.3deg);">
+          <svg class="pf-frame" viewBox="0 0 302 374" aria-hidden="true"><path class="pf-border" /></svg>
+          <img class="pf-photo" src="vendor/photos/cachorrinha.svg" alt="">
+          <div class="pf-cap">a dona do escritório</div>
+          <div class="pf-file">cachorrinha.jpg</div>
+        </div>
+        <div class="pf-item" style="transform: rotate(-1deg);">
+          <svg class="pf-frame" viewBox="0 0 302 374" aria-hidden="true"><path class="pf-border" /></svg>
+          <img class="pf-photo" src="vendor/photos/impressora.svg" alt="">
+          <div class="pf-cap">impressora 3D</div>
+          <div class="pf-file">impressora.jpg</div>
+        </div>
+        <div class="pf-item" style="transform: rotate(1.8deg);">
+          <svg class="pf-frame" viewBox="0 0 302 374" aria-hidden="true"><path class="pf-border" /></svg>
+          <img class="pf-photo" src="vendor/photos/cinema.svg" alt="">
+          <div class="pf-cap">cinema</div>
+          <div class="pf-file">cinema.jpg</div>
+        </div>
+        <div class="pf-item" style="transform: rotate(-0.8deg);">
+          <svg class="pf-frame" viewBox="0 0 302 374" aria-hidden="true"><path class="pf-border" /></svg>
+          <img class="pf-photo" src="vendor/photos/jogos.svg" alt="">
+          <div class="pf-cap">jogos</div>
+          <div class="pf-file">jogos.jpg</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var pessoalPrepped = false;
+function firePessoalTimeline() {
+  var items = document.querySelectorAll(".pf-item");
+  if (!items.length) return;
+  var tl = gsap.timeline();
+  for (var i = 0; i < items.length; i++) {
+    var border = items[i].querySelector(".pf-border");
+    var photo = items[i].querySelector(".pf-photo");
+    var cap = items[i].querySelector(".pf-cap");
+    var file = items[i].querySelector(".pf-file");
+    border.style.strokeDashoffset = border.getAttribute("data-hideoff");
+    var st = 0.25 + i * 0.22;
+    tl.to(border, { strokeDashoffset: 0, duration: 0.7, ease: "power2.inOut" }, st);
+    tl.fromTo(photo, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.5, ease: "power2.out" }, st + 0.35);
+    tl.fromTo(cap, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, st + 0.55);
+    tl.fromTo(file, { opacity: 0 }, { opacity: 1, duration: 0.3 }, st + 0.7);
+  }
+}
+
+function prepPessoal() {
+  if (pessoalPrepped) return;
+  var items = document.querySelectorAll(".pf-item");
+  if (!items.length) return;
+  pessoalPrepped = true;
+  for (var i = 0; i < items.length; i++) {
+    var border = items[i].querySelector(".pf-border");
+    border.setAttribute("d", hwWobbleRect(302, 374, 14, 3 + i * 7, 4));
+    setDrawHidden(border, 3);
+  }
+}
+
+    HW.scene("pessoal", {
+      prep: function () {
+        prepPessoal();
+      },
+      fire: firePessoalTimeline
+    });
+  </script>
+</template>

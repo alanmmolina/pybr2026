@@ -1,0 +1,83 @@
+<template>
+  <div data-composition-id="source" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline cmd-title" data-anim=""><span class="title-chip"><span class="brand-code">@</span><span class="brand">dlt</span>.source</span></h1>
+      <div class="sub" data-anim="" style="margin-top: 22px;">uma função Python que retorna um ou mais <span class="mono">resources</span></div>
+      <div class="sub" data-anim="" style="margin-top: 4px; font-size: 22px; line-height: 1.25; color: #b0b0b0;">agrupa configurações da fonte de dados</div>
+      <div class="split res-split" style="margin-top: 40px; grid-template-columns: 1100px 1fr; align-items: end;">
+        <div class="res-code">
+          <div class="code-box" data-anim="" style="margin-left: 0;">
+            <pre style="font-size: 22px;"><span class="syn-kw">import</span> dlt
+<span class="syn-kw">from</span> dlt.sources.helpers.rest_client <span class="syn-kw">import</span> <span class="syn-type">RESTClient</span>
+<span class="syn-kw">from</span> dlt.sources.helpers.rest_client.auth <span class="syn-kw">import</span> APIKeyAuth
+<span class="syn-kw">from</span> dlt.sources.helpers.rest_client.paginators <span class="syn-kw">import</span> JSONLinkPaginator
+
+@dlt.<span class="syn-fn">source</span><span class="syn-brk">(</span>name=<span class="syn-str">"rawg"</span><span class="syn-brk">)</span>
+<span class="syn-kw">def</span> <span class="syn-fn">rawg</span><span class="syn-brk">(</span><span class="syn-param">api_key</span>: <span class="syn-type">str</span> = dlt.secrets.value<span class="syn-brk">)</span> -> <span class="syn-type">list</span><span class="syn-brk">[</span>dlt.sources.<span class="syn-type">DltResource</span><span class="syn-brk">]</span>:
+    client = <span class="syn-fn">RESTClient</span><span class="syn-brk">(</span>
+        base_url=<span class="syn-str">"https://api.rawg.io/api"</span>,
+        auth=<span class="syn-fn">APIKeyAuth</span><span class="syn-brk">(</span>name=<span class="syn-str">"key"</span>, location=<span class="syn-str">"query"</span>, api_key=api_key<span class="syn-brk">)</span>,
+        paginator=<span class="syn-fn">JSONLinkPaginator</span><span class="syn-brk">(</span>next_url_path=<span class="syn-str">"next"</span><span class="syn-brk">)</span>,
+    <span class="syn-brk">)</span>
+    <span class="syn-kw">return</span> <span class="syn-brk">[</span>
+        <span class="syn-fn">genres</span><span class="syn-brk">(</span>client=client<span class="syn-brk">)</span>,
+        <span class="syn-brk">(</span>games_resource := <span class="syn-fn">games</span><span class="syn-brk">(</span>client=client<span class="syn-brk">)</span><span class="syn-brk">)</span>,
+        games_resource | <span class="syn-fn">game_details</span><span class="syn-brk">(</span>client=client<span class="syn-brk">)</span>,
+    <span class="syn-brk">]</span></pre>
+          </div>
+        </div>
+        <div class="res-stacks">
+          <div class="stack">
+            <div class="stack-cap file">.dlt/secrets.toml</div>
+            <div class="code-box" data-anim="">
+              <pre><span class="syn-brk">[</span>sources.rawg<span class="syn-brk">]</span>
+api_key = <span class="syn-str">"RAWG_API_KEY"</span></pre>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="stack-cap hand">a key é injetada como query param no request</div>
+            <div class="code-box" data-anim="">
+              <pre>GET /api/games?key=<span class="syn-str">RAWG_API_KEY</span></pre>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="stack-cap hand">a próxima página é encontrada através do link de retorno no campo next</div>
+            <div class="code-box" data-anim="">
+              <pre><span class="syn-brk">{</span>
+  <span class="syn-str">"next"</span>: <span class="syn-str">"…/api/games?key=…&amp;page=2"</span>,
+  <span class="syn-str">"count"</span>: <span class="syn-num">500518</span>,
+  <span class="syn-str">"results"</span>: <span class="syn-brk">[</span> <span class="syn-brk">{</span> <span class="syn-str">"id"</span>: <span class="syn-num">51325</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>, <span class="syn-cmt">…</span> <span class="syn-brk">]</span>
+<span class="syn-brk">}</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+function fireSource() {
+  var scene = document.getElementById("scene-source");
+  if (!scene) return;
+  var notes = scene.querySelectorAll(".res-note");
+  var rnotes = scene.querySelectorAll(".res-note-r");
+
+  /* guarda por lista: NodeList vazio faz o GSAP avisar "target not found" */
+  var tl = gsap.timeline();
+  if (notes.length) {
+    gsap.set(notes, { opacity: 0, x: -12 });
+    tl.to(notes, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", stagger: 0.12, overwrite: "auto" }, 0.2);
+  }
+  if (rnotes.length) {
+    gsap.set(rnotes, { opacity: 0, x: 12 });
+    tl.to(rnotes, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", stagger: 0.12, overwrite: "auto" }, 0.2);
+  }
+}
+
+    HW.scene("source", {
+      prep: function () {
+        HW.prepResNotes(document);
+      },
+      fire: fireSource
+    });
+  </script>
+</template>

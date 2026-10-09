@@ -1,0 +1,113 @@
+<template>
+  <div data-composition-id="questions" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner q-inner">
+      <!-- dragão da Python Brasil (sample-fullbleed) recolorido no tratamento
+           das figurinhas oficiais — tinta #0F0F0F sobre silhueta #B7FF06, com a
+           borda de corte. fica no topo centrado, no papel que o lockup tem na
+           capa: o slide abre e fecha com uma peça da identidade no mesmo lugar. -->
+      <img class="q-sticker" src="vendor/pybr/sticker-dragao.png" alt="Dragão da Python Brasil 2026" data-anim="">
+
+      <div class="q-head">
+        <!-- o agradecimento é a camada de marca: mesma família e mesma cor do
+             "dlt" da capa. "perguntas?" fica na camada de caneta, em branco. -->
+        <div class="q-thanks brand">obrigado!</div>
+        <h1 class="q-title hand">perguntas?</h1>
+      </div>
+
+      <div class="q-cols">
+        <!-- o QR leva a https://github.com/alanmmolina/pybr2026 — ele cobre o
+             que eram duas linhas digitáveis (o repositório e o site dos
+             slides) num gesto só. os módulos saem no lima do tema sobre o
+             canvas escuro: a razão de contraste é 15,9:1 e o jsqr lê sem
+             precisar de cartão claro. -->
+        <div class="q-col q-col-qr">
+          <img class="q-qr" src="vendor/pybr/qr-repositorio.svg" alt="QR code para github.com/alanmmolina/pybr2026">
+        </div>
+
+        <div class="q-vrule"></div>
+
+        <div class="q-col">
+          <!-- o mesmo componente do site no rodapé da capa: ícone + endereço
+               em Fira Code + gap 10px, tudo branco. o logo é o vendor/icon.svg,
+               que já vem em #fafafa — os outros três são desenhados na mesma
+               gramática "wired" dele: nós redondos ligados por fios. -->
+          <a class="q-item" href="https://alanmmolina.com" target="_blank" rel="noopener">
+            <img class="q-icon q-logo" src="vendor/icon.svg" alt="" aria-hidden="true">
+            <span class="q-value">alanmmolina.com</span>
+          </a>
+          <a class="q-item" href="mailto:contato@alanmmolina.com">
+            <svg class="q-icon q-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <span class="q-value">contato@alanmmolina.com</span>
+          </a>
+          <a class="q-item" href="https://www.linkedin.com/in/alanmmolina" target="_blank" rel="noopener">
+            <svg class="q-icon q-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M8 11v5m0-8v.01M12 16v-5m4 5v-3a2 2 0 1 0-4 0"/>
+              <path d="M5 21H19a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/>
+            </svg>
+            <span class="q-value">in/alanmmolina</span>
+          </a>
+          <!-- handle de github no formato usual (@usuário): curto, casa com o
+               in/alanmmolina ao lado, e não repete "github.com" — que o QR já
+               leva. a alternativa longa seria github.com/alanmmolina. -->
+          <a class="q-item" href="https://github.com/alanmmolina" target="_blank" rel="noopener">
+            <svg class="q-icon q-gh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2c2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2a4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6c-.6.6-.6 1.2-.5 2V21"/>
+            </svg>
+            <span class="q-value">@alanmmolina</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function fireQuestions() {
+      var sc = document.getElementById("scene-questions");
+      if (!sc) return;
+      var head = sc.querySelector(".q-head");
+      var vrule = sc.querySelector(".q-vrule");
+      var qr = sc.querySelector(".q-qr");
+      var items = sc.querySelectorAll(".q-item");
+      if (!head) return;
+
+      gsap.killTweensOf(head);
+      if (vrule) gsap.killTweensOf(vrule);
+      if (qr) gsap.killTweensOf(qr);
+      if (items.length) gsap.killTweensOf(items);
+
+      /* passo constante entre chegadas, com durações que se sobrepõem: sem
+         pausa morta entre o bloco do título e o dos links. a ordem é de cima
+         para baixo e da coluna esquerda para a direita — o QR primeiro, os
+         contatos depois. */
+      var PASSO = 0.065;
+      var tl = gsap.timeline();
+      tl.fromTo(head, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.42, ease: "power2.out" }, 0.06);
+      if (vrule) {
+        tl.fromTo(vrule, { opacity: 0, scaleY: 0.3 }, { opacity: 1, scaleY: 1, duration: 0.36, ease: "power2.out", transformOrigin: "50% 0%" }, 0.38);
+      }
+      if (qr) tl.fromTo(qr, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.36, ease: "power2.out" }, 0.54);
+      if (items.length) tl.fromTo(items, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.34, ease: "power2.out", stagger: PASSO }, 0.62);
+    }
+
+    function prepQuestions() {
+      var sc = document.getElementById("scene-questions");
+      if (!sc) return;
+      /* um gsap.set por alvo, com guarda: um NodeList vazio ou um null dentro de
+         um array de targets faz o GSAP avisar "target not found". */
+      var head = sc.querySelector(".q-head");
+      var vrule = sc.querySelector(".q-vrule");
+      var qr = sc.querySelector(".q-qr");
+      if (head) gsap.set(head, { opacity: 0 });
+      if (vrule) gsap.set(vrule, { opacity: 0 });
+      if (qr) gsap.set(qr, { opacity: 0 });
+      var items = sc.querySelectorAll(".q-item");
+      if (items.length) gsap.set(items, { opacity: 0 });
+    }
+
+    HW.scene("questions", {
+      prep: prepQuestions,
+      fire: fireQuestions
+    });
+  </script>
+</template>

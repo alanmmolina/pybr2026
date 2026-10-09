@@ -1,0 +1,100 @@
+<template>
+  <div data-composition-id="pipeline-destination" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline cmd-title" data-anim=""><span class="title-chip"><span class="brand-code">@</span><span class="brand">dlt</span>.destination</span></h1>
+      <div class="sub" data-anim="" style="margin-top: 22px;">trocar de destino é mudar <span class="accent">uma string</span></div>
+      <div class="sub" data-anim="" style="margin-top: 4px; font-size: 22px; line-height: 1.25; color: #b0b0b0;">também é possível customizar destinations existentes de acordo com suas <span class="mono">capabilities()</span> ou criar novas destinations</div>
+      <div class="split res-split" style="margin-top: 24px; grid-template-columns: 860px 1fr;">
+        <div class="dest-codes">
+          <div class="stack" data-anim="">
+            <div class="stack-cap hand">utilizar as definições padrão do destino</div>
+            <div class="code-box">
+              <pre>pipeline = dlt.<span class="syn-fn">pipeline</span><span class="syn-brk">(</span><span class="syn-str">"rawg"</span>, destination=<span class="syn-str">"duckdb"</span><span class="syn-brk">)</span></pre>
+            </div>
+          </div>
+          <div class="stack" data-anim="">
+            <div class="stack-cap hand">configurar o destino com os argumentos da factory</div>
+            <div class="code-box">
+              <pre>datalake = <span class="syn-fn">filesystem</span><span class="syn-brk">(</span>
+      <span class="syn-str">"s3://dlt-datalake"</span>,
+      destination_name=<span class="syn-str">"datalake"</span>,
+      naming_convention=<span class="syn-str">"sql_cs_v1"</span>,
+      layout=<span class="syn-str">"raw/{table_name}/{load_id}.{ext}"</span>,
+  <span class="syn-brk">)</span></pre>
+            </div>
+          </div>
+          <div class="stack" data-anim="">
+            <div class="stack-cap hand">criar um destino customizado com uma função</div>
+            <div class="code-box">
+              <pre>@dlt.<span class="syn-fn">destination</span>
+<span class="syn-kw">def</span> <span class="syn-fn">destino</span><span class="syn-brk">(</span><span class="syn-param">items</span>,<span class="syn-param">table</span><span class="syn-brk">)</span>:
+    ...</pre>
+            </div>
+          </div>
+        </div>
+        <div class="dest-side">
+          <div class="dest-wall">
+            <div class="logo-cell" style="background:#1e1e22;"><img class="raw" src="vendor/logos/dest-duckdb.svg" alt="DuckDB"></div>
+            <div class="logo-cell" style="background:#4169E1;"><img src="vendor/logos/dest-postgresql.svg" alt="Postgres"></div>
+            <div class="logo-cell" style="background:#29B5E8;"><img src="vendor/logos/dest-snowflake.svg" alt="Snowflake"></div>
+            <div class="logo-cell" style="background:#669DF6;"><img src="vendor/logos/dest-googlebigquery.svg" alt="BigQuery"></div>
+            <div class="logo-cell" style="background:#FF3621;"><img src="vendor/logos/dest-databricks.svg" alt="Databricks"></div>
+            <div class="logo-cell" style="background:#FFCC01;"><img class="black" src="vendor/logos/dest-clickhouse.svg" alt="ClickHouse"></div>
+            <div class="logo-cell" style="background:#DC244C;"><img src="vendor/logos/dest-qdrant.svg" alt="Qdrant"></div>
+            <div class="logo-cell" style="background:#292929;"><span class="logo-name hand">+16 outros</span></div>
+            <div class="logo-cell" style="background:#1e1e22;"><span class="logo-name">custom</span><span class="wall-code">destino(<span class="tf-hl">items, table</span>)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var destWallPrepped = false;
+function firePipelineDestination() {
+  var scene = document.getElementById("scene-pipeline-destination");
+  if (!scene) return;
+  var cellFrames = scene.querySelectorAll(".logo-cell-frame path");
+  var logos = scene.querySelectorAll(".dest-wall .logo-cell");
+
+  var tl = gsap.timeline();
+  gsap.set(logos, { opacity: 0, y: 14 });
+  tl.to(cellFrames, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out", stagger: 0.08, overwrite: "auto" }, 0.3);
+  tl.to(logos, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out", stagger: 0.08, overwrite: "auto" }, 0.45);
+}
+
+function prepDestWall() {
+  if (destWallPrepped) return;
+  var scene = document.getElementById("scene-pipeline-destination");
+  if (!scene) return;
+  var SVGN = "http://www.w3.org/2000/svg";
+  var cells = scene.querySelectorAll(".dest-wall .logo-cell");
+  if (!cells.length) return;
+  destWallPrepped = true;
+
+  for (var c = 0; c < cells.length; c++) {
+    var cw = cells[c].offsetWidth, ch = cells[c].offsetHeight;
+    var lsvg = document.createElementNS(SVGN, "svg");
+    lsvg.setAttribute("class", "logo-cell-frame");
+    lsvg.setAttribute("viewBox", "0 0 " + cw + " " + ch);
+    lsvg.setAttribute("aria-hidden", "true");
+    var lp = document.createElementNS(SVGN, "path");
+    lp.setAttribute("d", hwWobbleRect(cw, ch, 8, 200 + c * 11, 3));
+    lp.setAttribute("fill", "none");
+    lp.setAttribute("stroke", "#fafafa");
+    lp.setAttribute("stroke-width", "2.5");
+    lp.setAttribute("stroke-linecap", "round");
+    lp.setAttribute("stroke-linejoin", "round");
+    setDrawHidden(lp, 2.5);
+    lsvg.appendChild(lp);
+    cells[c].appendChild(lsvg);
+  }
+}
+
+    HW.scene("pipeline-destination", {
+      prep: function () {
+        prepDestWall();
+      },
+      fire: firePipelineDestination
+    });
+  </script>
+</template>

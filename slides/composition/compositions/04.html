@@ -1,0 +1,169 @@
+<template>
+  <div data-composition-id="pipeline-map" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline" data-anim="">Pipeline de Dados</h1>
+      <div class="pmap">
+        <svg class="pmap-conns" viewBox="0 0 1640 560" aria-hidden="true">
+          <g class="pmap-conn" data-x1="260" data-y="85" data-x2="400"></g>
+          <g class="pmap-conn" data-x1="260" data-y="280" data-x2="400"></g>
+          <g class="pmap-conn" data-x1="260" data-y="475" data-x2="400"></g>
+          <g class="pmap-conn" data-x1="760" data-y="280" data-x2="900"></g>
+          <g class="pmap-conn" data-x1="1240" data-y="85" data-x2="1380"></g>
+          <g class="pmap-conn" data-x1="1240" data-y="280" data-x2="1380"></g>
+          <g class="pmap-conn" data-x1="1240" data-y="475" data-x2="1380"></g>
+        </svg>
+        <div class="pmap-node" style="left:0; top:0; width:260px; height:170px;">
+          <svg class="pmap-ic" viewBox="0 0 120 120" data-icon="api"></svg>
+          <div class="pmap-lbl">API</div>
+        </div>
+        <div class="pmap-node" style="left:0; top:195px; width:260px; height:170px;">
+          <svg class="pmap-ic" viewBox="0 0 120 120" data-icon="sheet"></svg>
+          <div class="pmap-lbl">spreadsheet</div>
+        </div>
+        <div class="pmap-node" style="left:0; top:390px; width:260px; height:170px;">
+          <svg class="pmap-ic" viewBox="0 0 120 120" data-icon="db"></svg>
+          <div class="pmap-lbl">database</div>
+        </div>
+        <div class="pmap-node main hl" style="left:400px; top:25px; width:360px; height:510px;">
+          <svg class="pmap-ic" viewBox="0 0 120 120" data-icon="gear"></svg>
+          <div class="pmap-t">ingestão</div>
+          <div class="pmap-d">extract + load</div>
+        </div>
+        <div class="pmap-node main" style="left:900px; top:25px; width:340px; height:510px;">
+          <svg class="pmap-ic" viewBox="0 0 120 120" data-icon="gear"></svg>
+          <div class="pmap-t">transformação</div>
+          <div class="pmap-d">transform</div>
+        </div>
+        <div class="pmap-node" style="left:1380px; top:0; width:260px; height:170px;">
+          <svg class="pmap-ic" viewBox="0 0 120 120" data-icon="dash"></svg>
+          <div class="pmap-lbl">dashboard</div>
+        </div>
+        <div class="pmap-node" style="left:1380px; top:195px; width:260px; height:170px;">
+          <svg class="pmap-ic" viewBox="0 0 120 120" data-icon="app"></svg>
+          <div class="pmap-lbl">app</div>
+        </div>
+        <div class="pmap-node" style="left:1380px; top:390px; width:260px; height:170px;">
+          <svg class="pmap-ic" viewBox="0 0 120 120" data-icon="ml"></svg>
+          <div class="pmap-lbl">AI / ML</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var pmapPrepped = false;
+function firePmapTimeline() {
+  var scene = document.getElementById("scene-pipeline-map");
+  if (!scene) return;
+  /* Um passo por coluna, da esquerda para a direita: o mapa é um fluxo
+     (fontes → ingestão → transformação → consumidores) e a entrada segue
+     esse percurso. Dentro do passo, rótulo e traço entram juntos. */
+  var beats = [];
+  function beatAt(x) {
+    for (var i = 0; i < beats.length; i++) if (beats[i].x === x) return beats[i];
+    var b = { x: x, nodes: [], conns: [] };
+    beats.push(b);
+    return b;
+  }
+  var nodes = scene.querySelectorAll(".pmap-node");
+  for (var i = 0; i < nodes.length; i++) beatAt(nodes[i].offsetLeft).nodes.push(nodes[i]);
+  var conns = scene.querySelectorAll(".pmap-conn");
+  for (var c = 0; c < conns.length; c++) {
+    beatAt(parseFloat(conns[c].getAttribute("data-x1"))).conns.push(conns[c]);
+  }
+  beats.sort(function (a, b) { return a.x - b.x; });
+
+  var tl = gsap.timeline();
+  for (var k = 0; k < beats.length; k++) {
+    var b = beats[k];
+    var t = 0.25 + k * 0.22;
+
+    /* traços do passo (moldura + ícone + conectores) */
+    var els = [];
+    var texts = [];
+    for (var n = 0; n < b.nodes.length; n++) {
+      var fp = b.nodes[n].querySelector(".pmap-frame path");
+      if (fp) els.push(fp);
+      var ips = b.nodes[n].querySelectorAll(".pmap-ic path");
+      for (var p = 0; p < ips.length; p++) els.push(ips[p]);
+      var tx = b.nodes[n].querySelectorAll(".pmap-lbl, .pmap-t, .pmap-d");
+      for (var q = 0; q < tx.length; q++) texts.push(tx[q]);
+    }
+    for (var m = 0; m < b.conns.length; m++) {
+      var cps = b.conns[m].querySelectorAll("path");
+      for (var z = 0; z < cps.length; z++) els.push(cps[z]);
+    }
+    for (var e = 0; e < els.length; e++) els[e].style.strokeDashoffset = els[e].getAttribute("data-hideoff");
+    if (els.length) tl.to(els, { strokeDashoffset: 0, duration: 0.55, ease: "power2.out", stagger: 0.03 }, t);
+    if (texts.length) tl.fromTo(texts, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.05 }, t + 0.1);
+  }
+}
+
+function prepPmap() {
+  if (pmapPrepped) return;
+  var scene = document.getElementById("scene-pipeline-map");
+  if (!scene) return;
+  var SVGN = "http://www.w3.org/2000/svg";
+  var icons = scene.querySelectorAll(".pmap-ic[data-icon]");
+  for (var i = 0; i < icons.length; i++) {
+    var type = icons[i].getAttribute("data-icon");
+    /* a engrenagem do node destacado (hl) leva a cor de marca */
+    var icStroke = icons[i].parentNode.classList.contains("hl") ? "#B7FF06" : "#fafafa";
+    var shapes = pmapIconPaths(type, 11 + i * 13);
+    for (var s = 0; s < shapes.length; s++) {
+      var sh = shapes[s];
+      var el = document.createElementNS(SVGN, "path");
+      el.setAttribute("d", sh.d);
+      el.setAttribute("fill", "none");
+      el.setAttribute("stroke", icStroke);
+      el.setAttribute("stroke-width", sh.sw ? String(sh.sw) : "7");
+      el.setAttribute("stroke-linecap", "round");
+      el.setAttribute("stroke-linejoin", "round");
+      setDrawHidden(el, sh.sw ? parseFloat(sh.sw) : 7);
+      icons[i].appendChild(el);
+    }
+  }
+  var conns = scene.querySelectorAll(".pmap-conn");
+  for (var c = 0; c < conns.length; c++) {
+    var x1 = parseFloat(conns[c].getAttribute("data-x1"));
+    var y = parseFloat(conns[c].getAttribute("data-y"));
+    var x2 = parseFloat(conns[c].getAttribute("data-x2"));
+    var p = document.createElementNS(SVGN, "path");
+    p.setAttribute("d", hwConnector(x1 + HW_ARROW_GAP, y, x2 - HW_ARROW_GAP, 7 + c * 5));
+    p.setAttribute("fill", "none");
+    p.setAttribute("stroke", "#fafafa");
+    p.setAttribute("stroke-width", "4");
+    p.setAttribute("stroke-linecap", "round");
+    p.setAttribute("stroke-linejoin", "round");
+    conns[c].appendChild(p);
+    setDrawHidden(p, 4);
+  }
+  var nodes = scene.querySelectorAll(".pmap-node");
+  for (var n = 0; n < nodes.length; n++) {
+    var node = nodes[n];
+    var w = node.offsetWidth, h = node.offsetHeight;
+    var svg = document.createElementNS(SVGN, "svg");
+    svg.setAttribute("class", "pmap-frame");
+    svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+    svg.setAttribute("aria-hidden", "true");
+    var b = document.createElementNS(SVGN, "path");
+    b.setAttribute("d", hwWobbleRect(w, h, 8, 40 + n * 9, 4));
+    b.setAttribute("fill", "none");
+    b.setAttribute("stroke", "#727272");
+    b.setAttribute("stroke-width", "3");
+    b.setAttribute("stroke-linecap", "round");
+    b.setAttribute("stroke-linejoin", "round");
+    setDrawHidden(b, 3);
+    svg.appendChild(b);
+    node.appendChild(svg);
+  }
+  pmapPrepped = true;
+}
+
+    HW.scene("pipeline-map", {
+      prep: function () {
+        prepPmap();
+      },
+      fire: firePmapTimeline
+    });
+  </script>
+</template>

@@ -1,0 +1,182 @@
+<template>
+  <div data-composition-id="rawg-architecture" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline" data-anim="">Nosso objeto de estudo</h1>
+      <div class="ra">
+        <div class="ra-col api">
+          <div class="ra-box ra-api" data-color="#727272" data-stroke="2.5">
+            <div class="ra-brand">
+              <span class="ra-logo">RAWG</span>
+            </div>
+            <div class="ra-sub">api.rawg.io/api</div>
+            <div class="ra-line"><span class="verb">GET</span> /genres</div>
+            <div class="ra-line"><span class="verb">GET</span> /games</div>
+            <div class="ra-line"><span class="verb">GET</span> /games/{id}</div>
+            <div class="ra-note">paginação por link <span class="mono">next</span><br>free tier · <span class="accent">20k requests/mês</span></div>
+          </div>
+        </div>
+
+        <svg class="ra-arr" aria-hidden="true"></svg>
+
+        <div class="ra-pipe">
+          <div class="ra-pipe-tag"><span class="mk">dlt</span>.pipeline</div>
+          <div class="ra-pipe-inner">
+            <div class="ra-col src">
+              <div class="ra-box ra-src" data-color="#727272">
+                <div class="ra-tag"><span class="mk">@dlt</span>.source</div>
+                <div class="ra-res">
+                  <div class="ra-res-tag"><span class="mk">@dlt</span>.resource</div>
+                  <span class="ra-rname">genres</span>
+                  <span class="ra-hint">o catálogo de gêneros</span>
+                </div>
+                <div class="ra-res">
+                  <div class="ra-res-tag"><span class="mk">@dlt</span>.resource</div>
+                  <span class="ra-rname">games</span>
+                  <span class="ra-hint">a lista de jogos</span>
+                </div>
+                <div class="ra-res">
+                  <div class="ra-res-tag"><span class="mk">@dlt</span>.transformer</div>
+                  <span class="ra-rname">games | game_details</span>
+                  <span class="ra-hint">os detalhes por jogo</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ra-pipe-mid">
+              <div class="ra-run">.run()</div>
+              <svg class="ra-arr" aria-hidden="true"></svg>
+              <div class="ra-phases"><span>extract</span><span>normalize</span><span>load</span></div>
+            </div>
+
+            <div class="ra-col out">
+              <div class="ra-box ra-out" data-color="#727272">
+                <div class="ra-tag"><span class="mk">@dlt</span>.destination</div>
+                <div class="ra-db-head">
+                  <img class="ra-db-logo" src="vendor/logos/duckdb.svg" alt="DuckDB">
+                  <span class="ra-title mono">rawg_data</span>
+                </div>
+                <div class="ra-res">
+                  <span class="ra-rname">genres</span>
+                  <span class="ra-subt">+ genres__* (1)</span>
+                </div>
+                <div class="ra-res">
+                  <span class="ra-rname">games</span>
+                  <span class="ra-subt">+ games__* (7)</span>
+                </div>
+                <div class="ra-res">
+                  <span class="ra-rname">game_details</span>
+                  <span class="ra-subt">+ game_details__* (10)</span>
+                </div>
+                <div class="ra-res">
+                  <span class="ra-tbl">_dlt_pipeline_state</span>
+                  <span class="ra-tbl">_dlt_loads</span>
+                  <span class="ra-tbl">_dlt_version</span>
+                </div>
+                <div class="ra-note"><span class="accent">24 tabelas</span> no total</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var rawgArchPrepped = false;
+function fireRawgArch() {
+  var scene = document.getElementById("scene-rawg-architecture");
+  if (!scene) return;
+  var pipeFrame = scene.querySelector(".ra-pipe-frame path");
+  var pipeTag = scene.querySelector(".ra-pipe-tag");
+  var boxFrames = scene.querySelectorAll(".ra-box-frame path");
+  var resFrames = scene.querySelectorAll(".ra-res-frame path");
+  var boxes = scene.querySelectorAll(".ra-box");
+  var res = scene.querySelectorAll(".ra-res");
+  var arrBodies = scene.querySelectorAll(".ra-arr .flow-dash");
+  var arrHeads = scene.querySelectorAll(".ra-arr .flow-head");
+  var mid = scene.querySelector(".ra-pipe-mid");
+
+  if (pipeFrame) pipeFrame.style.strokeDashoffset = pipeFrame.getAttribute("data-hideoff");
+  for (var i = 0; i < boxFrames.length; i++) boxFrames[i].style.strokeDashoffset = boxFrames[i].getAttribute("data-hideoff");
+  for (var j = 0; j < resFrames.length; j++) resFrames[j].style.strokeDashoffset = resFrames[j].getAttribute("data-hideoff");
+  for (var a = 0; a < arrBodies.length; a++) { arrBodies[a].style.strokeDashoffset = "0"; arrBodies[a].style.strokeDasharray = "8 12"; }
+  gsap.set(arrBodies, { opacity: 0 });
+  gsap.set(arrHeads, { opacity: 0 });
+
+  var tl = gsap.timeline();
+  gsap.set(boxes, { opacity: 0, y: 20 });
+  gsap.set(res, { opacity: 0, y: 14 });
+  gsap.set(mid, { opacity: 0 });
+  gsap.set(pipeTag, { opacity: 0 });
+
+  if (pipeFrame) tl.to(pipeFrame, { strokeDashoffset: 0, duration: 0.7, ease: "power2.out" }, 0.1);
+  tl.to(pipeTag, { opacity: 1, duration: 0.35, ease: "power2.out" }, 0.3);
+  tl.to(boxFrames, { strokeDashoffset: 0, duration: 0.6, ease: "power2.out", stagger: 0.12 }, 0.25);
+  tl.to(boxes, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", stagger: 0.12 }, 0.35);
+  tl.to(resFrames, { strokeDashoffset: 0, duration: 0.45, ease: "power2.out", stagger: 0.1 }, 0.6);
+  tl.to(res, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.1 }, 0.65);
+  /* as duas setas viram fluxo: corpo tracejado que marcha, ponta sólida */
+  tl.to(arrBodies, { opacity: 1, duration: 0.35, ease: "power2.out", stagger: 0.15 }, 0.8);
+  tl.to(arrHeads, { opacity: 1, duration: 0.3, ease: "power2.out", stagger: 0.15 }, 0.8);
+  hwFlowMarch(arrBodies);
+  tl.to(mid, { opacity: 1, duration: 0.35, ease: "power2.out" }, 0.9);
+}
+
+function prepRawgArch() {
+  if (rawgArchPrepped) return;
+  var scene = document.getElementById("scene-rawg-architecture");
+  if (!scene) return;
+  rawgArchPrepped = true;
+  var SVGN = "http://www.w3.org/2000/svg";
+
+  var pipe = scene.querySelector(".ra-pipe");
+  if (pipe) {
+    var pw = pipe.offsetWidth, ph = pipe.offsetHeight;
+    var pfsvg = document.createElementNS(SVGN, "svg");
+    pfsvg.setAttribute("class", "ra-pipe-frame");
+    pfsvg.setAttribute("viewBox", "0 0 " + pw + " " + ph);
+    pfsvg.setAttribute("aria-hidden", "true");
+    makeStrokedPath(pfsvg, hwWobbleRect(pw, ph, 14, 90, 3), 3, "#B7FF06");
+    pipe.insertBefore(pfsvg, pipe.firstChild);
+  }
+
+  var boxes = scene.querySelectorAll(".ra-box");
+  for (var b = 0; b < boxes.length; b++) {
+    var color = boxes[b].getAttribute("data-color") || "#727272";
+    var sw = parseFloat(boxes[b].getAttribute("data-stroke")) || 3;
+    var w = boxes[b].offsetWidth, h = boxes[b].offsetHeight;
+    var fsvg = document.createElementNS(SVGN, "svg");
+    fsvg.setAttribute("class", "ra-box-frame");
+    fsvg.setAttribute("viewBox", "0 0 " + w + " " + h);
+    fsvg.setAttribute("aria-hidden", "true");
+    makeStrokedPath(fsvg, hwWobbleRect(w, h, 10, 120 + b * 11, 3), sw, color);
+    boxes[b].appendChild(fsvg);
+  }
+
+  var res = scene.querySelectorAll(".ra-res");
+  for (var r = 0; r < res.length; r++) {
+    var rw = res[r].offsetWidth, rh = res[r].offsetHeight;
+    var rfsvg = document.createElementNS(SVGN, "svg");
+    rfsvg.setAttribute("class", "ra-res-frame");
+    rfsvg.setAttribute("viewBox", "0 0 " + rw + " " + rh);
+    rfsvg.setAttribute("aria-hidden", "true");
+    makeStrokedPath(rfsvg, hwWobbleRect(rw, rh, 8, 200 + r * 9, 2.5), 2.5, "#727272");
+    res[r].appendChild(rfsvg);
+  }
+
+  var arrs = scene.querySelectorAll(".ra-arr");
+  for (var a = 0; a < arrs.length; a++) {
+    var aw = Math.round(arrs[a].getBoundingClientRect().width);
+    arrs[a].setAttribute("viewBox", "0 0 " + aw + " 36");
+    var acolor = arrs[a].parentNode.className.indexOf("ra-pipe-mid") >= 0 ? "#B7FF06" : "#79b8ff";
+    hwFlowArrow(arrs[a], HW_ARROW_GAP, 18, aw - HW_ARROW_GAP, 30 + a * 13, acolor);
+  }
+}
+
+    HW.scene("rawg-architecture", {
+      prep: function () {
+        prepRawgArch();
+      },
+      fire: fireRawgArch
+    });
+  </script>
+</template>

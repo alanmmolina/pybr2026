@@ -1,0 +1,210 @@
+<template>
+  <div data-composition-id="dlt-state" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline cmd-title" data-anim=""><span class="title-chip"><span class="brand">dlt</span>.state</span></h1>
+
+      <!-- ── o ciclo: o dict viaja no mesmo load package que os dados e volta
+             na próxima execução. valores reais do rawg.duckdb. ── -->
+      <div class="state-cycle">
+
+        <div class="sc-node sc-dict">
+          <!-- cap vazio só para alinhar as três caixas na horizontal -->
+          <div class="sc-cap hand"></div>
+          <div class="code-box sc-box">
+            <pre>pipeline.<span class="syn-fn">state</span>
+└─ <span class="syn-str">sources</span><span class="syn-brk">[</span><span class="syn-str">"rawg"</span><span class="syn-brk">]</span>
+  └─ <span class="syn-str">resources</span><span class="syn-brk">[</span><span class="syn-str">"games"</span><span class="syn-brk">]</span>
+    └─ <span class="syn-str">incremental</span><span class="syn-brk">[</span><span class="syn-str">"updated"</span><span class="syn-brk">]</span>
+      └─ <span class="syn-str">last_value</span>
+         <span class="syn-str">"2026-09-30T00:08:11"</span></pre>
+          </div>
+        </div>
+
+        <svg class="sc-arr" aria-hidden="true"></svg>
+
+        <div class="sc-node sc-pkg">
+          <div class="sc-cap hand">o load package</div>
+          <div class="code-box sc-box">
+            <pre><span class="sc-lead">load_id</span>  <span class="id-hl">1790731675.145563</span>
+<span class="res-hl">games</span>.0145….jsonl.gz
+  <span class="syn-cmt">100 linhas</span>
+_dlt_pipeline_state.….jsonl.gz
+  <span class="syn-cmt">1 linha</span></pre>
+          </div>
+        </div>
+
+        <svg class="sc-arr" aria-hidden="true"></svg>
+
+        <div class="sc-node sc-dest">
+          <div class="sc-cap hand">o destino</div>
+          <div class="code-box sc-box">
+            <pre>_dlt_pipeline_state
+ <span class="sc-lead">version</span>       <span class="syn-num">1</span>
+ <span class="sc-lead">pipeline_name</span> <span class="syn-str">"rawg"</span>
+ <span class="sc-lead">state</span>         <span class="syn-str">"eNp9kW1PwjAQ…"</span>
+ <span class="sc-lead">_dlt_load_id</span>  <span class="id-hl">1790731675.145563</span></pre>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- o retorno: o ciclo fecha no início da próxima execução -->
+      <div class="state-return">
+        <svg class="sc-ret" aria-hidden="true"></svg>
+        <div class="sc-ret-label hand">próxima execução · <span class="brand">dlt</span> restaura o state · inclusive em outra máquina</div>
+      </div>
+
+      <div class="callout sloppy" style="margin-top: 22px;">
+        <svg class="callout-frame" aria-hidden="true"></svg>
+        <div class="t">viaja junto, volta sozinho</div>
+        <p>o state é transportado dentro do load package, com o <span class="uline">mesmo <span class="mono">load_id</span> e commit dos dados</span>. Na próxima execução, o dlt restaura o state da <span class="uline">última carga completa</span>. Cursores incrementais são salvos <span class="accent">automaticamente</span> no state.</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    var stateCyclePrepped = false;
+
+    function prepStateCycle() {
+      if (stateCyclePrepped) return;
+      var scene = document.getElementById("scene-dlt-state");
+      if (!scene) return;
+      stateCyclePrepped = true;
+
+      /* as três caixas ficam com a altura do conteúdo mais alto — senão a
+         do dict (8 linhas) deixa as legendas em alturas diferentes */
+      var boxes = scene.querySelectorAll(".sc-box");
+      var maxPre = 0;
+      for (var b = 0; b < boxes.length; b++) {
+        var p = boxes[b].querySelector("pre");
+        if (p) maxPre = Math.max(maxPre, p.offsetHeight);
+      }
+      for (var b2 = 0; b2 < boxes.length; b2++) {
+        boxes[b2].style.minHeight = (maxPre + 32) + "px";
+      }
+
+      /* setas horizontais entre as três estações — mesmo hwConnector do
+         slide dlt.pipeline, em lima porque é o dlt que faz o state fluir */
+      var arrs = scene.querySelectorAll(".sc-arr");
+      for (var a = 0; a < arrs.length; a++) {
+        var aw = Math.round(arrs[a].getBoundingClientRect().width);
+        arrs[a].setAttribute("viewBox", "0 0 " + aw + " 40");
+        makeStrokedPath(arrs[a], hwConnector(HW_ARROW_GAP, 20, aw - HW_ARROW_GAP, 30 + a * 17), 4, "#B7FF06");
+      }
+
+      /* o arco de retorno: sobe do destino e volta para o dict */
+      var ret = scene.querySelector(".sc-ret");
+      if (ret) {
+        var rw = Math.round(ret.getBoundingClientRect().width);
+        var rh = Math.round(ret.getBoundingClientRect().height);
+        ret.setAttribute("viewBox", "0 0 " + rw + " " + rh);
+        /* as pontas verticais alinham sob o centro da 1ª e da 3ª estação.
+           a subida termina em barbY, onde as barbas da ponta se apoiam. */
+        var pad = Math.round(rw * 0.135), top = 0, bot = rh - 24;
+        var barbY = bot - 18;
+        var d = "M " + (rw - pad) + " " + top
+              + " L " + (rw - pad) + " " + barbY
+              + " Q " + (rw - pad) + " " + bot + " " + (rw - pad - 18) + " " + bot
+              + " L " + (pad + 18) + " " + bot
+              + " Q " + pad + " " + bot + " " + pad + " " + barbY;
+        /* corpo do arco: o PRÓPRIO traço é tracejado e está em fluxo — não é
+           uma segunda linha por cima. criado à mão para já nascer com o
+           dasharray do fluxo (makeStrokedPath montaria o do draw-in). */
+        var corpo = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        corpo.setAttribute("class", "sc-ret-flow");
+        corpo.setAttribute("d", d);
+        ret.appendChild(corpo);
+
+        /* ponta de seta para o dict — a ponta canônica do deck (17 de
+           profundidade, ±10 de largura), rotacionada para cima. */
+        var tipY = barbY - 17;
+        var wb = function (i) { return hwHash(i, 411) * 2; };
+        var head = "M " + (pad + wb(1)) + " " + (tipY + wb(2))
+                 + " L " + (pad - 10 + wb(3)) + " " + (barbY + wb(4))
+                 + " M " + (pad + wb(5)) + " " + (tipY + wb(6))
+                 + " L " + (pad + 10 + wb(7)) + " " + (barbY + wb(8));
+        var headEl = makeStrokedPath(ret, head, 4, "#B7FF06");
+        headEl.setAttribute("class", "sc-ret-head");
+      }
+
+      /* callout sloppy */
+      var callout = scene.querySelector(".callout");
+      if (callout) {
+        var cf = callout.querySelector(".callout-frame");
+        if (cf) {
+          var cw = callout.offsetWidth, ch = callout.offsetHeight;
+          cf.setAttribute("viewBox", "0 0 " + cw + " " + ch);
+          makeStrokedPath(cf, hwWobbleRect(cw, ch, 12, 90, 3), 3, "#448aff");
+        }
+      }
+    }
+
+    function fireStateCycle() {
+      var scene = document.getElementById("scene-dlt-state");
+      if (!scene) return;
+      var nodes = scene.querySelectorAll(".sc-node");
+      var arrs = scene.querySelectorAll(".sc-arr path");
+      var retFlow = scene.querySelector(".sc-ret-flow");
+      var retHead = scene.querySelector(".sc-ret-head");
+      var retLabel = scene.querySelector(".sc-ret-label");
+      var callout = scene.querySelector(".callout");
+      var calloutFrame = callout ? callout.querySelector(".callout-frame path") : null;
+
+      /* re-entrar no slide (ou o runtime re-registrar a cena) chamava o fire de
+         novo: um segundo timeline passava a lutar pelos mesmos elementos e o
+         traço do arco ficava travado. mata os tweens antes de recomeçar. */
+      var alvos = [];
+      function addAll(list) {
+        if (!list) return;
+        if (list.nodeType) { alvos.push(list); return; }
+        for (var k = 0; k < list.length; k++) if (list[k]) alvos.push(list[k]);
+      }
+      addAll(nodes); addAll(arrs); addAll(retFlow); addAll(retHead);
+      addAll(retLabel); addAll(callout); addAll(calloutFrame);
+      if (alvos.length) gsap.killTweensOf(alvos);
+
+      function hide(p) {
+        if (!p) return;
+        p.style.strokeDashoffset = p.getAttribute("data-hideoff");
+      }
+      for (var i = 0; i < arrs.length; i++) hide(arrs[i]);
+      hide(retHead);
+      hide(calloutFrame);
+
+      if (nodes.length) gsap.set(nodes, { opacity: 0, y: 16 });
+      if (retLabel) gsap.set(retLabel, { opacity: 0 });
+      /* o corpo do arco já nasce tracejado (CSS); aqui só reposiciona o traço */
+      if (retFlow) gsap.set(retFlow, { opacity: 0, strokeDashoffset: 0 });
+      if (callout) gsap.set(callout, { opacity: 0, y: 12 });
+
+      var tl = gsap.timeline();
+      /* 1. o dict — de onde vem a ilusão de memória local */
+      if (nodes[0]) tl.to(nodes[0], { opacity: 1, y: 0, duration: 0.42, ease: "power2.out" }, 0);
+      /* 2. a seta e o load package — o ponto focal: viaja junto */
+      if (arrs.length) tl.to(arrs[0], { strokeDashoffset: 0, duration: 0.4, ease: "power2.out" }, 0.34);
+      if (nodes[1]) tl.to(nodes[1], { opacity: 1, y: 0, duration: 0.42, ease: "power2.out" }, 0.42);
+      /* 3. a seta e a linha no destino */
+      if (arrs.length > 1) tl.to(arrs[1], { strokeDashoffset: 0, duration: 0.4, ease: "power2.out" }, 0.76);
+      if (nodes[2]) tl.to(nodes[2], { opacity: 1, y: 0, duration: 0.42, ease: "power2.out" }, 0.84);
+      /* 4. o ciclo fecha: a ponta desenha e o corpo aparece já tracejado */
+      if (retHead) tl.to(retHead, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out" }, 1.12);
+      if (retLabel) tl.to(retLabel, { opacity: 1, duration: 0.35, ease: "power2.out" }, 1.3);
+      /* 4b. e o traço passa a fluir de volta — é o próprio corpo tracejado do
+             arco andando, não uma linha por cima. o dasharray do CSS é
+             "24 16" = 40px de período, então -40 fecha o loop sem emenda.
+             repeat:-1 para não parar, como o flow-dash do slide 19
+             (o killTweensOf lá em cima cuida da reentrada no slide). */
+      if (retFlow) {
+        tl.to(retFlow, { opacity: 1, duration: 0.35, ease: "power2.out" }, 1.12);
+        tl.to(retFlow, { strokeDashoffset: -40, duration: 1.1, repeat: -1, ease: "none" }, 1.12);
+      }
+      /* 5. o callout — a correção de timing */
+      if (calloutFrame) tl.to(calloutFrame, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out" }, 1.4);
+      if (callout) tl.to(callout, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 1.45);
+    }
+
+    HW.scene("dlt-state", {
+      prep: prepStateCycle,
+      fire: fireStateCycle
+    });
+  </script>
+</template>

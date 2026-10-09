@@ -1,0 +1,92 @@
+<template>
+  <div data-composition-id="speaker" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline cmd-title" data-anim=""><span class="cmd-chip">whoami</span></h1>
+      <div class="htimeline">
+        <div class="ht-year" style="left: 0;">2015</div>
+        <div class="ht-tick" style="left: 0;"></div>
+        <div class="ht-year" style="left: 561px; transform: translateX(-50%);">2019</div>
+        <div class="ht-tick" style="left: 561px;"></div>
+        <div class="ht-year" style="left: 701px; transform: translateX(-50%);">2020</div>
+        <div class="ht-tick" style="left: 701px;"></div>
+        <div class="ht-year" style="left: 841px; transform: translateX(-50%);">2021</div>
+        <div class="ht-tick" style="left: 841px;"></div>
+        <div class="ht-year" style="left: 1262px; transform: translateX(-50%);">2024</div>
+        <div class="ht-tick" style="left: 1262px;"></div>
+        <div class="ht-year" style="right: 0;">hoje</div>
+        <svg class="ht-spine" viewBox="0 0 1640 14" aria-hidden="true">
+          <line class="ht-seg" data-len="701" x1="0" y1="10.5" x2="701" y2="10.5" stroke="#4a9eed" stroke-width="5" />
+          <line class="ht-seg" data-len="280" x1="561" y1="3.5" x2="841" y2="3.5" stroke="#a9fdac" stroke-width="5" />
+          <line class="ht-seg" data-len="421" x1="841" y1="3.5" x2="1262" y2="3.5" stroke="#ea1d2c" stroke-width="5" />
+          <line class="ht-seg" data-len="378" x1="1262" y1="3.5" x2="1640" y2="3.5" stroke="#3ac1d0" stroke-width="5" />
+        </svg>
+        <svg class="ht-arrow" viewBox="0 0 24 32" aria-hidden="true"><path d="M0 0 L24 16 L0 32 Z" fill="#727272" /></svg>
+        <img class="ht-logo" src="vendor/logos/unesp.svg" alt="" data-rot="-3" style="left: 167.5px; width: 191px;">
+        <img class="ht-logo" src="vendor/logos/visagio.svg" alt="" data-rot="2" style="left: 631px; width: 140px; height: 140px; top: 38px;">
+        <img class="ht-logo" src="vendor/logos/ifood.svg" alt="" data-rot="-2" style="left: 965px; width: 173px;">
+        <img class="ht-logo" src="vendor/logos/branching-minds.svg" alt="" data-rot="3" style="left: 1371px; width: 160px;">
+        <div class="ht-cap" style="left: 263px;">
+          <div class="ht-who">UNESP</div>
+          <div class="ht-role">Engenharia de Controle e Automação</div>
+        </div>
+        <div class="ht-cap" style="left: 701px;">
+          <div class="ht-who">Visagio</div>
+          <div class="ht-role">Consultor</div>
+          <div class="ht-role">Engenharia de Dados</div>
+        </div>
+        <div class="ht-cap" style="left: 1051.5px;">
+          <div class="ht-who">iFood</div>
+          <div class="ht-role">Arquiteto de Dados</div>
+          <div class="ht-role">Engenheiro de Software</div>
+        </div>
+        <div class="ht-cap" style="left: 1451px;">
+          <div class="ht-who">Branching Minds</div>
+          <div class="ht-role">Data Engineer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var whoamiPrepped = false;
+function fireWhoamiTimeline() {
+  var segs = document.querySelectorAll(".ht-seg");
+  if (!segs.length) return;
+  for (var i = 0; i < segs.length; i++) {
+    var len = parseFloat(segs[i].getAttribute("data-len"));
+    segs[i].style.strokeDasharray = len;
+    segs[i].style.strokeDashoffset = len;
+  }
+  var tl = gsap.timeline();
+  var drawStart = [0.15, 0.56, 0.765, 1.073];
+  var drawDur = [0.513, 0.205, 0.308, 0.276];
+  for (var j = 0; j < segs.length; j++) {
+    tl.to(segs[j], { strokeDashoffset: 0, duration: drawDur[j], ease: "power2.out" }, drawStart[j]);
+  }
+  tl.fromTo(".ht-logo", { scale: 0.25, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)", stagger: 0.28 }, 0.35)
+    .fromTo(".ht-cap", { xPercent: -50, opacity: 0, y: 18 }, { xPercent: -50, opacity: 1, y: 0, duration: 0.45, ease: "power2.out", stagger: 0.2 }, 1.3);
+}
+
+function prepWhoami() {
+  if (whoamiPrepped) return;
+  var segs = document.querySelectorAll(".ht-seg");
+  if (!segs.length) return;
+  whoamiPrepped = true;
+  for (var i = 0; i < segs.length; i++) {
+    var len = parseFloat(segs[i].getAttribute("data-len"));
+    segs[i].style.strokeDasharray = len;
+    segs[i].style.strokeDashoffset = len;
+  }
+  var logos = document.querySelectorAll(".ht-logo");
+  for (var j = 0; j < logos.length; j++) {
+    gsap.set(logos[j], { rotation: parseFloat(logos[j].getAttribute("data-rot")) });
+  }
+}
+
+    HW.scene("speaker", {
+      prep: function () {
+        prepWhoami();
+      },
+      fire: fireWhoamiTimeline
+    });
+  </script>
+</template>

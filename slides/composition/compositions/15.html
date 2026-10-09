@@ -1,0 +1,106 @@
+<template>
+  <div data-composition-id="resource-games" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline cmd-title" data-anim=""><span class="title-chip"><span class="brand-code">@</span><span class="brand">dlt</span>.resource</span></h1>
+      <div class="sub" data-anim="" style="margin-top: 22px;">respostas de APIs geralmente utilizam <span class="accent">listas e estruturas aninhadas</span></div>
+      <div class="split res-split" style="margin-top: 36px; grid-template-columns: 830px 790px; gap: 20px;">
+        <div class="res-code">
+          <div class="res-notes">
+            <div class="res-note n-green" data-line="3">upsert</div>
+            <div class="res-note n-green" data-line="4">chave do upsert</div>
+            <div class="res-note n-green" data-line="8">cursor incremental</div>
+            <div class="res-note n-green" data-line="16">mais novos primeiro</div>
+          </div>
+          <div class="code-box" data-anim="">
+            <pre style="font-size: 20px;">...
+
+@dlt.<span class="syn-fn">resource</span><span class="syn-brk">(</span>
+    <span class="hl-green">write_disposition=<span class="syn-str">"merge"</span>,</span>
+    <span class="hl-green">primary_key=<span class="syn-str">"id"</span>,</span>
+<span class="syn-brk">)</span>
+<span class="syn-kw">def</span> <span class="syn-fn">games</span><span class="syn-brk">(</span>
+    <span class="syn-param">client</span>: <span class="syn-type">RESTClient</span>,
+    <span class="hl-green"><span class="syn-param">updated_at</span>=dlt.sources.<span class="syn-fn">incremental</span><span class="syn-brk">(</span></span>
+        cursor_path=<span class="syn-str">"updated"</span>,
+        initial_value=<span class="syn-str">"1970-01-01T00:00:00"</span>,
+        row_order=<span class="syn-str">"desc"</span>,
+    <span class="syn-brk">)</span>,
+<span class="syn-brk">)</span> -> <span class="syn-type">Iterator</span><span class="syn-brk">[</span><span class="syn-type">dict</span><span class="syn-brk">[</span><span class="syn-type">str</span>, <span class="syn-type">Any</span><span class="syn-brk">]</span><span class="syn-brk">]</span>:
+    <span class="syn-kw">for</span> page <span class="syn-kw">in</span> client.<span class="syn-fn">paginate</span><span class="syn-brk">(</span>
+        path=<span class="syn-str">"games"</span>,
+        params=<span class="hl-green"><span class="syn-brk">{</span><span class="syn-str">"ordering"</span>: <span class="syn-str">"-updated"</span><span class="syn-brk">}</span></span>,
+        data_selector=<span class="syn-str">"results"</span>,
+    <span class="syn-brk">)</span>:
+        <span class="syn-kw">yield</span> <span class="syn-kw">from</span> page</pre>
+          </div>
+        </div>
+        <div class="res-json">
+          <div class="code-box" data-anim="">
+            <pre><span class="syn-brk">{</span>
+    <span class="syn-str">"next"</span>: <span class="syn-str">"…page=2"</span>,
+    <span class="syn-str">"results"</span>: <span class="syn-brk">[</span>
+      <span class="syn-brk">{</span>
+        <span class="syn-str">"id"</span>: <span class="syn-num">51325</span>,
+        <span class="syn-str">"slug"</span>: <span class="syn-str">"the-last-of-us-part-2"</span>,
+        <span class="syn-str">"name"</span>: <span class="syn-str">"The Last of Us Part II"</span>,
+        <span class="syn-str">"released"</span>: <span class="syn-str">"2020-06-19"</span>,
+        <span class="syn-str">"rating"</span>: <span class="syn-num">4.41</span>,
+        <span class="syn-str">"ratings_count"</span>: <span class="syn-num">2053</span>,
+        <span class="syn-str">"metacritic"</span>: <span class="syn-num">93</span>,
+        <span class="syn-str">"genres"</span>: <span class="syn-brk">[</span>
+          <span class="syn-brk">{</span> <span class="syn-str">"name"</span>: <span class="syn-str">"Action"</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>,
+          <span class="syn-brk">{</span> <span class="syn-str">"name"</span>: <span class="syn-str">"Adventure"</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>,
+          <span class="syn-cmt">…</span>
+        <span class="syn-brk">]</span>,
+        <span class="syn-str">"tags"</span>: <span class="syn-brk">[</span>
+          <span class="syn-brk">{</span> <span class="syn-str">"name"</span>: <span class="syn-str">"Singleplayer"</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>,
+          <span class="syn-brk">{</span> <span class="syn-str">"name"</span>: <span class="syn-str">"Atmospheric"</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>,
+          <span class="syn-cmt">…</span>
+        <span class="syn-brk">]</span>,
+        <span class="syn-str">"platforms"</span>: <span class="syn-brk">[</span>
+          <span class="syn-brk">{</span> <span class="syn-str">"platform"</span>: <span class="syn-brk">{</span> <span class="syn-str">"name"</span>: <span class="syn-str">"PlayStation 4"</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>,
+          <span class="syn-brk">{</span> <span class="syn-str">"platform"</span>: <span class="syn-brk">{</span> <span class="syn-str">"name"</span>: <span class="syn-str">"PlayStation 5"</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>
+        <span class="syn-brk">]</span>,
+        <span class="syn-str">"stores"</span>: <span class="syn-brk">[</span>
+          <span class="syn-brk">{</span> <span class="syn-str">"store"</span>: <span class="syn-brk">{</span> <span class="syn-str">"name"</span>: <span class="syn-str">"PlayStation Store"</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>
+        <span class="syn-brk">]</span>,
+        <span class="syn-str">"esrb_rating"</span>: <span class="syn-brk">{</span> <span class="syn-str">"name"</span>: <span class="syn-str">"Mature"</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span>,
+        <span class="syn-cmt">…</span>
+      <span class="syn-brk">}</span>
+    <span class="syn-brk">]</span>
+  <span class="syn-brk">}</span></pre>
+          </div>
+          <div class="res-notes-r">
+            <div class="res-note-r root" data-line="3"><svg class="ri"><use href="#ri-table"/></svg><span class="rn">games</span></div>
+            <div class="res-note-r child" data-line="11"><svg class="ri"><use href="#ri-table"/></svg><span class="rn">games__genres</span></div>
+            <div class="res-note-r child" data-line="16"><svg class="ri"><use href="#ri-table"/></svg><span class="rn">games__tags</span></div>
+            <div class="res-note-r child" data-line="21"><svg class="ri"><use href="#ri-table"/></svg><span class="rn">games__platforms</span></div>
+            <div class="res-note-r child" data-line="25"><svg class="ri"><use href="#ri-table"/></svg><span class="rn">games__stores</span></div>
+            <div class="res-note-r col" data-line="28"><svg class="ri"><use href="#ri-col"/></svg><span class="rn">esrb_rating__name</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+function fireResourceGames() {
+  var scene = document.getElementById("scene-resource-games");
+  if (!scene) return;
+  var notes = scene.querySelectorAll(".res-note");
+  var rnotes = scene.querySelectorAll(".res-note-r");
+
+  var tl = gsap.timeline();
+  gsap.set(notes, { opacity: 0, x: -12 });
+  gsap.set(rnotes, { opacity: 0, x: 12 });
+  tl.to(notes, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", stagger: 0.12, overwrite: "auto" }, 0.2);
+  tl.to(rnotes, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", stagger: 0.12, overwrite: "auto" }, 0.2);
+}
+
+    HW.scene("resource-games", {
+      prep: function () {
+        HW.prepResNotes(document);
+      },
+      fire: fireResourceGames
+    });
+  </script>
+</template>

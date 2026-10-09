@@ -1,0 +1,291 @@
+<template>
+  <div data-composition-id="real-example" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner erd-slide">
+      <div class="erd-title" data-anim="">
+        <img class="erd-duck" src="vendor/logos/duckdb-white.svg" alt="">
+        <span class="erd-file">rawg.duckdb</span>
+      </div>
+      <div class="erd-full">
+        <svg class="erd-wires" aria-hidden="true"></svg>
+
+        <!-- ── grupo: as 3 tabelas internas ── -->
+        <div class="erd-group">
+          <div class="erd-int">
+            <div class="erd-box" data-ent="version">
+              <div class="erd-head"><span class="name"><span class="brand">_dlt_</span>version</span><span class="erd-rows">1 linha</span></div>
+            <div class="erd-row"><span class="cname">schema_name</span><span class="ctyp">text</span></div>
+            <div class="erd-row"><span class="cname">version</span><span class="chip">PK</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row"><span class="cname">engine_version</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row k-hash" data-key="version_hash"><span class="cname">version_hash</span><span class="ctyp">text</span></div>
+              <div class="erd-foot">+ 2 colunas</div>
+            </div>
+            <div class="erd-box" data-ent="loads">
+              <div class="erd-head"><span class="name"><span class="brand">_dlt_</span>loads</span><span class="erd-rows">1 linha</span></div>
+            <div class="erd-row"><span class="cname">schema_name</span><span class="ctyp">text</span></div>
+            <div class="erd-row"><span class="cname">status</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row"><span class="cname">inserted_at</span><span class="ctyp">timestamp</span></div>
+            <div class="erd-row k-hash" data-key="schema_version_hash"><span class="cname">schema_version_hash</span><span class="ctyp">text</span></div>
+            <div class="erd-row k-load" data-key="load_id"><span class="cname">load_id</span><span class="chip">PK</span><span class="ctyp">text</span></div>
+            </div>
+            <div class="erd-box" data-ent="state">
+              <div class="erd-head"><span class="name"><span class="brand">_dlt_</span>pipeline_state</span><span class="erd-rows">1 linha</span></div>
+            <div class="erd-row"><span class="cname">pipeline_name</span><span class="ctyp">text</span></div>
+            <div class="erd-row"><span class="cname">version</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row"><span class="cname">_dlt_id</span><span class="chip">UK</span><span class="ctyp">text</span></div>
+            <div class="erd-row k-load" data-key="load_id"><span class="cname">_dlt_load_id</span><span class="chip">FK</span><span class="ctyp">text</span></div>
+              <div class="erd-foot">+ 4 colunas</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── centro: a raiz do resource games ── -->
+        <div class="erd-mid">
+          <div class="erd-box" data-ent="games">
+            <div class="erd-head"><span class="name res-hl">games</span><span class="erd-rows">100 linhas</span></div>
+            <div class="erd-row"><span class="cname">id</span><span class="chip">PK</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row"><span class="cname">name</span><span class="ctyp">text</span></div>
+            <div class="erd-row"><span class="cname">slug</span><span class="ctyp">text</span></div>
+            <div class="erd-row"><span class="cname">rating</span><span class="ctyp">double</span></div>
+            <div class="erd-row k-load" data-key="load_id"><span class="cname">_dlt_load_id</span><span class="chip">FK</span><span class="ctyp">text</span></div>
+            <div class="erd-row k-link" data-key="dlt_id"><span class="cname">_dlt_id</span><span class="chip">UK</span><span class="ctyp">text</span></div>
+            <div class="erd-foot">+ 24 colunas</div>
+          </div>
+        </div>
+
+        <!-- ── direita: as 7 tabelas filhas ── -->
+        <div class="erd-kids">
+          <div class="erd-box" data-ent="genres">
+            <div class="erd-head"><span class="name">games__genres</span><span class="erd-rows">225 linhas</span></div>
+            <div class="erd-row"><span class="cname">id</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row"><span class="cname">name</span><span class="ctyp">text</span></div>
+            <div class="erd-row k-link" data-key="parent_id"><span class="cname">_dlt_parent_id</span><span class="chip">FK</span><span class="ctyp">text</span></div>
+            <div class="erd-foot">+ 6 colunas</div>
+          </div>
+          <div class="erd-box" data-ent="parent_platforms">
+            <div class="erd-head"><span class="name">games__parent_platforms</span><span class="erd-rows">320 linhas</span></div>
+            <div class="erd-row"><span class="cname">platform__id</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row"><span class="cname">platform__name</span><span class="ctyp">text</span></div>
+            <div class="erd-row k-link" data-key="parent_id"><span class="cname">_dlt_parent_id</span><span class="chip">FK</span><span class="ctyp">text</span></div>
+            <div class="erd-foot">+ 4 colunas</div>
+          </div>
+          <div class="erd-box" data-ent="platforms">
+            <div class="erd-head"><span class="name">games__platforms</span><span class="erd-rows">358 linhas</span></div>
+            <div class="erd-row"><span class="cname">platform__id</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row"><span class="cname">released_at</span><span class="ctyp">timestamp</span></div>
+            <div class="erd-row k-link" data-key="parent_id"><span class="cname">_dlt_parent_id</span><span class="chip">FK</span><span class="ctyp">text</span></div>
+            <div class="erd-foot">+ 12 colunas</div>
+          </div>
+          <div class="erd-box" data-ent="ratings">
+            <div class="erd-head"><span class="name">games__ratings</span><span class="erd-rows">353 linhas</span></div>
+            <div class="erd-row"><span class="cname">id</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row"><span class="cname">title</span><span class="ctyp">text</span></div>
+            <div class="erd-row k-link" data-key="parent_id"><span class="cname">_dlt_parent_id</span><span class="chip">FK</span><span class="ctyp">text</span></div>
+            <div class="erd-foot">+ 5 colunas</div>
+          </div>
+          <div class="erd-box" data-ent="short_screenshots">
+            <div class="erd-head"><span class="name">games__short_screenshots</span><span class="erd-rows">673 linhas</span></div>
+            <div class="erd-row"><span class="cname">id</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row"><span class="cname">image</span><span class="ctyp">text</span></div>
+            <div class="erd-row k-link" data-key="parent_id"><span class="cname">_dlt_parent_id</span><span class="chip">FK</span><span class="ctyp">text</span></div>
+            <div class="erd-foot">+ 3 colunas</div>
+          </div>
+          <div class="erd-box" data-ent="stores">
+            <div class="erd-head"><span class="name">games__stores</span><span class="erd-rows">262 linhas</span></div>
+            <div class="erd-row"><span class="cname">id</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row"><span class="cname">store__name</span><span class="ctyp">text</span></div>
+            <div class="erd-row k-link" data-key="parent_id"><span class="cname">_dlt_parent_id</span><span class="chip">FK</span><span class="ctyp">text</span></div>
+            <div class="erd-foot">+ 8 colunas</div>
+          </div>
+          <div class="erd-box" data-ent="tags">
+            <div class="erd-head"><span class="name">games__tags</span><span class="erd-rows">1.386 linhas</span></div>
+            <div class="erd-row"><span class="cname">id</span><span class="ctyp">bigint</span></div>
+            <div class="erd-row"><span class="cname">name</span><span class="ctyp">text</span></div>
+            <div class="erd-row k-link" data-key="parent_id"><span class="cname">_dlt_parent_id</span><span class="chip">FK</span><span class="ctyp">text</span></div>
+            <div class="erd-foot">+ 7 colunas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var realExamplePrepped = false;
+
+    /* cotovelo ortogonal com canto arredondado — grammar do tipo database-schema */
+    function hwElbow(x1, y1, x2, y2, xm, r) {
+      r = r || 8;
+      if (Math.abs(y2 - y1) < 1) return "M " + x1 + " " + y1 + " L " + x2 + " " + y2;
+      var s = y2 > y1 ? 1 : -1;
+      var a = xm > x1 ? 1 : -1;
+      var b = x2 > xm ? 1 : -1;
+      r = Math.min(r, Math.abs(xm - x1) || 8, Math.abs(xm - x2) || 8, Math.abs(y2 - y1) / 2);
+      var d = "M " + x1 + " " + y1;
+      d += " L " + (xm - a * r) + " " + y1;
+      d += " Q " + xm + " " + y1 + " " + xm + " " + (y1 + s * r);
+      d += " L " + xm + " " + (y2 - s * r);
+      d += " Q " + xm + " " + y2 + " " + (xm + b * r) + " " + y2;
+      d += " L " + x2 + " " + y2;
+      return d;
+    }
+
+    function prepRealExample() {
+      if (realExamplePrepped) return;
+      var scene = document.getElementById("scene-real-example");
+      if (!scene) return;
+      realExamplePrepped = true;
+      var SVGN = "http://www.w3.org/2000/svg";
+
+      var host = scene.querySelector(".erd-full");
+      var wires = scene.querySelector(".erd-wires");
+      if (!host || !wires) return;
+      wires.setAttribute("viewBox", "0 0 " + host.offsetWidth + " " + host.offsetHeight);
+
+      /* âncora = centro vertical da LINHA da coluna, não da caixa.
+         Medido por getBoundingClientRect, não offsetLeft/offsetTop: estes
+         seguem o offsetParent e deslocam as caixas internas. */
+      var HB = host.getBoundingClientRect();
+      function A(ent, key) {
+        var box = host.querySelector('[data-ent="' + ent + '"]');
+        if (!box) return null;
+        var bb = box.getBoundingClientRect();
+        var row = key ? box.querySelector('[data-key="' + key + '"]') : null;
+        var cy;
+        if (row) {
+          var rb = row.getBoundingClientRect();
+          cy = rb.top + rb.height / 2 - HB.top;
+        } else {
+          cy = bb.top - HB.top + bb.height / 2;
+        }
+        return {
+          l: bb.left - HB.left,
+          r: bb.right - HB.left,
+          t: bb.top - HB.top,
+          b: bb.bottom - HB.top,
+          cy: cy,
+          cx: (bb.left + bb.right) / 2 - HB.left
+        };
+      }
+
+      function wire(d, color, sw) {
+        var p = document.createElementNS(SVGN, "path");
+        p.setAttribute("d", d);
+        p.setAttribute("fill", "none");
+        p.setAttribute("stroke", color);
+        p.setAttribute("stroke-width", sw);
+        p.setAttribute("stroke-linecap", "round");
+        p.setAttribute("stroke-linejoin", "round");
+        wires.appendChild(p);
+        return p;
+      }
+
+      var PURPLE = "#B392F0", AMBER = "#dba642", GRAY = "#5a5a62";
+      var kids = ["genres", "parent_platforms", "platforms", "ratings", "short_screenshots", "stores", "tags"];
+      var games = A("games", "dlt_id");
+      var gamesLoad = A("games", "load_id");
+      var loads = A("loads", "load_id");
+      var stateLoad = A("state", "load_id");
+      var versionHash = A("version", "version_hash");
+      var loadsHash = A("loads", "schema_version_hash");
+
+      /* linhagem: games._dlt_load_id → _dlt_loads.load_id */
+      if (gamesLoad && loads) {
+        wire(hwElbow(gamesLoad.l, gamesLoad.cy, loads.r, loads.cy, (gamesLoad.l + loads.r) / 2, 8), AMBER, 1.4);
+      }
+      /* linhagem: _dlt_pipeline_state._dlt_load_id → _dlt_loads.load_id
+         (pela calha esquerda — ir direto à borda direita atravessava as caixas) */
+      if (stateLoad && loads) {
+        var laneL = Math.min(stateLoad.l, loads.l) - 20;
+        wire(hwElbow(stateLoad.l, stateLoad.cy, loads.l, loads.cy + 10, laneL, 8), AMBER, 1.4);
+      }
+      /* versão do schema: _dlt_loads.schema_version_hash → _dlt_version.version_hash */
+      if (versionHash && loadsHash) {
+        var lane = versionHash.l - 20;
+        var d = "M " + versionHash.l + " " + versionHash.cy +
+                " L " + (lane + 8) + " " + versionHash.cy +
+                " Q " + lane + " " + versionHash.cy + " " + lane + " " + (versionHash.cy + 8) +
+                " L " + lane + " " + (loadsHash.cy - 8) +
+                " Q " + lane + " " + loadsHash.cy + " " + (lane + 8) + " " + loadsHash.cy +
+                " L " + loadsHash.l + " " + loadsHash.cy;
+        wire(d, GRAY, 1.2);
+      }
+      /* normalização: games._dlt_id → espinha → _dlt_parent_id de cada filha */
+      if (games) {
+        var kidsA = [];
+        for (var i = 0; i < kids.length; i++) {
+          var ka = A(kids[i], "parent_id");
+          if (ka) kidsA.push(ka);
+        }
+        if (kidsA.length) {
+          var xs = kidsA[0].l - 40;   /* espinha encostada nas filhas: o vão da esquerda fica livre p/ o rótulo */
+          wire(hwElbow(games.r, games.cy, xs, games.cy, xs, 0), PURPLE, 1.4);
+          wire("M " + xs + " " + kidsA[0].cy + " L " + xs + " " + kidsA[kidsA.length - 1].cy, PURPLE, 1.4);
+          for (var k = 0; k < kidsA.length; k++) {
+            wire("M " + xs + " " + kidsA[k].cy + " L " + kidsA[k].l + " " + kidsA[k].cy, PURPLE, 1.4);
+          }
+        }
+      }
+
+      /* rótulos das relações — máscara opaca, folga da linha */
+      function label(text, x, y, mode) {
+        var d = document.createElement("div");
+        d.className = "erd-link-label";
+        d.innerHTML = text;
+        d.style.left = x + "px";
+        d.style.top = y + "px";
+        d.style.transform = mode === "below" ? "translate(-50%, 0)" : "translate(-50%, -100%)";
+        host.appendChild(d);
+        return d;
+      }
+      if (gamesLoad && loads) {
+        label('<span class="mono">_dlt_load_id</span><span class="to">aponta para</span><span class="mono">_dlt_loads.load_id</span><span class="val">1790731675.145563</span>',
+              (gamesLoad.l + loads.r) / 2, gamesLoad.cy - 22, "above");
+      }
+      if (games) {
+        var kidsFirst = A(kids[0], "parent_id");
+        if (kidsFirst) {
+          label('<span class="mono">_dlt_parent_id</span><span class="to">aponta para</span><span class="mono">games._dlt_id</span>',
+                (games.r + (kidsFirst.l - 40)) / 2, games.cy + 14, "below");
+        }
+      }
+
+    }
+
+    function fireRealExample() {
+      var scene = document.getElementById("scene-real-example");
+      if (!scene) return;
+      var host = scene.querySelector(".erd-full");
+      if (!host) return;
+
+      var boxes = host.querySelectorAll(".erd-box");
+      var wires = host.querySelectorAll(".erd-wires path");
+      var labels = host.querySelectorAll(".erd-link-label");
+      var group = host.querySelector(".erd-group");
+      var groupTag = host.querySelector(".erd-group-tag");
+
+      for (var w = 0; w < wires.length; w++) {
+        var len = wires[w].getTotalLength();
+        wires[w].style.strokeDasharray = len + " " + len;
+        wires[w].style.strokeDashoffset = len;
+        wires[w].setAttribute("data-hideoff", len);
+      }
+
+      gsap.set(boxes, { opacity: 0, y: 12 });
+      gsap.set(labels, { opacity: 0 });
+      if (group) gsap.set(group, { opacity: 0 });
+      if (groupTag) gsap.set(groupTag, { opacity: 0 });
+
+      var tl = gsap.timeline();
+      if (group) tl.to(group, { opacity: 1, duration: 0.35, ease: "power2.out" }, 0);
+      if (groupTag) tl.to(groupTag, { opacity: 1, duration: 0.3, ease: "power2.out" }, 0.15);
+      tl.to(boxes, { opacity: 1, y: 0, duration: 0.38, ease: "power2.out", stagger: 0.055 }, 0.1);
+      tl.to(wires, { strokeDashoffset: 0, duration: 0.5, ease: "power2.inOut", stagger: 0.05 }, 0.55);
+      tl.to(labels, { opacity: 1, duration: 0.3, ease: "power2.out", stagger: 0.08 }, 1.0);
+    }
+
+    HW.scene("real-example", {
+      prep: function () {
+        prepRealExample();
+      },
+      fire: fireRealExample
+    });
+  </script>
+</template>

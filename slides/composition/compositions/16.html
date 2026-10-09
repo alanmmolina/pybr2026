@@ -1,0 +1,116 @@
+<template>
+  <div data-composition-id="transformer" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline cmd-title" data-anim=""><span class="title-chip"><span class="brand-code">@</span><span class="brand">dlt</span>.transformer</span></h1>
+      <div class="sub" data-anim="" style="margin-top: 22px;">quando precisamos de dados para extrair mais dados</div>
+      <div class="sub" data-anim="" style="margin-top: 4px; font-size: 22px; line-height: 1.25; color: #b0b0b0;"><span class="mono">resources</span> são encadeados sem duplicação de código</div>
+      <div class="split res-split" style="margin-top: 24px; grid-template-columns: 1100px 1fr; align-items: end;">
+        <div class="res-code">
+          <div class="res-notes">
+            <div class="res-note n-green" data-line="5">chamadas em paralelo</div>
+            <div class="res-note n-green" data-line="11">objeto único</div>
+          </div>
+          <div class="code-box" data-anim="">
+            <pre>...
+
+@dlt.<span class="syn-fn">transformer</span><span class="syn-brk">(</span>
+    write_disposition=<span class="syn-str">"merge"</span>,
+    primary_key=<span class="syn-str">"id"</span>,
+    <span class="hl-green">parallelized=<span class="syn-kw">True</span>,</span>
+<span class="syn-brk">)</span>
+<span class="syn-kw">def</span> <span class="syn-fn">game_details</span><span class="syn-brk">(</span>
+    <span class="syn-param">game_item</span>: <span class="syn-type">dict</span><span class="syn-brk">[</span><span class="syn-type">str</span>, <span class="syn-type">Any</span><span class="syn-brk">]</span>,
+    <span class="syn-param">client</span>: <span class="syn-type">RESTClient</span>,
+<span class="syn-brk">)</span> -> <span class="syn-type">dict</span><span class="syn-brk">[</span><span class="syn-type">str</span>, <span class="syn-type">Any</span><span class="syn-brk">]</span>:
+    <span class="hl-green"><span class="syn-kw">return</span> client.<span class="syn-fn">get</span><span class="syn-brk">(</span>
+        path=f<span class="syn-str">"games/{game_item['id']}"</span>,
+    <span class="syn-brk">)</span>.<span class="syn-fn">json</span><span class="syn-brk">(</span><span class="syn-brk">)</span></span></pre>
+          </div>
+        </div>
+        <div class="res-stacks">
+          <div class="stack">
+            <div class="stack-cap hand">resource games busca os itens</div>
+            <div class="code-box" data-anim="">
+              <pre><span class="syn-brk">{</span> <span class="syn-str">"id"</span>: <span class="tf-hl">51325</span>,
+    <span class="syn-str">"name"</span>: <span class="syn-str">"The Last of Us Part II"</span>,
+    <span class="syn-str">"rating"</span>: <span class="syn-num">4.41</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span></pre>
+            </div>
+          </div>
+          <div class="tf-arrow" data-anim="">
+            <svg class="tf-arr" aria-hidden="true"></svg>
+            <span class="tf-chip">id&nbsp;<span class="tf-hl">51325</span></span>
+          </div>
+          <div class="stack">
+            <div class="stack-cap hand">os ids são utilizados para fazer o request por game</div>
+            <div class="code-box" data-anim="">
+              <pre>GET /api/games/<span class="tf-hl">51325</span>?key=<span class="syn-str">RAWG_API_KEY</span></pre>
+            </div>
+          </div>
+          <div class="tf-arrow short" data-anim="">
+            <svg class="tf-arr" aria-hidden="true"></svg>
+          </div>
+          <div class="stack">
+            <div class="stack-cap hand">traz detalhes adicionais para cada game</div>
+            <div class="code-box" data-anim="">
+              <pre><span class="syn-brk">{</span> <span class="syn-str">"id"</span>: <span class="tf-hl">51325</span>,
+    <span class="syn-str">"description"</span>: <span class="syn-str">"…"</span>,
+    <span class="syn-str">"website"</span>: <span class="syn-str">"…"</span>,
+    <span class="syn-str">"alternative_names"</span>: <span class="syn-brk">[</span> <span class="syn-str">"TLOU2"</span>, <span class="syn-cmt">…</span> <span class="syn-brk">]</span>,
+    <span class="syn-str">"metacritic_platforms"</span>: <span class="syn-brk">[</span>
+      <span class="syn-brk">{</span> <span class="syn-str">"platform"</span>: <span class="syn-brk">{</span>
+          <span class="syn-str">"name"</span>: <span class="syn-str">"PlayStation 4"</span> <span class="syn-brk">}</span>,
+        <span class="syn-cmt">…</span> <span class="syn-brk">}</span> <span class="syn-brk">]</span>,
+    <span class="syn-cmt">…</span> <span class="syn-brk">}</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var tfArrowsPrepped = false;
+function fireTransformer() {
+  var scene = document.getElementById("scene-transformer");
+  if (!scene) return;
+  var notes = scene.querySelectorAll(".res-note");
+  var arrs = scene.querySelectorAll(".tf-arr path");
+
+  var tl = gsap.timeline();
+  gsap.set(notes, { opacity: 0, x: -12 });
+  tl.to(notes, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", stagger: 0.12, overwrite: "auto" }, 0.2);
+  tl.to(arrs, { strokeDashoffset: 0, duration: 0.55, ease: "power2.out", stagger: 0.12, overwrite: "auto" }, 0.15);
+}
+
+function prepTfArrows() {
+  if (tfArrowsPrepped) return;
+  var arrows = document.querySelectorAll(".tf-arrow");
+  if (!arrows.length) return;
+  tfArrowsPrepped = true;
+
+  for (var a = 0; a < arrows.length; a++) {
+    var box = arrows[a].getBoundingClientRect();
+    var w = Math.round(box.width);
+    var h = Math.round(box.height);
+    var svg = arrows[a].querySelector(".tf-arr");
+    if (!svg) continue;
+    svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+    var x = Math.round(w / 2);
+    var gap = null;
+    var chip = arrows[a].querySelector(".tf-chip");
+    if (chip) {
+      var cbox = chip.getBoundingClientRect();
+      gap = [Math.round(cbox.top - box.top) - 4, Math.round(cbox.bottom - box.top) + 4];
+    }
+    makeStrokedPath(svg, hwArrowDown(x, HW_ARROW_GAP, h - HW_ARROW_GAP, 47 + a * 9, gap), 4, "currentColor");
+  }
+}
+
+    HW.scene("transformer", {
+      prep: function () {
+        HW.prepResNotes(document);
+        prepTfArrows();
+      },
+      fire: fireTransformer
+    });
+  </script>
+</template>

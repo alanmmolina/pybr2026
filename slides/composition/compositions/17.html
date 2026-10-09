@@ -1,0 +1,183 @@
+<template>
+  <div data-composition-id="schema-contracts" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline cmd-title" data-anim=""><span class="title-chip"><span class="brand">dlt</span>.Schema</span></h1>
+
+      <div class="contract-stage">
+        <!-- ── onde você escreve: os dois parâmetros, lado a lado ── -->
+        <div class="contract-where">
+          <div class="res-code contract-code">
+            <div class="res-notes">
+              <div class="res-note n-shape" data-line="2">a forma</div>
+              <div class="res-note n-policy" data-line="4">a política</div>
+            </div>
+            <div class="code-box">
+              <pre>@dlt.<span class="syn-fn">resource</span><span class="syn-brk">(</span>
+    write_disposition=<span class="syn-str">"merge"</span>,
+    <span class="hl-shape">columns=Game,</span>
+    primary_key=<span class="syn-str">"id"</span>,
+    <span class="hl-policy">schema_contract={"columns": "freeze"},</span>
+<span class="syn-brk">)</span>
+<span class="syn-kw">def</span> <span class="syn-fn">games</span><span class="syn-brk">(</span><span class="syn-param">client</span>: <span class="syn-type">RESTClient</span>,…<span class="syn-brk">)</span>:
+    ...</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── a simetria: 4 formas, 4 políticas.
+               rótulo do papel FORA da caixa (Excalifont), nome do parâmetro dentro.
+               moldura sloppy nos dois painéis; caixas internas no padrão limpo. ── -->
+        <div class="roles">
+
+          <div class="role-block">
+            <div class="role-cap hand n-shape">columns</div>
+            <div class="role-panel rp-shape">
+              <svg class="role-frame" aria-hidden="true"></svg>
+              <div class="rp-grid">
+                <div class="role-box">
+                  <svg class="role-box-frame" aria-hidden="true"></svg>
+                  <div class="rb-name">dict</div>
+                  <div class="rb-detail"><span class="syn-brk">{</span>
+  <span class="syn-str">"id"</span>: <span class="syn-brk">{</span><span class="syn-str">"data_type"</span>: <span class="syn-str">"bigint"</span><span class="syn-brk">}</span>
+<span class="syn-brk">}</span></div>
+                </div>
+                <div class="role-box">
+                  <svg class="role-box-frame" aria-hidden="true"></svg>
+                  <div class="rb-name">list</div>
+                  <div class="rb-detail"><span class="syn-brk">[{</span>
+  <span class="syn-str">"name"</span>: <span class="syn-str">"id"</span>,
+  <span class="syn-str">"data_type"</span>: <span class="syn-str">"bigint"</span>
+<span class="syn-brk">}]</span></div>
+                </div>
+                <div class="role-box">
+                  <svg class="role-box-frame" aria-hidden="true"></svg>
+                  <div class="rb-name">Pydantic</div>
+                  <div class="rb-detail"><span class="syn-kw">class</span> <span class="syn-type">Game</span>(<span class="syn-type">BaseModel</span>):
+  id: <span class="syn-type">int</span></div>
+                </div>
+                <div class="role-box">
+                  <svg class="role-box-frame" aria-hidden="true"></svg>
+                  <div class="rb-name">pyarrow</div>
+                  <div class="rb-detail">pa.<span class="syn-fn">schema</span>([
+  (<span class="syn-str">"id"</span>, pa.<span class="syn-fn">int64</span>())
+])</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="role-block">
+            <div class="role-cap hand n-policy">schema_contract</div>
+            <div class="role-panel rp-policy">
+              <svg class="role-frame" aria-hidden="true"></svg>
+              <div class="rp-grid">
+                <div class="role-box">
+                  <svg class="role-box-frame" aria-hidden="true"></svg>
+                  <div class="rb-name">evolve</div>
+                  <div class="rb-detail">schema muda
+dados são carregados</div>
+                </div>
+                <div class="role-box">
+                  <svg class="role-box-frame" aria-hidden="true"></svg>
+                  <div class="rb-name">freeze</div>
+                  <div class="rb-detail">schema não muda
+dados não são carregados</div>
+                </div>
+                <div class="role-box">
+                  <svg class="role-box-frame" aria-hidden="true"></svg>
+                  <div class="rb-name">discard_row</div>
+                  <div class="rb-detail">schema não muda
+linha não é carregada</div>
+                </div>
+                <div class="role-box">
+                  <svg class="role-box-frame" aria-hidden="true"></svg>
+                  <div class="rb-name">discard_value</div>
+                  <div class="rb-detail">schema não muda
+valor não é carregado</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var contractsPrepped = false;
+
+    function prepSchemaContracts() {
+      if (contractsPrepped) return;
+      var scene = document.getElementById("scene-schema-contracts");
+      if (!scene) return;
+      contractsPrepped = true;
+
+      /* notas do slice de código — mesma mecânica dos slides de componente */
+      HW.prepResNotes(scene);
+
+      /* molduras sloppy dos dois painéis — mesmo idioma do .callout.sloppy */
+      var panels = scene.querySelectorAll(".role-panel");
+      for (var i = 0; i < panels.length; i++) {
+        var p = panels[i];
+        var f = p.querySelector(".role-frame");
+        if (!f) continue;
+        var w = p.offsetWidth, h = p.offsetHeight;
+        f.setAttribute("viewBox", "0 0 " + w + " " + h);
+        var stroke = "#B7FF06";
+        makeStrokedPath(f, hwWobbleRect(w, h, 12, 200 + i * 23, 3), 3, stroke);
+      }
+
+      /* as 8 caixas internas também sloppy — em cinza, subordinadas às molduras
+         de cor dos painéis (amplitude menor: 2, contra 3 lá). */
+      var iboxes = scene.querySelectorAll(".role-box");
+      for (var b = 0; b < iboxes.length; b++) {
+        var bx = iboxes[b];
+        var bf = bx.querySelector(".role-box-frame");
+        if (!bf) continue;
+        var bw = bx.offsetWidth, bh = bx.offsetHeight;
+        bf.setAttribute("viewBox", "0 0 " + bw + " " + bh);
+        makeStrokedPath(bf, hwWobbleRect(bw, bh, 8, 300 + b * 19, 2), 2, "#4c4c55");
+      }
+    }
+
+    function fireSchemaContracts() {
+      var scene = document.getElementById("scene-schema-contracts");
+      if (!scene) return;
+      var where = scene.querySelector(".contract-where");
+      var notes = scene.querySelectorAll(".contract-code .res-note");
+      var blocks = scene.querySelectorAll(".role-block");
+      var frames = scene.querySelectorAll(".role-frame path, .role-box-frame path");
+      var boxes = scene.querySelectorAll(".role-box");
+
+      function hide(p) {
+        if (!p) return;
+        p.style.strokeDashoffset = p.getAttribute("data-hideoff");
+      }
+      for (var f = 0; f < frames.length; f++) hide(frames[f]);
+
+      if (where) gsap.set(where, { opacity: 0, y: 14 });
+      if (notes.length) gsap.set(notes, { opacity: 0, x: -12 });
+      if (blocks.length) gsap.set(blocks, { opacity: 0, y: 16 });
+      if (boxes.length) gsap.set(boxes, { opacity: 0, y: 10 });
+
+      var tl = gsap.timeline();
+      /* 1. o slice: os dois parâmetros, lado a lado */
+      if (where) tl.to(where, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 0);
+      /* 2. as duas anotações apontam as duas linhas */
+      if (notes.length) tl.to(notes, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out", stagger: 0.18 }, 0.35);
+      /* 3. os dois blocos — forma primeiro, política depois */
+      if (blocks.length) tl.to(blocks, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.18 }, 0.6);
+      /* 4. as molduras sloppy se desenham */
+      if (frames.length) tl.to(frames, { strokeDashoffset: 0, duration: 0.55, ease: "power2.out", stagger: 0.18 }, 0.7);
+      /* 5. as 8 caixas internas entram */
+      if (boxes.length) tl.to(boxes, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out", stagger: 0.06 }, 1.15);
+    }
+
+    HW.scene("schema-contracts", {
+      prep: function () {
+        prepSchemaContracts();
+      },
+      fire: fireSchemaContracts
+    });
+  </script>
+</template>

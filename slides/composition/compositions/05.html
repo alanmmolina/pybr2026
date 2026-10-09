@@ -1,0 +1,160 @@
+<template>
+  <div data-composition-id="problem-sources" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline" data-anim="">Nenhuma fonte é igual</h1>
+      <div class="srcs">
+        <div class="src-col">
+          <div class="src-hub">
+            <svg class="src-ic" viewBox="0 0 120 120" data-icon="api"></svg>
+            <div class="src-lbl" data-anim="">API</div>
+            <div class="src-chip"><span class="chip-t">formato</span><span class="chip-v">json<br>xml</span></div>
+            <div class="src-chip"><span class="chip-t">paginação</span><span class="chip-v">cursor<br>offset<br>link-header</span></div>
+            <div class="src-chip"><span class="chip-t">auth</span><span class="chip-v">api key<br>basic<br>oauth2</span></div>
+            <div class="src-chip"><span class="chip-t">rate limit</span><span class="chip-v">window<br>quota<br>retry-after</span></div>
+            <div class="src-chip"><span class="chip-t">protocolo</span><span class="chip-v">rest<br>graphql<br>soap<br>webhook</span></div>
+          </div>
+        </div>
+        <div class="src-col">
+          <div class="src-hub">
+            <svg class="src-ic" viewBox="0 0 120 120" data-icon="sheet"></svg>
+            <div class="src-lbl" data-anim="">spreadsheet</div>
+            <div class="src-chip"><span class="chip-t">formato</span><span class="chip-v">csv<br>txt<br>xls<br>xlsx</span></div>
+            <div class="src-chip"><span class="chip-t">saas</span><span class="chip-v">google sheets<br>airtable</span></div>
+            <div class="src-chip"><span class="chip-t">storage</span><span class="chip-v">s3<br>gcs<br>blob</span></div>
+          </div>
+        </div>
+        <div class="src-col">
+          <div class="src-hub">
+            <svg class="src-ic" viewBox="0 0 120 120" data-icon="db"></svg>
+            <div class="src-lbl" data-anim="">database</div>
+            <div class="src-chip"><span class="chip-t">sql</span><span class="chip-v">postgres<br>mysql<br>mssql<br>duckdb</span></div>
+            <div class="src-chip"><span class="chip-t">nosql</span><span class="chip-v">mongodb<br>cassandra</span></div>
+            <div class="src-chip"><span class="chip-t">grafo</span><span class="chip-v">neo4j</span></div>
+            <div class="src-chip"><span class="chip-t">timeseries</span><span class="chip-v">timescale<br>influx</span></div>
+            <div class="src-chip"><span class="chip-t">streaming</span><span class="chip-v">kafka<br>kinesis</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var srcPrepped = false;
+function fireSrcTimeline() {
+  var scene = document.getElementById("scene-problem-sources");
+  if (!scene) return;
+  var icons = scene.querySelectorAll(".src-ic path");
+  var conns = scene.querySelectorAll(".src-conn path");
+  var frames = scene.querySelectorAll(".src-chip-frame path");
+  var chips = scene.querySelectorAll(".src-chip");
+  var els = [];
+  els.push.apply(els, icons);
+  els.push.apply(els, conns);
+  els.push.apply(els, frames);
+  for (var i = 0; i < els.length; i++) {
+    els[i].style.strokeDashoffset = els[i].getAttribute("data-hideoff");
+  }
+  var tl = gsap.timeline();
+  tl.to(icons, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out", stagger: 0.05 }, 0.25);
+  tl.to(conns, { strokeDashoffset: 0, duration: 0.4, ease: "power2.out", stagger: 0.04 }, 0.5);
+  tl.to(frames, { strokeDashoffset: 0, duration: 0.35, ease: "power2.out", stagger: 0.05 }, 0.7);
+  gsap.set(chips, { opacity: 0, scale: 0.92 });
+  tl.to(chips, { opacity: 1, scale: 1, duration: 0.35, ease: "power2.out", stagger: 0.05 }, 0.78);
+}
+
+function prepSrc() {
+  if (srcPrepped) return;
+  var scene = document.getElementById("scene-problem-sources");
+  if (!scene) return;
+  var SVGN = "http://www.w3.org/2000/svg";
+  /* Cada tipo de fonte ganha uma cor própria: azul, verde e amarelo são três
+     coisas que não se confundem, e é isso que a lâmina está dizendo. Os
+     rótulos ficam brancos; a cor mora só no ícone. */
+  var SRC_HUES = ["#448aff", "#46a758", "#dba642"];
+  var cols = scene.querySelectorAll(".src-col");
+  for (var ci = 0; ci < cols.length; ci++) {
+    var hub = cols[ci].querySelector(".src-hub");
+    var ic = cols[ci].querySelector(".src-ic");
+    var hue = SRC_HUES[ci] || "#fafafa";
+    var shapes = pmapIconPaths(ic.getAttribute("data-icon"), 21 + ci * 13);
+    for (var s = 0; s < shapes.length; s++) {
+      var sh = shapes[s];
+      var el = document.createElementNS(SVGN, "path");
+      el.setAttribute("d", sh.d);
+      el.setAttribute("fill", "none");
+      el.setAttribute("stroke", hue);
+      el.setAttribute("stroke-width", sh.sw ? String(sh.sw) : "7");
+      el.setAttribute("stroke-linecap", "round");
+      el.setAttribute("stroke-linejoin", "round");
+      setDrawHidden(el, sh.sw ? parseFloat(sh.sw) : 7);
+      ic.appendChild(el);
+    }
+    var hw = hub.offsetWidth, hh = hub.offsetHeight;
+    var cx = hw / 2, cy = hh / 2;
+    var csvg = document.createElementNS(SVGN, "svg");
+    csvg.setAttribute("class", "src-conn");
+    csvg.setAttribute("viewBox", "0 0 " + hw + " " + hh);
+    csvg.setAttribute("aria-hidden", "true");
+    hub.insertBefore(csvg, hub.firstChild);
+    var chips = cols[ci].querySelectorAll(".src-chip");
+    var slots = chips.length >= 5
+      ? [[-185, -230], [185, -115], [-185, 0], [185, 115], [-185, 230]]
+      : (chips.length === 3
+        ? [[-185, -115], [185, -115], [0, 190]]
+        : [[-185, -115], [185, -115], [-185, 115], [185, 115]]);
+    var iconR = 62;
+    for (var k = 0; k < chips.length; k++) {
+      var chip = chips[k];
+      var pos = slots[k];
+      var nx = cx + pos[0];
+      var ny = cy + pos[1];
+      chip.style.left = nx + "px";
+      chip.style.top = ny + "px";
+      var rot = (hwHash(k, 17) * 3).toFixed(1);
+      chip.style.transform = "translate(-50%,-50%) rotate(" + rot + "deg)";
+      var nw = chip.offsetWidth, nh = chip.offsetHeight;
+      var fsvg = document.createElementNS(SVGN, "svg");
+      fsvg.setAttribute("class", "src-chip-frame");
+      fsvg.setAttribute("viewBox", "0 0 " + nw + " " + nh);
+      fsvg.setAttribute("aria-hidden", "true");
+      var fp = document.createElementNS(SVGN, "path");
+      fp.setAttribute("d", hwWobbleRect(nw, nh, Math.min(nw, nh) / 2, 80 + k * 9, 3));
+      fp.setAttribute("fill", "none");
+      fp.setAttribute("stroke", "#727272");
+      fp.setAttribute("stroke-width", "2.5");
+      fp.setAttribute("stroke-linecap", "round");
+      fp.setAttribute("stroke-linejoin", "round");
+      setDrawHidden(fp, 2.5);
+      fsvg.appendChild(fp);
+      chip.insertBefore(fsvg, chip.firstChild);
+      var dx = nx - cx, dy = ny - cy;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var ux = dx / dist, uy = dy / dist;
+      var sx = cx + ux * iconR;
+      var sy = cy + uy * iconR;
+      var tx = (Math.abs(ux) > 1e-6) ? (nw / 2) / Math.abs(ux) : 1e9;
+      var ty = (Math.abs(uy) > 1e-6) ? (nh / 2) / Math.abs(uy) : 1e9;
+      var half = Math.min(tx, ty) + 10;
+      var ex = nx - ux * half;
+      var ey = ny - uy * half;
+      var p = document.createElementNS(SVGN, "path");
+      p.setAttribute("d", hwLink(sx, sy, ex, ey, 90 + k * 5));
+      p.setAttribute("fill", "none");
+      p.setAttribute("stroke", "#727272");
+      p.setAttribute("stroke-width", "3");
+      p.setAttribute("stroke-linecap", "round");
+      p.setAttribute("stroke-linejoin", "round");
+      setDrawHidden(p, 3);
+      csvg.appendChild(p);
+    }
+  }
+  srcPrepped = true;
+}
+
+    HW.scene("problem-sources", {
+      prep: function () {
+        prepSrc();
+      },
+      fire: fireSrcTimeline
+    });
+  </script>
+</template>

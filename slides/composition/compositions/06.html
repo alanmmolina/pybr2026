@@ -1,0 +1,129 @@
+<template>
+  <div data-composition-id="connector-costs" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline" data-anim="">Plataformas de Conectores</h1>
+      <div class="connector-grid">
+        <div class="platform">
+          <div class="platform-body">
+            <div class="logo-cell" style="background:#306BEA;"><img src="vendor/logos/fivetran.svg" alt="Fivetran"></div>
+            <div class="logo-cell" style="background:#615EFF;"><img class="lg" src="vendor/logos/airbyte.svg" alt="Airbyte"><span class="logo-name">Airbyte</span></div>
+            <div class="logo-cell" style="background:#19E57F;"><img class="lg" src="vendor/logos/matillion.svg" alt="Matillion"><span class="logo-name">Matillion</span></div>
+            <div class="logo-cell" style="background:#080216;"><img src="vendor/logos/meltano.svg" alt="Meltano"></div>
+            <div class="logo-cell" style="background:#171717;"><img src="vendor/logos/hevo.svg" alt="Hevo"></div>
+            <div class="logo-cell" style="background:#26124d;"><img src="vendor/logos/rivery.svg" alt="Rivery"></div>
+          </div>
+        </div>
+        <div class="costs">
+          <div class="cost-item">
+            <h3>maquinário à parte</h3>
+            <p>componente separado na arquitetura, com ciclo de vida e overhead operacional próprios</p>
+          </div>
+          <div class="cost-item">
+            <h3>fonte particular</h3>
+            <p>quando a fonte foge do padrão, esbarra nas restrições justamente onde você precisa de flexibilidade</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var connPrepped = false;
+function fireConnectorsTimeline() {
+  var scene = document.getElementById("scene-connector-costs");
+  if (!scene) return;
+  var frame = scene.querySelector(".platform-frame path");
+  var costFrames = scene.querySelectorAll(".cost-frame path");
+  var cellFrames = scene.querySelectorAll(".logo-cell-frame path");
+  var logos = scene.querySelectorAll(".logo-cell");
+  var costItems = scene.querySelectorAll(".cost-item");
+
+  if (frame) frame.style.strokeDashoffset = frame.getAttribute("data-hideoff");
+  for (var i = 0; i < costFrames.length; i++) costFrames[i].style.strokeDashoffset = costFrames[i].getAttribute("data-hideoff");
+  for (var m = 0; m < cellFrames.length; m++) cellFrames[m].style.strokeDashoffset = cellFrames[m].getAttribute("data-hideoff");
+
+  var tl = gsap.timeline();
+  gsap.set(logos, { opacity: 0, scale: 0.8 });
+  gsap.set(costItems, { opacity: 0, y: 24 });
+
+  if (frame) tl.to(frame, { strokeDashoffset: 0, duration: 0.6, ease: "power2.out" }, 0.15);
+  tl.to(logos, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.7)", stagger: 0.14 }, 0.5);
+  tl.to(cellFrames, { strokeDashoffset: 0, duration: 0.45, ease: "power2.out", stagger: 0.14 }, 0.5);
+  /* os callouts entram junto da cauda da cascata dos logos (que fecha em 1.65),
+     e não depois dela — em 1.75 eles soavam atrasados em relação ao resto. */
+  tl.to(costItems, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", stagger: 0.14 }, 1.15);
+  tl.to(costFrames, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out", stagger: 0.14 }, 1.15);
+}
+
+function prepConnectors() {
+  if (connPrepped) return;
+  var scene = document.getElementById("scene-connector-costs");
+  if (!scene) return;
+  var SVGN = "http://www.w3.org/2000/svg";
+
+  var platform = scene.querySelector(".platform");
+  if (platform) {
+    var w = platform.offsetWidth, h = platform.offsetHeight;
+    var svg = document.createElementNS(SVGN, "svg");
+    svg.setAttribute("class", "platform-frame");
+    svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+    svg.setAttribute("aria-hidden", "true");
+    var b = document.createElementNS(SVGN, "path");
+    b.setAttribute("d", hwWobbleRect(w, h, 10, 60, 5));
+    b.setAttribute("fill", "none");
+    b.setAttribute("stroke", "#727272");
+    b.setAttribute("stroke-width", "3");
+    b.setAttribute("stroke-linecap", "round");
+    b.setAttribute("stroke-linejoin", "round");
+    setDrawHidden(b, 3);
+    svg.appendChild(b);
+    platform.appendChild(svg);
+  }
+
+  var items = scene.querySelectorAll(".cost-item");
+  for (var j = 0; j < items.length; j++) {
+    var iw = items[j].offsetWidth, ih = items[j].offsetHeight;
+    var csvg = document.createElementNS(SVGN, "svg");
+    csvg.setAttribute("class", "cost-frame");
+    csvg.setAttribute("viewBox", "0 0 " + iw + " " + ih);
+    csvg.setAttribute("aria-hidden", "true");
+    var cp = document.createElementNS(SVGN, "path");
+    cp.setAttribute("d", hwWobbleRect(iw, ih, 8, 120 + j * 9, 3));
+    cp.setAttribute("fill", "none");
+    cp.setAttribute("stroke", "#dba642");
+    cp.setAttribute("stroke-width", "2.5");
+    cp.setAttribute("stroke-linecap", "round");
+    cp.setAttribute("stroke-linejoin", "round");
+    setDrawHidden(cp, 2.5);
+    csvg.appendChild(cp);
+    items[j].appendChild(csvg);
+  }
+
+  var cells = scene.querySelectorAll(".logo-cell");
+  for (var c = 0; c < cells.length; c++) {
+    var cw = cells[c].offsetWidth, ch = cells[c].offsetHeight;
+    var lsvg = document.createElementNS(SVGN, "svg");
+    lsvg.setAttribute("class", "logo-cell-frame");
+    lsvg.setAttribute("viewBox", "0 0 " + cw + " " + ch);
+    lsvg.setAttribute("aria-hidden", "true");
+    var lp = document.createElementNS(SVGN, "path");
+    lp.setAttribute("d", hwWobbleRect(cw, ch, 8, 200 + c * 11, 3));
+    lp.setAttribute("fill", "none");
+    lp.setAttribute("stroke", "#fafafa");
+    lp.setAttribute("stroke-width", "2.5");
+    lp.setAttribute("stroke-linecap", "round");
+    lp.setAttribute("stroke-linejoin", "round");
+    setDrawHidden(lp, 2.5);
+    lsvg.appendChild(lp);
+    cells[c].appendChild(lsvg);
+  }
+  connPrepped = true;
+}
+
+    HW.scene("connector-costs", {
+      prep: function () {
+        prepConnectors();
+      },
+      fire: fireConnectorsTimeline
+    });
+  </script>
+</template>

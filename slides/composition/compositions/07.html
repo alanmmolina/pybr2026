@@ -1,0 +1,93 @@
+<template>
+  <div data-composition-id="parallel-dialects" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline" data-anim="">Scripts <span class="accent">caseiros</span></h1>
+      <div class="dialects">
+        <div class="dialect-col">
+          <div class="d-fname">ingestor.py</div>
+          <div class="dialect">
+<pre><span class="syn-kw">import</span> json
+<span class="syn-kw">import</span> requests
+
+URL = <span class="syn-str">"https://dummyjson.com/products"</span>
+items, skip = <span class="syn-brk">[</span><span class="syn-brk">]</span>, 0
+<span class="syn-kw">while</span> <span class="syn-kw">True</span>:
+    params = <span class="syn-brk">{</span><span class="syn-str">"limit"</span>: 10, <span class="syn-str">"skip"</span>: skip<span class="syn-brk">}</span>
+    response = requests.<span class="syn-fn">get</span><span class="syn-brk">(</span>URL, params<span class="syn-brk">)</span>
+    batch = response.<span class="syn-fn">json</span><span class="syn-brk">(</span><span class="syn-brk">)</span>
+    items += batch<span class="syn-brk">[</span><span class="syn-str">"products"</span><span class="syn-brk">]</span>
+    <span class="syn-kw">if</span> <span class="syn-fn">len</span><span class="syn-brk">(</span>batch<span class="syn-brk">[</span><span class="syn-str">"products"</span><span class="syn-brk">]</span><span class="syn-brk">)</span> < 10:
+        <span class="syn-kw">break</span>
+    skip += 10
+
+<span class="syn-kw">with</span> <span class="syn-fn">open</span><span class="syn-brk">(</span><span class="syn-str">"items.json"</span>, <span class="syn-str">"w"</span><span class="syn-brk">)</span> <span class="syn-kw">as</span> file:
+    json.<span class="syn-fn">dump</span><span class="syn-brk">(</span>items, file<span class="syn-brk">)</span></pre>
+          </div>
+          <div class="d-tag">síncrono · um request por vez</div>
+        </div>
+        <div class="dialect-col">
+          <div class="d-fname">client.py</div>
+          <div class="dialect">
+<pre><span class="syn-kw">import</span> requests
+
+<span class="syn-kw">def</span> <span class="syn-fn">page</span><span class="syn-brk">(</span><span class="syn-param">url</span>,<span class="syn-param">skip</span><span class="syn-brk">)</span>:
+    params = <span class="syn-brk">{</span><span class="syn-str">"limit"</span>: 10, <span class="syn-str">"skip"</span>: skip<span class="syn-brk">}</span>
+    response = requests.<span class="syn-fn">get</span><span class="syn-brk">(</span>url, params<span class="syn-brk">)</span>
+    <span class="syn-kw">return</span> response.<span class="syn-fn">json</span><span class="syn-brk">(</span><span class="syn-brk">)</span><span class="syn-brk">[</span><span class="syn-str">"products"</span><span class="syn-brk">]</span>
+
+
+<span class="syn-kw">class</span> Store:
+    <span class="syn-kw">def</span> <span class="syn-fn">__init__</span><span class="syn-brk">(</span>self, url<span class="syn-brk">)</span>:
+        self.url = url
+
+    <span class="syn-kw">def</span> <span class="syn-fn">items</span><span class="syn-brk">(</span>self<span class="syn-brk">)</span>:
+        skip = 0
+        <span class="syn-kw">while</span> <span class="syn-kw">True</span>:
+            batch = <span class="syn-fn">page</span><span class="syn-brk">(</span>self.url, skip<span class="syn-brk">)</span>
+            <span class="syn-kw">yield</span> <span class="syn-kw">from</span> batch
+            <span class="syn-kw">if</span> <span class="syn-fn">len</span><span class="syn-brk">(</span>batch<span class="syn-brk">)</span> < 10:
+                <span class="syn-kw">break</span>
+            skip += 10</pre>
+          </div>
+          <div class="d-tag">classe · devolve um gerador</div>
+        </div>
+        <div class="dialect-col">
+          <div class="d-fname">fetcher.py</div>
+          <div class="dialect">
+<pre><span class="syn-kw">import</span> asyncio
+<span class="syn-kw">import</span> httpx
+
+<span class="syn-kw">async</span> <span class="syn-kw">def</span> <span class="syn-fn">fetch</span><span class="syn-brk">(</span><span class="syn-param">client</span>,<span class="syn-param">url</span><span class="syn-brk">)</span>:
+    response = <span class="syn-kw">await</span> client.<span class="syn-fn">get</span><span class="syn-brk">(</span>url<span class="syn-brk">)</span>
+    <span class="syn-kw">return</span> response.<span class="syn-fn">json</span><span class="syn-brk">(</span><span class="syn-brk">)</span>
+
+<span class="syn-kw">async</span> <span class="syn-kw">def</span> <span class="syn-fn">all_pages</span><span class="syn-brk">(</span>client, urls<span class="syn-brk">)</span>:
+    jobs = <span class="syn-brk">[</span><span class="syn-brk">]</span>
+    <span class="syn-kw">for</span> url <span class="syn-kw">in</span> urls:
+        jobs.<span class="syn-fn">append</span><span class="syn-brk">(</span><span class="syn-fn">fetch</span><span class="syn-brk">(</span>client, url<span class="syn-brk">)</span><span class="syn-brk">)</span>
+    <span class="syn-kw">return</span> <span class="syn-kw">await</span> asyncio.<span class="syn-fn">gather</span><span class="syn-brk">(</span>*jobs<span class="syn-brk">)</span></pre>
+          </div>
+          <div class="d-tag">assíncrono · páginas em paralelo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    /* as caixas são code boxes de hairline (padrão do slide 13), não moldura
+       desenhada. a entrada é um script por vez, da esquerda para a direita:
+       os três dialetos são alternativas em paralelo, e a leitura pede essa
+       ordem. */
+    HW.scene("parallel-dialects", {
+      fire: function () {
+        var scene = document.getElementById("scene-parallel-dialects");
+        if (!scene) return;
+        var cols = scene.querySelectorAll(".dialect-col");
+        if (!cols.length) return;
+        gsap.killTweensOf(cols);
+        gsap.fromTo(cols,
+          { opacity: 0, y: 22 },
+          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.24 });
+      }
+    });
+  </script>
+</template>

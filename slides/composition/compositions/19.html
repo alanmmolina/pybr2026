@@ -1,0 +1,153 @@
+<template>
+  <div data-composition-id="pipeline" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner">
+      <h1 class="headline cmd-title" data-anim=""><span class="title-chip"><span class="brand">dlt</span>.pipeline</span></h1>
+      <div class="trig-row">
+        <div class="flow-end trig-side"><span class="ra-logo" style="font-size: 40px;">RAWG</span><span class="flow-file" style="font-size: 17px;">api.rawg.io/api</span></div>
+        <svg class="trig-flow" aria-hidden="true"></svg>
+        <div class="code-box trig-box">
+          <pre style="font-size: 22px; line-height: 1.5;">pipeline = dlt.<span class="syn-fn">pipeline</span><span class="syn-brk">(</span><span class="tf-hl">"rawg"</span>, destination=<span class="syn-str">"duckdb"</span><span class="syn-brk">)</span>
+  info = pipeline.<span class="syn-fn">run</span><span class="syn-brk">(</span><span class="syn-fn">rawg_source</span><span class="syn-brk">(</span><span class="syn-brk">)</span></pre>
+          <div class="trig-ret">
+            <div class="trig-ret-label"><span class="repl-ps">&gt;&gt;&gt;</span> info.load_packages[0].load_id</div>
+            <div class="trig-ret-val"><span class="id-hl">'1790731675.145563'</span></div>
+          </div>
+        </div>
+        <svg class="trig-flow" aria-hidden="true"></svg>
+        <div class="flow-end trig-side"><img class="raw" src="vendor/logos/duckdb-white.svg" alt="DuckDB" style="height: 72px;"><span class="flow-file" style="font-size: 17px;"><span class="tf-hl">rawg</span>.duckdb</span></div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-station">
+          <div class="flow-file flow-title"><span class="flow-path">~/.dlt/pipelines/<span class="tf-hl">rawg</span>/</span><br><span class="flow-path">normalize/extracted/<span class="id-hl">1790731675.145563</span>/new_jobs/</span><br><span class="res-hl">games</span>.014597893b.0.typed-jsonl.gz</div>
+          <div class="code-box flow-box">
+            <pre class="flow-code"><span class="syn-brk">{</span> <span class="syn-str">"id"</span>: <span class="syn-num">3498</span>,
+    <span class="syn-str">"slug"</span>: <span class="syn-str">"grand-theft-auto-v"</span>,
+    <span class="syn-str">"name"</span>: <span class="syn-str">"Grand Theft Auto V"</span>,
+    <span class="syn-str">"released"</span>: <span class="syn-str">"2013-09-17"</span>,
+    <span class="syn-str">"tba"</span>: <span class="syn-kw">false</span>,
+    <span class="syn-str">"background_image"</span>: <span class="syn-str">"https://…jpg"</span>,
+    <span class="syn-str">"rating"</span>: <span class="syn-num">4.47</span>,
+    <span class="syn-str">"rating_top"</span>: <span class="syn-num">5</span>, <span class="syn-cmt">…</span> <span class="syn-brk">}</span></pre>
+          </div>
+          <div class="stack-cap hand flow-phase">extract</div>
+        </div>
+        <svg class="flow-arr" aria-hidden="true"></svg>
+        <div class="flow-station">
+          <div class="flow-file flow-title"><span class="flow-path">~/.dlt/pipelines/<span class="tf-hl">rawg</span>/</span><br><span class="flow-path">schemas/</span><br><span class="tf-hl">rawg</span>.schema.json</div>
+          <div class="code-box flow-box">
+            <pre class="flow-code"><span class="syn-str">"name"</span>: <span class="tf-hl">"rawg"</span>,
+  <span class="syn-str">"tables"</span>: <span class="syn-brk">{</span> <span class="res-hl">"games"</span>: <span class="syn-brk">{</span>
+    <span class="syn-str">"columns"</span>: <span class="syn-brk">{</span>
+      <span class="syn-str">"id"</span>: <span class="syn-brk">{</span> <span class="syn-str">"data_type"</span>: <span class="syn-str">"bigint"</span>,
+              <span class="syn-str">"primary_key"</span>: <span class="syn-kw">true</span> <span class="syn-brk">}</span>,
+      <span class="syn-str">"name"</span>: <span class="syn-brk">{</span> <span class="syn-str">"data_type"</span>: <span class="syn-str">"text"</span> <span class="syn-brk">}</span>,
+      <span class="syn-str">"rating"</span>: <span class="syn-brk">{</span> <span class="syn-str">"data_type"</span>: <span class="syn-str">"double"</span> <span class="syn-brk">}</span>,
+      <span class="syn-cmt">…</span> <span class="syn-brk">}</span> <span class="syn-brk">}</span></pre>
+          </div>
+          <div class="stack-cap hand flow-phase">normalize</div>
+        </div>
+        <svg class="flow-arr" aria-hidden="true"></svg>
+        <div class="flow-station">
+          <div class="flow-file flow-title"><span class="flow-path">~/.dlt/pipelines/<span class="tf-hl">rawg</span>/</span><br><span class="flow-path">load/loaded/<span class="id-hl">1790731675.145563</span>/completed_jobs/</span><br><span class="res-hl">games</span>.5c5a686297.0.insert_values.gz</div>
+          <div class="code-box flow-box">
+            <pre class="flow-code"><span class="syn-kw">INSERT INTO</span> <span class="syn-brk">{</span><span class="syn-brk">}</span><span class="syn-brk">(</span><span class="syn-str">"id"</span>,<span class="syn-str">"slug"</span>,<span class="syn-str">"name"</span>,
+    <span class="syn-str">"released"</span>,<span class="syn-str">"tba"</span>,<span class="syn-str">"background_image"</span>,
+    <span class="syn-str">"rating"</span>,<span class="syn-str">"rating_top"</span>, <span class="syn-cmt">…</span><span class="syn-brk">)</span>
+  <span class="syn-kw">VALUES</span>
+  <span class="syn-brk">(</span><span class="syn-num">3498</span>, E<span class="syn-str">'grand-theft-auto-v'</span>,
+   E<span class="syn-str">'Grand Theft Auto V'</span>,
+   E<span class="syn-str">'2013-09-17'</span>, <span class="syn-kw">False</span>,
+   E<span class="syn-str">'https://…jpg'</span>, <span class="syn-num">4.47</span>, <span class="syn-num">5</span>, <span class="syn-cmt">…</span><span class="syn-brk">)</span></pre>
+          </div>
+          <div class="stack-cap hand flow-phase">load</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var pipelineFlowPrepped = false;
+function firePipeline() {
+  var scene = document.getElementById("scene-pipeline");
+  if (!scene) return;
+  var trigBox = scene.querySelector(".trig-box");
+  var trigSides = scene.querySelectorAll(".trig-side");
+  var endFrames = scene.querySelectorAll(".flow-end .ra-box-frame path");
+  var flowSvg = scene.querySelectorAll(".trig-flow");
+  var flowDash = scene.querySelectorAll(".flow-dash");
+  var stations = scene.querySelectorAll(".flow-station");
+  var arrs = scene.querySelectorAll(".flow-arr path");
+
+  var tl = gsap.timeline();
+  gsap.set(trigBox, { opacity: 0, y: 16 });
+  gsap.set(trigSides, { opacity: 0, y: 16 });
+  gsap.set(flowSvg, { opacity: 0 });
+  gsap.set(stations, { opacity: 0, y: 18 });
+  gsap.set(arrs, { opacity: 0, y: 18 });
+
+  /* 1) o código primeiro */
+  tl.to(trigBox, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", overwrite: "auto" }, 0);
+  /* 2) as pontas RAWG/DuckDB (moldura sloppy se desenhando) e o conector de fluxo */
+  tl.to(trigSides, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.1, overwrite: "auto" }, 0.18);
+  tl.to(endFrames, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out", stagger: 0.1, overwrite: "auto" }, 0.22);
+  tl.to(flowSvg, { opacity: 1, duration: 0.35, ease: "power2.out", stagger: 0.08, overwrite: "auto" }, 0.3);
+  /* 3) steps da esquerda para a direita — cada seta acompanha o movimento
+        da estação que ela liga (slide + draw-in juntos) */
+  tl.to(stations[0], { opacity: 1, y: 0, duration: 0.42, ease: "power2.out", overwrite: "auto" }, 0.5);
+  tl.to(arrs[0], { opacity: 1, y: 0, strokeDashoffset: 0, duration: 0.42, ease: "power2.out", overwrite: "auto" }, 0.66);
+  tl.to(stations[1], { opacity: 1, y: 0, duration: 0.42, ease: "power2.out", overwrite: "auto" }, 0.66);
+  tl.to(arrs[1], { opacity: 1, y: 0, strokeDashoffset: 0, duration: 0.42, ease: "power2.out", overwrite: "auto" }, 0.82);
+  tl.to(stations[2], { opacity: 1, y: 0, duration: 0.42, ease: "power2.out", overwrite: "auto" }, 0.82);
+
+  /* o dado segue fluindo: tracejado marchando nos conectores */
+  if (flowDash.length) {
+    gsap.to(flowDash, { strokeDashoffset: "-=20", duration: 1.1, repeat: -1, ease: "none" });
+  }
+}
+
+function prepPipelineFlow() {
+  if (pipelineFlowPrepped) return;
+  var scene = document.getElementById("scene-pipeline");
+  if (!scene) return;
+  pipelineFlowPrepped = true;
+  var SVGN = "http://www.w3.org/2000/svg";
+
+  var arrs = scene.querySelectorAll(".flow-arr");
+  for (var a = 0; a < arrs.length; a++) {
+    var aw = Math.round(arrs[a].getBoundingClientRect().width);
+    arrs[a].setAttribute("viewBox", "0 0 " + aw + " 36");
+    makeStrokedPath(arrs[a], hwConnector(HW_ARROW_GAP, 18, aw - HW_ARROW_GAP, 30 + a * 13), 4, "#B7FF06");
+  }
+
+  /* molduras sloppy nas caixas das pontas (RAWG / DuckDB) */
+  var ends = scene.querySelectorAll(".flow-end");
+  for (var e = 0; e < ends.length; e++) {
+    var ew = ends[e].offsetWidth, eh = ends[e].offsetHeight;
+    var efsvg = document.createElementNS(SVGN, "svg");
+    efsvg.setAttribute("class", "ra-box-frame");
+    efsvg.setAttribute("viewBox", "0 0 " + ew + " " + eh);
+    efsvg.setAttribute("aria-hidden", "true");
+    makeStrokedPath(efsvg, hwWobbleRect(ew, eh, 12, 40 + e * 23, 3), 3, "#727272");
+    ends[e].appendChild(efsvg);
+  }
+
+  /* conectores de fluxo entre RAWG → código → DuckDB: linha tracejada que
+     marcha continuamente + ponteiro sólido na ponta (direção do dado) —
+     verde do dlt porque é o dlt quem faz o dado fluir */
+  var flows = scene.querySelectorAll(".trig-flow");
+  for (var f = 0; f < flows.length; f++) {
+    var fw = 84, fy = 18;
+    flows[f].setAttribute("viewBox", "0 0 " + fw + " 36");
+    /* mesmo hwFlowArrow da faixa de baixo: corpo tracejado + ponta canônica,
+       com HW_ARROW_GAP de folga para cada lado. */
+    hwFlowArrow(flows[f], HW_ARROW_GAP, fy, fw - HW_ARROW_GAP, 70 + f * 9, "#B7FF06");
+  }
+}
+
+    HW.scene("pipeline", {
+      prep: function () {
+        prepPipelineFlow();
+      },
+      fire: firePipeline
+    });
+  </script>
+</template>

@@ -1,0 +1,76 @@
+<template>
+  <div data-composition-id="cover" data-width="1920" data-height="1080" data-duration="10" style="position:absolute; inset:0; overflow:hidden; background:#0F0F0F;">
+    <div class="slide-inner cover-inner">
+      <!-- lockup oficial da Python Brasil 2026 (Ana Terhorst / APyB), usada como
+           está: sem distorcer e sem recolorir. -->
+      <img class="pybr-lockup" src="vendor/pybr/lockup-on-dark.png" alt="Python Brasil 2026" data-anim="">
+      <div class="cover-rule-lock" data-anim=""></div>
+      <h1 class="headline cover-title" data-anim=""><span class="brand">dlt</span> <span class="muted">(data load tool)</span></h1>
+      <div class="sub cover-sub" data-anim="">ingestão de dados <span class="sub-tail">do jeito Pythônico</span><!-- sublinhado sloppy em lima, filho do subtítulo para herdar
+           a posição dele. cor de marca só em elemento desenhado à mão. --><svg class="cover-underline" viewBox="0 0 340 14" aria-hidden="true"></svg></div>
+      <div class="footer cover-footer">
+        <div class="who"><strong>Alan Molina</strong> · Engenheiro de Dados</div>
+        <div class="cover-rule"></div>
+        <div class="site"><img src="vendor/icon.svg" alt="" class="logo">alanmmolina.com</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function desenhaSublinhado() {
+      var sc = document.getElementById("scene-cover");
+      if (!sc) return;
+      var svg = sc.querySelector(".cover-underline");
+      var tail = sc.querySelector(".sub-tail");
+      var sub = sc.querySelector(".cover-sub");
+      if (!svg || !tail || !sub) return;
+      /* medidas relativas ao próprio subtítulo: offsetWidth de elemento
+         inline subestima a largura, e a coordenada de página sai errada
+         enquanto o font-display:swap não assenta. */
+      var sr = sub.getBoundingClientRect(), tr = tail.getBoundingClientRect();
+      var w = Math.round(tr.width);
+      var left = Math.round(tr.left - sr.left);
+      svg.innerHTML = "";
+      svg.setAttribute("viewBox", "0 0 " + w + " 12");
+      svg.style.left = left + "px";
+      svg.style.width = w + "px";
+      /* ancora no fim do TRECHO, não no fim da caixa de linha: com line-height
+         1.45 sobram ~7px de descender depois das letras, e o traço ficava
+         longe mesmo com margin-top pequeno. */
+      svg.style.top = Math.round(tr.bottom - sr.top) + "px";
+      /* eixo suave com espessura constante: hwSmoothPath dá a bezier, e não a
+         polilinha do hwWobblePoly (que era o que criava bicos). o arco do eixo
+         continua, só a pressão sai. */
+      var pts = [], n = 6;
+      for (var i = 0; i < n; i++) {
+        var t2 = i / (n - 1);
+        pts.push([2 + (w - 4) * t2, 5 - 1.2 * Math.sin(Math.PI * t2)]);
+      }
+      makeStrokedPath(svg, hwSmoothPath(pts, 17, 0.8), 5, "#B7FF06");
+    }
+
+    function fireCover() {
+      /* as fontes são vendadas com font-display:swap. medir antes do Roboto
+         aplicar dava 407px onde depois há 431 — o traço saía curto. espera
+         as fontes, aí mede, desenha e anima. */
+      var roda = function () {
+        desenhaSublinhado();
+        var sc = document.getElementById("scene-cover");
+        if (!sc) return;
+        var p = sc.querySelector(".cover-underline path");
+        if (!p) return;
+        /* de volta ao draw-in do deck: com largura fixa o traço é stroke de
+           novo, e o strokeDashoffset volta a valer. */
+        gsap.killTweensOf(p);
+        p.style.strokeDashoffset = p.getAttribute("data-hideoff");
+        gsap.to(p, { strokeDashoffset: 0, duration: 0.65, ease: "power2.out" });
+      };
+      if (document.fonts && document.fonts.ready && document.fonts.status !== "loaded") {
+        document.fonts.ready.then(roda);
+      } else {
+        roda();
+      }
+    }
+
+    HW.scene("cover", { prep: function () {}, fire: fireCover });
+  </script>
+</template>
