@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR" saved-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dlt: schema, normalização e incremental loading</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&family=Fira+Code:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<h1>Aula 5: Schema, normalização e incremental loading</h1>
+
+<div class="lesson-meta">
+  <strong>Objetivo:</strong> Entender como o dlt infere schemas, achata dados aninhados em tabelas relacionais, lida com tipos divergentes (variant columns) e implementa carga incremental com cursor e merge strategies.<br>
+  <strong>Requer:</strong> <a href="0004-pipeline-destination.html">Aula 4</a>.<br>
+  <strong>Fonte primária:</strong> <a href="https://dlthub.com/docs/general-usage/schema">Schema</a> e <a href="https://dlthub.com/docs/general-usage/incremental-loading">Incremental loading</a> (docs oficiais).
+</div>
+
+<h2>Schema inference: como o dlt "entende" seus dados</h2>
+
+<p>Quando um resource yielda dados, o dlt <strong>infere o schema automaticamente</strong> na fase de normalize. Ele observa os registros, detecta tipos, e gera a estrutura da tabela:</p>
+
+<pre><code><span class="syn-cmt"># Exemplo: o dlt infere "id" como bigint, "name" como text,</span>
+<span class="syn-cmt"># "rating" como double precision, "metacritic" como bigint e</span>
+<span class="syn-cmt"># "updated" como timestamp (detector de ISO 8601)</span>
+@dlt.resource
+<span class="syn-kw">def</span> <span class="syn-fn">games</span>():
+    <span class="syn-kw">yield</span> {<span class="syn-str">"id"</span>: <span class="syn-num">3498</span>, <span class="syn-str">"name"</span>: <span class="syn-str">"Grand Theft Auto V"</span>,
+           <span class="syn-str">"rating"</span>: <span class="syn-num">4.47</span>, <span class="syn-str">"metacritic"</span>: <span class="syn-num">96</span>,
+           <span class="syn-str">"updated"</span>: <span class="syn-str">"2026-06-03T12:00:00"</span>}</code></pre>
+
+<p>A inferência usa <strong>detectors configuráveis</strong> — o detector de ISO 8601 (string de data vira <code>timestamp</code>) vem habilitado por padrão. Você pode adicionar/remover detectors, definir <em>preferred types</em> por regex (ex.: toda coluna <code>*_at</code> vira <code>timestamp</code>) e regras de hints globais:</p>
+
+<pre><code><span class="syn-cmt"># preferred types: colunas que casam o padrão ganham o tipo</span>
+settings:
+  preferred_types:
+    re:timestamp: timestamp
+    created_at: timestamp
+    updated_at: timestamp</code></pre>
+
+<p>Se registros posteriores trazem colunas novas, o dlt evolui o schema automaticamente (modo <code>evolve</code>). Isso é controlável com schema contracts — <a href="0006-schema-contracts-ecossistema.html">Aula 6</a>.</p>
+
+<h2>Naming conventions</h2>
+
+<p>O dlt traduz identificadores para o namespace que o destino aceita. O padrão: <strong>snake_case minúsculo</strong>, só alfanuméricos e underscore, e <strong>aninhamento expresso com <code>__</code> duplo</strong>:</p>
+
+<pre><code><span class="syn-cmt"># "createdAt" → created_at; "CamelCase" → camel_case</span>
+<span class="syn-cmt"># chave "esrb_rating" { "name" } → coluna esrb_rating__name</span></code></pre>
+
+<p>A mesma convenção vale para <strong>todos os destinos</strong> — você vê os mesmos nomes de tabelas e colunas em DuckDB, Snowflake ou Postgres. (Se quiser manter <code>camelCase</code> literal, existe a convenção <code>direct</code> — mas os docs recomendam: "use nomes simples, curtos, minúsculos".)</p>
+
+<h2>Normalização de dados aninhados</h2>
+
+<p>Este é um dos recursos mais poderosos do dlt. Dados JSON com nested lists e dicts são automaticamente "achatados" em tabelas relacionais:</p>
+
+<pre><code><span class="syn-cmt"># Item do endpoint /games — campos e tipos conforme a spec Swagger</span>
+<span class="syn-cmt"># oficial da RAWG (api.rawg.io/docs); valores ilustrativos</span>
+{
+    <span class="syn-str">"id"</span>: <span class="syn-num">3498</span>,
+    <span class="syn-str">"slug"</span>: <span class="syn-str">"grand-theft-auto-v"</span>,
+    <span class="syn-str">"name"</span>: <span class="syn-str">"Grand Theft Auto V"</span>,
+    <span class="syn-str">"rating"</span>: <span class="syn-num">4.47</span>,
+    <span class="syn-str">"updated"</span>: <span class="syn-str">"2026-06-03T12:00:00"</span>,
+    <span class="syn-str">"platforms"</span>: [
+        {<span class="syn-str">"platform"</span>: {<span class="syn-str">"id"</span>: <span class="syn-num">4</span>, <span class="syn-str">"name"</span>: <span class="syn-str">"PC"</span>, <span class="syn-str">"slug"</span>: <span class="syn-str">"pc"</span>},
+         <span class="syn-str">"released_at"</span>: <span class="syn-str">"2015-04-14"</span>},
+        {<span class="syn-str">"platform"</span>: {<span class="syn-str">"id"</span>: <span class="syn-num">18</span>, <span class="syn-str">"name"</span>: <span class="syn-str">"PlayStation 4"</span>, <span class="syn-str">"slug"</span>: <span class="syn-str">"playstation4"</span>},
+         <span class="syn-str">"released_at"</span>: <span class="syn-str">"2014-11-18"</span>}
+    ],
+    <span class="syn-str">"esrb_rating"</span>: {<span class="syn-str">"id"</span>: <span class="syn-num">4</span>, <span class="syn-str">"name"</span>: <span class="syn-str">"Mature"</span>, <span class="syn-str">"slug"</span>: <span class="syn-str">"mature"</span>},
+    <span class="syn-str">"added_by_status"</span>: {<span class="syn-str">"owned"</span>: <span class="syn-num">13165</span>, <span class="syn-str">"toplay"</span>: <span class="syn-num">720</span>}
+}
+
+<span class="syn-cmt"># Schema gerado pelo dlt:</span>
+<span class="syn-cmt"># Tabela raiz: games</span>
+<span class="syn-cmt"># Colunas: id, slug, name, rating, updated, esrb_rating__id,</span>
+<span class="syn-cmt">#          esrb_rating__name, esrb_rating__slug, added_by_status__owned,</span>
+<span class="syn-cmt">#          added_by_status__toplay (dicts → colunas com __)</span>
+<span class="syn-cmt"># Tabela aninhada: games__platforms (lista → tabela filha)</span>
+<span class="syn-cmt"># Colunas: platform__id, platform__name, platform__slug, released_at,</span>
+<span class="syn-cmt">#          _dlt_parent_id, _dlt_list_idx</span></code></pre>
+
+<svg viewBox="0 0 720 272" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="normalize-title normalize-desc" style="width:100%;height:auto;display:block;margin:1.2rem 0;">
+  <title id="normalize-title">Normalização: JSON aninhado vira tabelas relacionais ligadas por _dlt_parent_id</title>
+  <desc id="normalize-desc">Duas tabelas: a raiz games e a aninhada games__platforms. A coluna _dlt_parent_id da tabela filha referencia a coluna _dlt_id da tabela raiz, formando a referência aninhada.</desc>
+  <defs>
+    <marker id="normalize-arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#B7FF06"/></marker>
+  </defs>
+
+  <path d="M 440,164 H 368 Q 360,164 360,172 V 180 Q 360,188 368,188 H 280" fill="none" stroke="#B7FF06" stroke-width="1.2" marker-end="url(#normalize-arr)"/>
+  <rect x="374" y="144" width="60" height="12" rx="2" fill="transparent"/>
+  <text x="404" y="153" fill="#B7FF06" font-size="8" font-family="'Fira Code',monospace" text-anchor="middle" letter-spacing="0.06em">parent_key</text>
+
+  <rect x="40" y="48" width="240" height="176" rx="5" fill="transparent" stroke="#3A3A3A" stroke-width="1"/>
+  <rect x="40" y="80" width="240" height="24" fill="transparent"/>
+  <rect x="40" y="128" width="240" height="24" fill="transparent"/>
+  <rect x="40" y="176" width="240" height="24" fill="transparent"/>
+  <line x1="40" y1="80" x2="280" y2="80" stroke="#3A3A3A" stroke-width="1"/>
+  <text x="56" y="69" fill="#eaeaea" font-size="12" font-weight="600" font-family="'Roboto',sans-serif">games</text>
+  <text x="264" y="69" fill="#8a8a8a" font-size="8" font-family="'Fira Code',monospace" text-anchor="end" letter-spacing="0.08em">TABLE</text>
+  <text x="56" y="96" fill="#eaeaea" font-size="12" font-family="'Roboto',sans-serif">id</text>
+  <text x="264" y="96" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">bigint</text>
+  <rect x="184" y="84" width="24" height="16" rx="2" fill="transparent" stroke="#3A3A3A" stroke-width="0.8"/>
+  <text x="196" y="96" fill="#eaeaea" font-size="8" font-family="'Fira Code',monospace" text-anchor="middle">PK</text>
+  <text x="56" y="120" fill="#eaeaea" font-size="12" font-family="'Roboto',sans-serif">name</text>
+  <text x="264" y="120" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">text</text>
+  <text x="56" y="144" fill="#eaeaea" font-size="12" font-family="'Roboto',sans-serif">esrb_rating__name</text>
+  <text x="264" y="144" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">text</text>
+  <text x="56" y="168" fill="#eaeaea" font-size="12" font-family="'Roboto',sans-serif">added_by_status__owned</text>
+  <text x="264" y="168" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">bigint</text>
+  <text x="56" y="192" fill="#8a8a8a" font-size="12" font-family="'Roboto',sans-serif">_dlt_id</text>
+  <text x="264" y="192" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">text</text>
+  <text x="56" y="216" fill="#8a8a8a" font-size="12" font-family="'Roboto',sans-serif">_dlt_load_id</text>
+  <text x="264" y="216" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">text</text>
+
+  <rect x="440" y="48" width="240" height="152" rx="5" fill="transparent" stroke="#3A3A3A" stroke-width="1"/>
+  <rect x="440" y="80" width="240" height="24" fill="transparent"/>
+  <rect x="440" y="128" width="240" height="24" fill="transparent"/>
+  <rect x="440" y="176" width="240" height="24" fill="transparent"/>
+  <line x1="440" y1="80" x2="680" y2="80" stroke="#3A3A3A" stroke-width="1"/>
+  <text x="456" y="69" fill="#eaeaea" font-size="12" font-weight="600" font-family="'Roboto',sans-serif">games__platforms</text>
+  <text x="664" y="69" fill="#8a8a8a" font-size="8" font-family="'Fira Code',monospace" text-anchor="end" letter-spacing="0.08em">TABLE</text>
+  <text x="456" y="96" fill="#eaeaea" font-size="12" font-family="'Roboto',sans-serif">platform__name</text>
+  <text x="664" y="96" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">text</text>
+  <text x="456" y="120" fill="#eaeaea" font-size="12" font-family="'Roboto',sans-serif">released_at</text>
+  <text x="664" y="120" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">date</text>
+  <text x="456" y="144" fill="#8a8a8a" font-size="12" font-family="'Roboto',sans-serif">_dlt_id</text>
+  <text x="664" y="144" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">text</text>
+  <text x="456" y="168" fill="#8a8a8a" font-size="12" font-family="'Roboto',sans-serif">_dlt_parent_id</text>
+  <text x="664" y="168" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">text</text>
+  <rect x="584" y="156" width="24" height="16" rx="2" fill="rgba(183,255,6,0.12)" stroke="#B7FF06" stroke-width="0.8"/>
+  <text x="596" y="168" fill="#B7FF06" font-size="8" font-family="'Fira Code',monospace" text-anchor="middle">FK</text>
+  <text x="456" y="192" fill="#8a8a8a" font-size="12" font-family="'Roboto',sans-serif">_dlt_list_idx</text>
+  <text x="664" y="192" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">bigint</text>
+</svg>
+
+<h3>Anatomia das colunas de sistema</h3>
+
+<table>
+  <tr><th>Coluna</th><th>Hint</th><th>Função</th></tr>
+  <tr><td><code>_dlt_id</code></td><td><code>row_key</code></td><td>Identidade única da linha. Em root tables: string aleatória (ou hash determinístico do <code>primary_key</code> no merge). Em nested tables: hash de parent + posição na lista.</td></tr>
+  <tr><td><code>_dlt_load_id</code></td><td>—</td><td>Qual load package trouxe a linha (linhagem até a execução)</td></tr>
+  <tr><td><code>_dlt_parent_id</code></td><td><code>parent_key</code></td><td>FK para o <code>_dlt_id</code> da linha pai</td></tr>
+  <tr><td><code>_dlt_root_id</code></td><td><code>root_key</code></td><td>FK direto para a root table, pulando pais intermediários (necessário para merge)</td></tr>
+  <tr><td><code>_dlt_list_idx</code></td><td>—</td><td>Posição do elemento na lista aninhada original</td></tr>
+</table>
+
+<p>O conjunto <code>parent</code> + <code>row_key</code> + <code>parent_key</code> forma a <strong>nested reference</strong> — a chave estrangeira relacional que liga as tabelas. É o que permite que <code>replace</code> e <code>merge</code> funcionem corretamente em dados aninhados.</p>
+
+<h3>max_table_nesting</h3>
+
+<p>Você controla a profundidade da normalização:</p>
+
+<pre><code><span class="syn-cmt"># 0: nada é expandido, tudo vira JSON</span>
+@dlt.resource(max_table_nesting=<span class="syn-num">0</span>)
+
+<span class="syn-cmt"># 1: só expande um nível de listas/dicts</span>
+@dlt.resource(max_table_nesting=<span class="syn-num">1</span>)
+
+<span class="syn-cmt"># 2-3: recomendado para produzir schemas mais legíveis</span>
+@dlt.source(max_table_nesting=<span class="syn-num">2</span>)</code></pre>
+
+<h2>Variant columns: quando os tipos divergem</h2>
+
+<p>O normalizer padrão tenta <strong>coerção</strong> entre tipos compatíveis (<code>"123"</code> → <code>int</code>, <code>int</code> → <code>text</code>). Quando a coerção falha, o dlt cria uma <strong>variant column</strong> em vez de quebrar:</p>
+
+<pre><code><span class="syn-cmt"># Rodada 1: metacritic é bigint</span>
+[ {<span class="syn-str">"metacritic"</span>: <span class="syn-num">96</span>} ]
+
+<span class="syn-cmt"># Rodada 2: a fonte mandou uma string não-numérica</span>
+[ {<span class="syn-str">"metacritic"</span>: <span class="syn-num">96</span>}, {<span class="syn-str">"metacritic"</span>: <span class="syn-str">"tbd"</span>} ]
+
+<span class="syn-cmt"># Schema resultante: coluna metacritic (bigint) + coluna metacritic__v_text (text)</span>
+<span class="syn-cmt"># Valores que não couberam em bigint vão para metacritic__v_text</span></code></pre>
+
+<div class="callout">
+  <div class="callout-title">Controle fino de tipos</div>
+  <p>Existe um normalizer alternativo (<code>relational_no_coercion</code>) que <strong>nunca</strong> converte entre tipos — todo mismatch vira variant column. E se uma coluna específica deve ser tratada como JSON bruto (sem flattening), force com <code>columns={"col": {"data_type": "json"}}</code>.</p>
+</div>
+
+<h2>Incremental loading: só o que mudou</h2>
+
+<p>Carregamento incremental significa trazer apenas dados <strong>novos ou modificados</strong> — baixa latência, baixo custo. O dlt faz isso com <code>dlt.sources.incremental</code>:</p>
+
+<pre><code><span class="syn-kw">import</span> dlt
+<span class="syn-kw">from</span> dlt.sources <span class="syn-kw">import</span> incremental
+
+@dlt.resource(primary_key=<span class="syn-str">"id"</span>, write_disposition=<span class="syn-str">"merge"</span>)
+<span class="syn-kw">def</span> <span class="syn-fn">games</span>(
+    updated_at=dlt.sources.incremental(cursor_path=<span class="syn-str">"updated"</span>, initial_value=<span class="syn-str">"1970-01-01T00:00:00"</span>)
+):
+    <span class="syn-cmt"># `updated_at.last_value` contém o maior timestamp já carregado</span>
+    <span class="syn-cmt"># e a RAWG aceita filtro por intervalo: updated=DATA,DATA</span>
+    dados = client.paginate(path=<span class="syn-str">"games"</span>, params={
+        <span class="syn-str">"updated"</span>: <span class="syn-str">f"{updated_at.last_value},{agora}"</span>,
+    })
+    <span class="syn-kw">yield from</span> dados</code></pre>
+
+<p>O dlt persiste o cursor (<code>last_value</code>) no <strong>pipeline state</strong> entre execuções. Na próxima rodada, <code>updated_at.last_value</code> automaticamente começa de onde parou. É o mecanismo que torna o pipeline <strong>resumível</strong> — inclusive de outra máquina, já que o state vive no destino.</p>
+
+<h3>Como funciona internamente</h3>
+
+<ol>
+  <li><strong>Primeira execução:</strong> carrega do <code>initial_value</code> até o presente. O dlt registra o maior valor de <code>updated_at</code> encontrado.</li>
+  <li><strong>Segunda execução:</strong> o resource começa do último <code>last_value</code> registrado. Só dados novos ou modificados são carregados.</li>
+  <li><strong>Com <code>write_disposition="merge"</code>:</strong> faz upsert com base na <code>primary_key</code>. Registros existentes são atualizados, novos são inseridos.</li>
+</ol>
+
+<h2>Escolhendo a write disposition: o fluxograma</h2>
+
+<p>A primeira pergunta é: <strong>meus dados são stateful ou stateless?</strong></p>
+
+<pre><code>Dados imutáveis (evento, log, page view)?
+  → stateless → append
+
+Dados mutáveis (perfil de usuário, catálogo)?
+  → stateful
+      Precisa manter histórico de mudanças?
+        → SIM → SCD2 (dimensões que mudam lentamente, tipo 2)
+        → NÃO → dá para pedir só "o que mudou desde ontem"?
+            → SIM → merge (upsert incremental)
+            → NÃO → replace (full refresh)</code></pre>
+
+<h3>Merge strategies</h3>
+
+<table>
+  <tr><th>Estratégia</th><th>Comportamento</th><th>Quando usar</th></tr>
+  <tr><td><code>upsert</code> (padrão)</td><td>Insere novos, atualiza existentes por <code>primary_key</code></td><td>CRM, catálogos, entidades com ID estável</td></tr>
+  <tr><td><code>delete-insert</code></td><td>Deleta registros do batch e insere tudo de novo</td><td>Fontes que mandam snapshot completo da entidade</td></tr>
+  <tr><td><code>SCD2</code></td><td>Mantém histórico completo com <code>_dlt_valid_from</code> / <code>_dlt_valid_to</code></td><td>Dimensões que mudam lentamente (cliente trocou de cidade)</td></tr>
+  <tr><td><code>insert-only</code></td><td>Apenas insere; nunca atualiza nem deleta</td><td>Eventos que chegam atrasados, auditoria</td></tr>
+</table>
+
+<h2>Pipeline state: a memória do pipeline</h2>
+
+<p>O estado é um <strong>dicionário Python que vive ao lado dos seus dados</strong>: você grava valores numa execução e os lê na próxima. Internamente, o dlt o usa para o que você já viu nesta aula:</p>
+
+<ul>
+  <li><strong>Cursor values</strong> — o <code>last_value</code> de cada incremental.</li>
+  <li><strong>Schema versions</strong> — o histórico de schemas por tabela.</li>
+  <li><strong>Custom state</strong> — qualquer estado que você mesmo escrever.</li>
+</ul>
+
+<p>No nosso exemplo, o RAWg já usa o estado <strong>sem você escrever uma linha</strong>: o cursor do <code>dlt.sources.incremental</code> é persistido ali automaticamente. Depois de rodar o pipeline, dá para inspecioná-lo em <code>pipeline.state</code> — é exatamente o que o <code>smoke_test.py</code> verifica:</p>
+
+<pre><code><span class="syn-cmt"># onde o cursor incremental do RAWg vive no pipeline state</span>
+state = pipeline.state
+games_state = state[<span class="syn-str">"sources"</span>][<span class="syn-str">"rawg"</span>][<span class="syn-str">"resources"</span>][<span class="syn-str">"games"</span>]
+cursor = games_state[<span class="syn-str">"incremental"</span>][<span class="syn-str">"updated"</span>][<span class="syn-str">"last_value"</span>]
+<span class="syn-cmt"># → "2026-06-03T12:00:00" — o maior `updated` já carregado</span></code></pre>
+
+<p>Isso cobre ~90% do uso de estado. Para o restante — estado customizado — o dlt expõe <strong>dois escopos de acesso</strong>:</p>
+
+<table>
+  <tr><th>Escopo</th><th>API</th><th>Visibilidade</th></tr>
+  <tr><td>Source</td><td><code>dlt.current.source_state()</code></td><td>Compartilhado entre os resources do source; read-only na função do source</td></tr>
+  <tr><td>Resource</td><td><code>dlt.current.resource_state()</code></td><td>Privado de um resource específico</td></tr>
+</table>
+
+<div class="callout">
+  <div class="callout-title">dlt.current.state() é source_state</div>
+  <p>O nome <code>dlt.current.state()</code> ainda existe, mas é um <strong>alias de <code>source_state()</code></strong> (source-scoped) — não um "estado global do pipeline" separado. Verificado no código 1.30.0: <code>dlt/pipeline/current.py</code> tem <code>state = source_state</code>. O estado do pipeline inteiro (todos os sources/resources) fica em <code>pipeline.state</code>.</p>
+</div>
+
+<svg viewBox="0 0 680 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="state-title state-desc" style="width:100%;height:auto;display:block;margin:1.2rem 0;">
+  <title id="state-title">Escopos do estado: pipeline.state contém source_state, que contém resource_state</title>
+  <desc id="state-desc">Três caixas aninhadas: pipeline.state (estado completo), source_state (compartilhado entre resources) e resource_state (privado por resource), a mais interna em destaque.</desc>
+
+  <rect x="32" y="40" width="616" height="288" rx="8" fill="transparent" stroke="#3A3A3A" stroke-width="1"/>
+  <text x="48" y="64" fill="#ABABAB" font-size="8" font-family="'Fira Code',monospace" letter-spacing="0.08em">pipeline.state</text>
+  <text x="48" y="80" fill="#8a8a8a" font-size="8" font-family="'Fira Code',monospace">cursor · schemas · custom state</text>
+
+  <rect x="88" y="96" width="504" height="184" rx="8" fill="transparent" stroke="#3A3A3A" stroke-width="1"/>
+  <text x="104" y="120" fill="#ABABAB" font-size="8" font-family="'Fira Code',monospace" letter-spacing="0.08em">source_state</text>
+  <text x="104" y="136" fill="#8a8a8a" font-size="8" font-family="'Fira Code',monospace">dlt.current.source_state()</text>
+  <text x="104" y="152" fill="#8a8a8a" font-size="8" font-family="'Fira Code',monospace">compartilhado entre resources</text>
+
+  <rect x="144" y="152" width="392" height="80" rx="8" fill="rgba(183,255,6,0.10)" stroke="#B7FF06" stroke-width="1"/>
+  <text x="160" y="176" fill="#B7FF06" font-size="8" font-family="'Fira Code',monospace" letter-spacing="0.08em">resource_state</text>
+  <text x="160" y="196" fill="#8a8a8a" font-size="8" font-family="'Fira Code',monospace">dlt.current.resource_state()</text>
+  <text x="160" y="216" fill="#8a8a8a" font-size="8" font-family="'Fira Code',monospace">privado por resource</text>
+</svg>
+
+<p>O padrão mais comum: guardar uma lista do que já foi processado no escopo do resource, para não reprocessar (ex.: arquivos já baixados):</p>
+
+<pre><code>@dlt.resource(write_disposition=<span class="syn-str">"append"</span>)
+<span class="syn-kw">def</span> <span class="syn-fn">players_games</span>(chess_url, player):
+    <span class="syn-cmt"># resource-scoped: privado deste resource</span>
+    checked = dlt.current.resource_state().setdefault(<span class="syn-str">"archives"</span>, [])
+    <span class="syn-kw">for</span> url <span class="syn-kw">in</span> _archives(chess_url, player):
+        <span class="syn-kw">if</span> url <span class="syn-kw">in</span> checked:
+            <span class="syn-kw">continue</span>
+        checked.append(url)
+        <span class="syn-kw">yield from</span> _get_games(url)</code></pre>
+
+<p>O estado precisa ser JSON-serializável (o dlt trata <code>DateTime</code>, <code>Decimal</code>, <code>bytes</code> e <code>UUID</code> além dos tipos padrão).</p>
+
+<h3>Onde o estado mora — e como ele viaja</h3>
+
+<p>O estado é salvo no working dir local e <strong>sincronizado com o destino</strong>, na tabela <code>_dlt_pipeline_state</code>. A identidade do estado remoto é: <strong>nome do pipeline + localização do destino + dataset</strong>. É isso que torna o pipeline resumível de outra máquina.</p>
+
+<ul>
+  <li>Em orquestradores com filesystem limpo (Airflow), o dlt restaura o estado do destino automaticamente.</li>
+  <li><code>dlt pipeline sync</code> pede o estado de volta manualmente.</li>
+  <li>Se você mantém o working dir entre runs, desligue o sync com <code>restore_from_destination=false</code> no <code>config.toml</code>.</li>
+</ul>
+
+<h3>Quando NÃO usar o estado</h3>
+
+<p>Não use o estado se ele pode crescer para <strong>milhões de registros</strong> (ex.: timestamp de modificação de cada usuário). Nesse caso, use os próprios dados como estado — o dlt expõe o pipeline atual para consultar o destino, com <code>first_run</code> para evitar consultar uma tabela que ainda não existe:</p>
+
+<pre><code>@dlt.resource(name=<span class="syn-str">"user_comments"</span>)
+<span class="syn-kw">def</span> <span class="syn-fn">comments</span>(user_id):
+    pipeline = dlt.current.pipeline()
+    max_id = <span class="syn-num">0</span>
+    <span class="syn-kw">if</span> <span class="syn-kw">not</span> pipeline.first_run:   <span class="syn-cmt"># na 1ª execução a tabela ainda não existe</span>
+        table = pipeline.dataset().table(<span class="syn-str">"user_comments"</span>).to_ibis()
+        <span class="syn-cmt"># seleciona max(_id) para este user_id e usa como filtro</span>
+        ...
+    <span class="syn-kw">yield from</span> dados_filtrados_por_max_id</code></pre>
+
+<h3>Resetando o estado</h3>
+
+<ul>
+  <li><strong>Total:</strong> dropar o dataset do destino, <code>dev_mode=True</code>, ou <code>dlt pipeline &lt;nome&gt; drop --drop-all</code>.</li>
+  <li><strong>Parcial:</strong> <code>dlt pipeline &lt;nome&gt; drop &lt;resource&gt;</code> (estado + tabela de um resource) ou <code>--state-paths</code> (reseta um caminho específico do estado sem tocar tabelas/dados).</li>
+</ul>
+
+<p>Fonte: <a href="https://dlthub.com/docs/general-usage/state">State (docs oficiais)</a>.</p>
+
+<h3>Lag / attribution window</h3>
+
+<p>APIs de analytics costumam "corrigir" dados retroativamente (eventos que chegam atrasados). Para isso, o incremental aceita um <em>lag</em>: o cursor não avança até o "agora", mas até <code>agora - lag</code> — e na próxima rodada a janela é revisada. Com <code>merge</code> no lugar, dados corrigidos são atualizados em vez de duplicados.</p>
+
+<h2>Exemplo do curso: o que a RAWG vira no destino</h2>
+
+<p>O endpoint <code>/games</code> da RAWG é uma aula de JSON aninhado — e o <code>/games/{id}</code> (usado pelo transformer <code>game_details</code>) ainda mais. Veja o que o dlt gera a partir de cada um (código em <a href="../../exemplos/rawg/rawg.py">exemplos/rawg/</a>; o <code>smoke_test.py</code> valida exatamente estas tabelas):</p>
+
+<pre><code><span class="syn-cmt"># Item do /games — campos e tipos conforme a spec Swagger oficial da RAWG</span>
+{
+  <span class="syn-str">"id"</span>: <span class="syn-num">3498</span>, <span class="syn-str">"name"</span>: <span class="syn-str">"Grand Theft Auto V"</span>, <span class="syn-str">"updated"</span>: <span class="syn-str">"2026-06-03T12:00:00"</span>,
+  <span class="syn-str">"platforms"</span>: [{<span class="syn-str">"platform"</span>: {<span class="syn-str">"id"</span>: <span class="syn-num">4</span>, <span class="syn-str">"name"</span>: <span class="syn-str">"PC"</span>, <span class="syn-str">"slug"</span>: <span class="syn-str">"pc"</span>}, <span class="syn-str">"released_at"</span>: <span class="syn-str">"2015-04-14"</span>}, ...],
+  <span class="syn-str">"esrb_rating"</span>: {<span class="syn-str">"id"</span>: <span class="syn-num">4</span>, <span class="syn-str">"name"</span>: <span class="syn-str">"Mature"</span>, <span class="syn-str">"slug"</span>: <span class="syn-str">"mature"</span>},
+  <span class="syn-str">"added_by_status"</span>: {<span class="syn-str">"owned"</span>: <span class="syn-num">13165</span>, <span class="syn-str">"toplay"</span>: <span class="syn-num">720</span>}
+}
+
+<span class="syn-cmt"># Tabelas geradas (verificadas contra um run real, set/2026):</span>
+<span class="syn-cmt"># games            → id, name, updated, esrb_rating__name,</span>
+<span class="syn-cmt">#                    added_by_status__owned, ... (dicts → colunas __)</span>
+<span class="syn-cmt"># games__platforms → lista aninhada (com requirements_en__* —</span>
+<span class="syn-cmt">#                    a própria RAWG já nomeia requirements_en/_ru)</span>
+<span class="syn-cmt"># games__genres, games__tags, games__stores, games__ratings,</span>
+<span class="syn-cmt"># games__short_screenshots, games__parent_platforms → idem</span>
+
+<span class="syn-cmt"># E o transformer: /games/{id} (GameSingle) gera mais nested tables</span>
+<span class="syn-cmt"># game_details                        → description, website, ...</span>
+<span class="syn-cmt"># game_details__platforms, __metacritic_platforms, __alternative_names,</span>
+<span class="syn-cmt"># __developers, __publishers, __genres, __tags, __stores, __ratings,</span>
+<span class="syn-cmt"># __parent_platforms → 24 tabelas no total (genres__games inclusive)</span></code></pre>
+
+<p>O incremental do exemplo usa um recurso nativo do dlt: a RAWG aceita tanto o filtro <code>updated=DATA,DATA</code> (intervalo) quanto <code>ordering=-updated</code> (mais novos primeiro). Declarando <code>row_order="desc"</code> no cursor, o dlt <strong>para de pedir páginas sozinho</strong> quando encontra um registro mais antigo que o cursor, filtra o já carregado e deduplica pelo <code>primary_key</code> — o resource só cuida da paginação pura:</p>
+
+<pre><code><span class="syn-cmt"># o cursor declara a ordem dos dados; o resource só pagina</span>
+@dlt.resource(write_disposition=<span class="syn-str">"merge"</span>, primary_key=<span class="syn-str">"id"</span>)
+<span class="syn-kw">def</span> <span class="syn-fn">games</span>(
+    client,
+    updated_at=dlt.sources.incremental(
+        cursor_path=<span class="syn-str">"updated"</span>, initial_value=<span class="syn-str">"1970-01-01T00:00:00"</span>, row_order=<span class="syn-str">"desc"</span>
+    ),
+):
+    ...</code></pre>
+
+<p>Padrão canônico dos docs de <a href="https://dlthub.com/docs/general-usage/incremental/cursor">cursor-based incremental loading</a> (o exemplo de GitHub Events faz exatamente isso).</p>
+
+<h2>Quiz rápido</h2>
+
+<div class="quiz" id="q1">
+  <h4>Pergunta 1: O que acontece quando um dict aninhado é encontrado nos dados?</h4>
+  <button onclick="check(this, false)">É ignorado (só dados planos são carregados)</button>
+  <button onclick="check(this, false)">É serializado como string JSON na coluna</button>
+  <button onclick="check(this, true)">As chaves viram colunas com prefixo (ex: endereco__cidade)</button>
+  <button onclick="check(this, false)">Cria um banco de dados separado</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <h4>Pergunta 2: O que dlt.sources.incremental("updated_at") faz?</h4>
+  <button onclick="check(this, false)">Cria um índice na coluna updated_at</button>
+  <button onclick="check(this, false)">Ordena os dados por updated_at antes de carregar</button>
+  <button onclick="check(this, true)">Rastreia o maior valor de updated_at já carregado e usa como filtro</button>
+  <button onclick="check(this, false)">Converte updated_at para UTC automaticamente</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <h4>Pergunta 3: max_table_nesting=0 significa:</h4>
+  <button onclick="check(this, false)">Nenhuma tabela é criada</button>
+  <button onclick="check(this, true)">Dados aninhados são armazenados como JSON, sem expandir</button>
+  <button onclick="check(this, false)">Apenas a primeira linha é carregada</button>
+  <button onclick="check(this, false)">Desabilita a inferência de schema</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <h4>Pergunta 4: O que é uma variant column (ex: id__v_text)?</h4>
+  <button onclick="check(this, false)">Uma coluna criptografada para dados sensíveis</button>
+  <button onclick="check(this, false)">Um alias de coluna criado pelo naming convention</button>
+  <button onclick="check(this, true)">Coluna gerada quando valores não podem ser coerceados ao tipo existente</button>
+  <button onclick="check(this, false)">A chave primária virtual de uma nested table</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <h4>Pergunta 5: Qual merge strategy mantém histórico completo de mudanças?</h4>
+  <button onclick="check(this, false)">upsert</button>
+  <button onclick="check(this, false)">delete-insert</button>
+  <button onclick="check(this, true)">SCD2</button>
+  <button onclick="check(this, false)">insert-only</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="ask-followup">
+  <h4>Dúvidas?</h4>
+  <p>Pergunte ao agente. Exemplos: "Como funciona SCD2 na prática com <code>_dlt_valid_from</code>?", "O que são as colunas <code>_dlt_*</code> em detalhe?", "Como configurar lag/attribution window para dados que chegam atrasados?", "Quando usar <code>relational_no_coercion</code>?", "Qual a diferença prática entre <code>resource_state()</code> e <code>source_state()</code>?", "Quando faz sentido usar os próprios dados como estado em vez do pipeline state?"</p>
+</div>
+
+<div class="nav">
+  <a href="0004-pipeline-destination.html">← Aula 4: Pipeline e Destination</a>
+  <a href="0006-schema-contracts-ecossistema.html">Aula 6: Schema contracts e ecossistema →</a>
+</div>
+
+<script>
+function check(btn, correct) {
+  const quiz = btn.parentElement;
+  quiz.querySelectorAll('button').forEach(b => {
+    b.classList.remove('correct', 'incorrect');
+    b.disabled = true;
+  });
+  if (correct) {
+    btn.classList.add('correct');
+    quiz.querySelector('.feedback').textContent = 'Correto!';
+  } else {
+    btn.classList.add('incorrect');
+    quiz.querySelector('.feedback').textContent = 'Incorreto. Tente revisar a seção correspondente.';
+    quiz.querySelectorAll('button').forEach(b => {
+      if (b.onclick && b.onclick.toString().includes('true')) b.classList.add('correct');
+    });
+  }
+}
+</script>
+
+</body>
+</html>

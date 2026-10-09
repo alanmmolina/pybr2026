@@ -1,0 +1,9 @@
+# Internals dos conceitos core aprofundados (resource, source, pipeline, destination, state)
+
+As lessons 2-5 foram aprofundadas no lugar (decisão do usuário, set/2026 — supera o limite anterior de ~250-300 linhas por lesson) com internals colhidos da doc oficial 1.30.0 (resource, source, pipeline, destination, state, glossary). Três insights que corrigem ou refinam o entendimento anterior:
+
+1. **`dlt.current.state()` é alias de `source_state()` — não um estado "global do pipeline" separado.** Verificado no código 1.30.0 (`dlt/pipeline/current.py:53` tem `state = source_state`). Os dois escopos reais são `resource_state()` (privado por resource) e `source_state()` (compartilhado, read-only na função do source); o documento inteiro fica em `pipeline.state`. A Lesson 5 antes usava `dlt.current.state()` como "estado customizado" genérico — corrigido.
+2. **A função do source é eager, os resources são lazy.** A função do source executa na hora da chamada; por isso os docs mandam não extrair dados nela. Também: `source.resources` é dict com `.selected`/`with_resources()`; `clone()`/`resources.add()` pós-criação; e o gotcha de que `max_table_nesting` no source não propaga para resource acessado direto via `source.resources["x"]`.
+3. **O destination só é acessado em 2 pontos** (sync de estado no `run()` e no `load()`); `extract`/`normalize` não importam deps nem credenciais do destino — base do multi-stage. `_dlt_loads.status` dá filtro de carga parcial + chaining de transformações + lineage.
+
+**Implications:** a estrutura de 6 lessons permanece, agora com internals embutidos em 2-5 (Lesson 6 = schema contracts, fora da lista de conceitos do usuário). Novos pontos de quiz/follow-up cobrem esses internals. O reference/ segue vazio — candidato natural para um cheat sheet único de internals antes da palestra, se o usuário quiser consolidar.

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR" saved-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dlt: pipeline e destination</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&family=Fira+Code:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<h1>Aula 4: Pipeline e Destination — carga, estado, refresh e staging</h1>
+
+<div class="lesson-meta">
+  <strong>Objetivo:</strong> Dominar o ciclo de vida do pipeline — dev_mode, refresh modes, estado persistente, staging, retries — e como trocar destinos sem tocar na extração.<br>
+  <strong>Requer:</strong> <a href="0003-resource-transformer.html">Aula 3</a>.<br>
+  <strong>Fonte primária:</strong> <a href="https://dlthub.com/docs/general-usage/pipeline">Pipeline</a> e <a href="https://dlthub.com/docs/general-usage/destination">Destination</a> (docs oficiais).
+</div>
+
+<h2>Pipeline: o orquestrador</h2>
+
+<p>O pipeline executa as três fases — <strong>extract → normalize → load</strong> (detalhadas na <a href="0002-arquitetura-core.html">Aula 2</a>) — e persiste artefatos no diretório de trabalho <code>~/.dlt/pipelines/&lt;nome&gt;/</code>:</p>
+
+<pre><code><span class="syn-kw">import</span> dlt
+
+pipeline = dlt.pipeline(
+    pipeline_name=<span class="syn-str">"rawg"</span>,              <span class="syn-cmt"># identidade persistente</span>
+    destination=<span class="syn-str">"duckdb"</span>,            <span class="syn-cmt"># pode ser sobrescrito no run()</span>
+    dataset_name=<span class="syn-str">"rawg_data"</span>,         <span class="syn-cmt"># schema/database no destino</span>
+    dev_mode=<span class="syn-num">True</span>,                  <span class="syn-cmt"># adiciona sufixo datetime ao dataset</span>
+    progress=<span class="syn-str">"log"</span>,               <span class="syn-cmt"># monitor de progresso</span>
+)</code></pre>
+
+<h3>O que o dlt persiste por pipeline</h3>
+
+<table>
+  <tr><th>Artefato</th><th>Onde</th><th>Para quê</th></tr>
+  <tr><td>Load packages</td><td><code>working_dir/&lt;pipeline&gt;/</code></td><td>Dados extraídos com ID único, prontos para normalize/load</td></tr>
+  <tr><td>State</td><td><code>_dlt_pipeline_state</code> no destino</td><td>Cursores incrementais, estado customizado — <a href="0005-schema-normalizacao-incremental.html">Aula 5</a></td></tr>
+  <tr><td>Schemas</td><td>Pasta do pipeline + <code>_dlt_version</code></td><td>Histórico de schema para detectar drift e migrar</td></tr>
+  <tr><td>Traces/logs</td><td>Pasta do pipeline</td><td>Debug, telemetria OTEL</td></tr>
+</table>
+
+<h3>Dev mode</h3>
+
+<p>Quando <code>dev_mode=True</code>, cada execução cria um dataset com sufixo de timestamp (<code>rawg_data_20260722_143000</code>). Ideal para experimentação: você nunca sobrescreve dados de produção enquanto testa. Combine com <code>destination="duckdb"</code> em dev e o destino real em prod — o resto do código não muda.</p>
+
+<h2>Identidade do pipeline: nome, dataset e diretório</h2>
+
+<p>Três defaults que valem conhecer:</p>
+
+<ul>
+  <li><code>pipeline_name</code>: se omitido, o dlt usa o <strong>nome do módulo</strong> em execução.</li>
+  <li><code>dataset_name</code>: se omitido, vira <code>{pipeline_name}_dataset</code> (em destinos que têm dataset; fica vazio em vector DBs e ClickHouse).</li>
+  <li>Working dir: <code>~/.dlt/pipelines/&lt;nome&gt;/</code> — <strong>dois pipelines com o mesmo nome enxergam a mesma pasta e compartilham estado</strong>.</li>
+</ul>
+
+<p>Para separar ambientes (dev/staging/prod) mantendo o mesmo nome, use <code>pipelines_dir</code>:</p>
+
+<pre><code><span class="syn-kw">import</span> os
+<span class="syn-kw">from</span> dlt.common.pipeline <span class="syn-kw">import</span> get_dlt_pipelines_dir
+
+dev_dir = os.path.join(get_dlt_pipelines_dir(), <span class="syn-str">"dev"</span>)
+pipeline = dlt.pipeline(destination=<span class="syn-str">"duckdb"</span>, dataset_name=<span class="syn-str">"sequence"</span>,
+                        pipelines_dir=dev_dir)</code></pre>
+
+<h2>O método run()</h2>
+
+<pre><code><span class="syn-cmt"># Aceita source, resource, generator, lista, qualquer iterável</span>
+info = pipeline.run(
+    data,
+    table_name=<span class="syn-str">"tabela"</span>,               <span class="syn-cmt"># opcional: força nome da tabela</span>
+    write_disposition=<span class="syn-str">"replace"</span>,      <span class="syn-cmt"># sobrescreve o hint do resource</span>
+    refresh=<span class="syn-str">"drop_data"</span>,              <span class="syn-cmt"># força refresh (veja abaixo)</span>
+    loader_file_format=<span class="syn-str">"parquet"</span>,    <span class="syn-cmt"># formato do arquivo de carga</span>
+    schema_contract=<span class="syn-str">"freeze"</span>,         <span class="syn-cmt"># sobrescreve contratos de todos os resources</span>
+)
+<span class="syn-fn">print</span>(info)  <span class="syn-cmt"># LoadInfo com métricas da execução</span></code></pre>
+
+<p>O <code>LoadInfo</code> retornado traz, entre outras coisas: os load IDs criados, o schema aplicado e o pipeline — útil para programar reações (ex.: disparar dbt após a carga, como na <a href="0006-schema-contracts-ecossistema.html">Aula 6</a>).</p>
+
+<h2>Refresh modes: resetando estado e dados</h2>
+
+<p>Três níveis de refresh, do mais leve ao mais destrutivo:</p>
+
+<table>
+  <tr><th>Mode</th><th>Efeito</th><th>Schema afetado?</th></tr>
+  <tr><td><code>drop_data</code></td><td>Trunca tabelas do resource, reseta estado incremental</td><td>Não — schema preservado</td></tr>
+  <tr><td><code>drop_resources</code></td><td>Dropa tabelas dos resources, reseta estado</td><td>Sim — histórico apagado, só a versão atual fica</td></tr>
+  <tr><td><code>drop_sources</code></td><td>Dropa todas as tabelas do source, reseta schema e estado</td><td>Sim — limpeza completa</td></tr>
+</table>
+
+<pre><code><span class="syn-cmt"># Exemplo: refresh de uma tabela específica</span>
+pipeline.run(
+    rawg().with_resources(<span class="syn-str">"genres"</span>),
+    refresh=<span class="syn-str">"drop_data"</span>,
+)
+<span class="syn-cmt"># Trunca a tabela `genres` e recarrega o catálogo de gêneros.</span>
+<span class="syn-cmt"># Outras tabelas do source (games, game_details...) não são afetadas.</span></code></pre>
+
+<div class="callout">
+  <div class="callout-title">Nuance importante</div>
+  <p>O truncate/drop acontece <strong>quando a fase de load começa</strong> — um extract ou normalize que falhe não afeta os dados no destino. E o refresh pode ser configurado sem tocar no código: <code>PIPELINES__RAWG__REFRESH=drop_data python rawg.py</code>.</p>
+</div>
+
+<p>Nota dos docs: forçar <code>write_disposition="replace"</code> como forma de refresh (o jeito antigo) não é mais recomendado — o argumento <code>refresh</code> faz isso de forma limpa, sem mutar o schema persistido.</p>
+
+<h3>O que o refresh faz por dentro</h3>
+
+<p>O refresh é <strong>transacional</strong>: o dlt só toca no destino se <code>extract</code> e <code>normalize</code> concluírem com sucesso. Sequência completa do <code>drop_sources</code>, passo a passo:</p>
+
+<ol>
+  <li>Coleta as tabelas a dropar (as do schema do source no destino).</li>
+  <li>Remove o estado do pipeline associado ao source.</li>
+  <li>Reseta o schema do source.</li>
+  <li>Roda <code>extract</code> + <code>normalize</code> (cria estado e schema novos).</li>
+  <li><strong>Antes do load</strong>, dropa as tabelas coletadas (staging + dataset).</li>
+  <li>Remove o schema do source da tabela <code>_dlt_version</code>.</li>
+  <li>Roda o <code>load</code> normalmente (tabelas recriadas, schema e estado novos persistidos).</li>
+</ol>
+
+<div class="callout">
+  <div class="callout-title">drop_resources vs drop_data</div>
+  <p><code>drop_resources</code> faz o mesmo, limitado aos resources processados — mas <strong>não apaga chaves de estado no nível do source</strong> (<code>dlt.current.source_state()</code>). <code>drop_data</code> só trunca (<code>TRUNCATE</code>), preserva o schema e, no incremental, reseta o cursor para o <code>initial_value</code>.</p>
+</div>
+
+<h2>dlt.attach(): reconectando a um pipeline</h2>
+
+<p>Um pipeline é durável. Você pode reconectar a ele pelo nome para ler dados ou inspecionar estado — mesmo em outro processo:</p>
+
+<pre><code><span class="syn-kw">import</span> dlt
+
+<span class="syn-cmt"># Reconecta a um pipeline que já rodou antes</span>
+pipeline = dlt.attach(
+    pipeline_name=<span class="syn-str">"rawg"</span>,
+    destination=<span class="syn-str">"duckdb"</span>,
+    dataset_name=<span class="syn-str">"rawg_data"</span>,
+)
+
+dataset = pipeline.dataset()
+df = dataset.games.df()</code></pre>
+
+<h3>Sincronizando estado com o destino</h3>
+
+<p>No início do <code>run()</code>, o dlt sincroniza o estado local com o destino. Em orquestradores como Airflow — onde cada task nasce com filesystem limpo — o dlt <strong>restaura o estado a partir do destino</strong>. A identidade do estado remoto é: nome do pipeline + localização do destino + dataset. Se você mantém o working dir entre execuções, pode desligar com <code>restore_from_destination=false</code> no <code>config.toml</code>; e <code>dlt pipeline sync</code> pede o estado de volta manualmente. Detalhes completos na <a href="0005-schema-normalizacao-incremental.html">Aula 5 (state)</a>.</p>
+
+<h2>Dataset API</h2>
+
+<p>O dataset expõe as tabelas como objetos lazy que você converte para o formato necessário:</p>
+
+<pre><code>dataset.tables                     <span class="syn-cmt"># ['_dlt_loads', 'games', 'games__platforms', 'game_details', ...]</span>
+dataset.games.df()                 <span class="syn-cmt"># pandas DataFrame</span>
+dataset.games.arrow()              <span class="syn-cmt"># PyArrow Table (zero-copy)</span>
+dataset.game_details.to_ibis()     <span class="syn-cmt"># Ibis expression (lazy, compilável para SQL)</span>
+dataset.row_counts()               <span class="syn-cmt"># contagem por tabela</span></code></pre>
+
+<h2>Destinations: trocar é trivial</h2>
+
+<p>O mesmo código de extração funciona em qualquer destino. O dlt cuida de:</p>
+
+<ul>
+  <li><strong>Credenciais:</strong> lidas de <code>secrets.toml</code> ou variáveis de ambiente</li>
+  <li><strong>DDL:</strong> <code>CREATE TABLE</code> no dialeto correto (Snowflake vs Postgres vs DuckDB)</li>
+  <li><strong>Tipos:</strong> mapeamento automático (Python <code>datetime</code> → <code>TIMESTAMP</code> no Postgres, <code>TIMESTAMP_NTZ</code> no Snowflake)</li>
+  <li><strong>Staging:</strong> S3/GCS/Azure para warehouses que exigem stage antes do COPY</li>
+  <li><strong>Retries:</strong> carga idempotente por load job — rerun seguro após falha de rede</li>
+</ul>
+
+<pre><code><span class="syn-cmt"># De DuckDB em dev para Snowflake em prod: muda uma string</span>
+pipeline = dlt.pipeline(
+    pipeline_name=<span class="syn-str">"rawg"</span>,
+    destination=<span class="syn-str">"snowflake"</span>,   <span class="syn-cmt"># era "duckdb"</span>
+    dataset_name=<span class="syn-str">"rawg_data"</span>,
+)</code></pre>
+
+<h3>Capabilities: nem todo destino faz tudo igual</h3>
+
+<p>Cada destination declara o que suporta (upsert, staged load, schema migration, etc.) e o dlt adapta a estratégia de carga automaticamente. Quando um warehouse exige staging, o fluxo vira:</p>
+
+<pre><code>extract → normalize → <span class="syn-cmt">(upload para S3/GCS)</span> → COPY/MERGE no warehouse</code></pre>
+
+<p>Para formatos abertos (Iceberg, Delta) e data lakes, o dlt escreve arquivos Parquet diretamente — sem engine intermediária.</p>
+
+<h2>As quatro formas de declarar um destino</h2>
+
+<p>Todas criam a mesma classe de destino; a diferença é onde você põe a configuração:</p>
+
+<pre><code><span class="syn-cmt"># 1. shorthand — só built-ins</span>
+dlt.pipeline(<span class="syn-str">"p"</span>, destination=<span class="syn-str">"filesystem"</span>)
+
+<span class="syn-cmt"># 2. named destination — o tipo sai do toml/env (troca de ambiente sem mexer no código)</span>
+dlt.pipeline(<span class="syn-str">"p"</span>, destination=<span class="syn-str">"my_destination"</span>)  <span class="syn-cmt"># [destination.my_destination] destination_type=...</span>
+
+<span class="syn-cmt"># 3. factory type string</span>
+dlt.pipeline(<span class="syn-str">"p"</span>, destination=<span class="syn-str">"dlt.destinations.filesystem"</span>)
+
+<span class="syn-cmt"># 4. factory importada — permite instanciar e nomear</span>
+<span class="syn-kw">from</span> dlt.destinations <span class="syn-kw">import</span> filesystem
+azure = filesystem(<span class="syn-str">"az://dlt-azure-bucket"</span>, destination_name=<span class="syn-str">"production_az_bucket"</span>)</code></pre>
+
+<div class="callout">
+  <div class="callout-title">Named destination = troca dev→prod sem código</div>
+  <p>Em dev: <code>[destination.my_destination] destination_type = "duckdb"</code>. Em prod, só o toml muda para <code>"bigquery"</code> + credenciais. O código fica intacto — o caso de uso clássico de ambiente.</p>
+</div>
+
+<p>Para inspecionar o que um destino consegue fazer: <code>pipeline.destination.capabilities()</code> (formatos de arquivo, tamanho máximo de identificador, <code>recommended_file_size</code>, <code>naming_convention</code>...).</p>
+
+<h2>Quando o dlt acessa o destino</h2>
+
+<p>O destino é acessado em <strong>apenas dois momentos</strong>:</p>
+
+<ol>
+  <li>No início do <code>run()</code> — para sincronizar o estado do pipeline (ou <code>pipeline.sync_destination()</code> explícito).</li>
+  <li>No <code>load()</code> — para migrar o schema e carregar o load package.</li>
+</ol>
+
+<p>Consequência poderosa: <code>extract</code> e <code>normalize</code> <strong>não importam as dependências nem pedem as credenciais do destino</strong>. Você pode rodar cada fase em processos ou containers separados (multi-stage):</p>
+
+<pre><code>pipeline.extract(data, table_name=<span class="syn-str">"letters"</span>)     <span class="syn-cmt"># nenhuma credencial de destino necessária</span>
+pipeline.normalize()                            <span class="syn-cmt"># idem</span>
+pipeline.load(destination=filesystem(bucket_url=...))  <span class="syn-cmt"># só aqui o destino é tocado</span></code></pre>
+
+<h2>Naming convention por destino</h2>
+
+<p>O dlt traduz identificadores para o que cada destino aceita (padrão: snake_case). Mas cada destino tem regras próprias de case sensitivity:</p>
+
+<table>
+  <tr><th>Destino</th><th>Case sensitivity</th></tr>
+  <tr><td>Redshift</td><td>Sem suporte a case-sensitive; converte tudo para minúsculas</td></tr>
+  <tr><td>Snowflake</td><td>Case-sensitive; upper case tratado como case-insensitive (default)</td></tr>
+  <tr><td>DuckDB</td><td>Sem case-sensitive, mas preserva o casing no information schema</td></tr>
+  <tr><td>BigQuery</td><td>Tudo case-sensitive</td></tr>
+</table>
+
+<p>Você pode trocar a convenção (ex.: <code>sql_cs_v1</code> para Snowflake case-sensitive), mas isso só afeta schemas novos — o dlt se recusa a re-normalizar identificadores de tabelas já criadas (use <code>refresh</code> para dropar).</p>
+
+<h2>_dlt_loads: linhagem e chaining</h2>
+
+<p>Cada execução gera um <strong>load package</strong> com um <code>load_id</code> único, registrado na tabela <code>_dlt_loads</code> com <code>status = 0</code> (carga completa). Daí saem três utilidades:</p>
+
+<ul>
+  <li><strong>Filtro de carga parcial:</strong> uma linha cujo <code>load_id</code> não existe em <code>_dlt_loads</code> ainda não foi concluída — dá para excluir dados de pacotes que nunca terminaram (importante em destinos sem transações longas, como Redshift).</li>
+  <li><strong>Chaining de transformações:</strong> use o <code>status</code> como marcador — a transformação 1 pega <code>status=0</code> e marca <code>1</code>, a próxima pega <code>1</code> e marca <code>2</code>...</li>
+  <li><strong>Lineage:</strong> <code>pipeline_name</code> + <code>load_id</code> identificam a fonte e o momento de cada dado — a base do data vault.</li>
+</ul>
+
+<h2>SQL client: acesso de baixo nível</h2>
+
+<p>Além da <strong>Dataset API</strong> (mais amigável, vista acima), todo destino SQL expõe um cliente de baixo nível. O <code>filesystem</code> tem um especial que consulta seus arquivos via um DuckDB em memória:</p>
+
+<pre><code><span class="syn-kw">with</span> pipeline.sql_client() <span class="syn-kw">as</span> client:
+    <span class="syn-kw">with</span> client.execute_query(<span class="syn-str">"SELECT id, name FROM customers WHERE id = %s"</span>, <span class="syn-num">10</span>) <span class="syn-kw">as</span> cursor:
+        <span class="syn-fn">print</span>(cursor.df())   <span class="syn-cmt"># fetchall(), fetchone(), arrow(), iter_df()...</span></code></pre>
+
+<h2>secrets.toml</h2>
+
+<p>O que é secreto fica em <code>.dlt/secrets.toml</code>; o que é apenas configuração fica em <code>.dlt/config.toml</code>. No exemplo do curso, só a chave da API é secreta — e o DuckDB nem precisa de credencial explícita (usa um arquivo local por padrão):</p>
+
+<pre><code><span class="syn-cmt"># .dlt/secrets.toml — só o que é secreto</span>
+<span class="syn-cmt"># (seção [sources.rawg]: o nome do @dlt.source define o namespace)</span>
+[sources.rawg]
+api_key = <span class="syn-str">"COLE_SUA_API_KEY_AQUI"</span>   <span class="syn-cmt"># https://rawg.io/apidocs → Get API Key</span>
+
+<span class="syn-cmt"># .dlt/config.toml — configuração que não é segredo</span>
+[destination.filesystem]
+bucket_url = <span class="syn-str">"file:///.../lake_local"</span>   <span class="syn-cmt"># para S3: "s3://seu-bucket/rawg" + env vars AWS</span></code></pre>
+
+<p>O dlt resolve a credencial/configuração correta automaticamente baseado no <code>destination</code> configurado. Nenhum <code>if/else</code> no código — e o <code>secrets.toml</code> nunca vai para o git (adicione ao <code>.gitignore</code>).</p>
+
+<h2>Progress monitors</h2>
+
+<table>
+  <tr><th>Monitor</th><th>Indicado para</th></tr>
+  <tr><td><code>"tqdm"</code></td><td>Notebooks, desenvolvimento local</td></tr>
+  <tr><td><code>"enlighten"</code></td><td>Terminal interativo, barras de progresso</td></tr>
+  <tr><td><code>"alive_progress"</code></td><td>Animações fancy</td></tr>
+  <tr><td><code>"log"</code></td><td>Produção: loga progresso com intervalo configurável</td></tr>
+</table>
+
+<pre><code><span class="syn-cmt"># Em produção: loga a cada 60 segundos</span>
+pipeline = dlt.pipeline(
+    pipeline_name=<span class="syn-str">"rawg"</span>,
+    destination=<span class="syn-str">"duckdb"</span>,
+    progress=dlt.progress.log(<span class="syn-num">60</span>),
+)</code></pre>
+
+<h2>Custom destinations</h2>
+
+<p>Se os 20+ destinos não cobrirem seu caso, o dlt expõe a interface <code>Destination</code> para escrever o seu em Python — incluindo destinos não-SQL (vector DBs como Weaviate e Qdrant são implementados assim). É o tema central de extensibilidade da <a href="0006-schema-contracts-ecossistema.html">Aula 6</a>.</p>
+
+<h2>Exemplo do curso: um source, dois destinos</h2>
+
+<p>No exemplo RAWG (<a href="../../exemplos/rawg/">exemplos/rawg/</a>), o mesmo source carrega para DuckDB (dev) ou para um data lake Parquet (prod). Só muda o <code>destination</code> — e as credenciais saem de <code>.dlt/secrets.toml</code> / <code>.dlt/config.toml</code>:</p>
+
+<pre><code><span class="syn-cmt"># python rawg.py (dev): DuckDB no laptop</span>
+dlt.pipeline(pipeline_name=<span class="syn-str">"rawg"</span>, destination=<span class="syn-str">"duckdb"</span>, dataset_name=<span class="syn-str">"rawg_data"</span>, dev_mode=<span class="syn-num">True</span>)
+
+<span class="syn-cmt"># python rawg.py filesystem (prod): Parquet no lake</span>
+<span class="syn-cmt"># .dlt/config.toml → [destination.filesystem] bucket_url = "file://.../lake_local"</span>
+<span class="syn-cmt"># (para S3: troque por "s3://seu-bucket/rawg" + env vars AWS — nada mais muda)</span>
+dlt.pipeline(pipeline_name=<span class="syn-str">"rawg_lake"</span>, destination=<span class="syn-str">"filesystem"</span>, dataset_name=<span class="syn-str">"rawg_lake"</span>)</code></pre>
+
+<div class="callout">
+  <div class="callout-title">Nuance do lake que o destino filesystem revela</div>
+  <p>O destino filesystem não suporta <code>merge</code> — ele faz fallback para <code>append</code> (cada execução gera novos arquivos Parquet imutáveis). Isso é o padrão clássico de data lake: append-only + deduplicação no momento da consulta (DuckDB/Athena/warehouse). Warehouse faz merge; lake faz append.</p>
+</div>
+
+<h2>Quiz rápido</h2>
+
+<div class="quiz" id="q1">
+  <h4>Pergunta 1: O que dev_mode=True faz no pipeline?</h4>
+  <button onclick="check(this, false)">Desabilita a escrita no destino</button>
+  <button onclick="check(this, false)">Ativa logs de debug verbose</button>
+  <button onclick="check(this, true)">Adiciona sufixo datetime ao dataset_name para cada execução</button>
+  <button onclick="check(this, false)">Roda extração e normalização sem carregar</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <h4>Pergunta 2: Qual refresh mode é o menos destrutivo?</h4>
+  <button onclick="check(this, false)">drop_sources</button>
+  <button onclick="check(this, true)">drop_data</button>
+  <button onclick="check(this, false)">drop_resources</button>
+  <button onclick="check(this, false)">drop_all</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <h4>Pergunta 3: Para que serve dlt.attach()?</h4>
+  <button onclick="check(this, false)">Conectar um resource a um transformer</button>
+  <button onclick="check(this, true)">Reconectar a um pipeline que já rodou, pelo nome</button>
+  <button onclick="check(this, false)">Vincular o pipeline a um repositório git</button>
+  <button onclick="check(this, false)">Anexar um arquivo CSV ao pipeline</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <h4>Pergunta 4: O que é staging no contexto do dlt?</h4>
+  <button onclick="check(this, false)">Um ambiente de teste separado do de produção</button>
+  <button onclick="check(this, true)">Upload intermediário para S3/GCS antes do COPY no warehouse</button>
+  <button onclick="check(this, false)">A fase de normalização renomeada</button>
+  <button onclick="check(this, false)">Um cache local do dataset no laptop</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <h4>Pergunta 5: Quando o truncate de um refresh="drop_data" acontece?</h4>
+  <button onclick="check(this, false)">Antes do extract, para liberar espaço</button>
+  <button onclick="check(this, false)">Durante o normalize</button>
+  <button onclick="check(this, true)">No início da fase de load — extract/normalize falhos não afetam o destino</button>
+  <button onclick="check(this, false)">Somente após o load terminar com sucesso</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="ask-followup">
+  <h4>Dúvidas?</h4>
+  <p>Pergunte ao agente. Exemplos: "Como funciona o staging no Snowflake?", "Como escrever um destination customizado?", "O que acontece com o estado se eu renomear um pipeline?", "O que é loader_file_format e quando mudar para parquet?", "Quando usar named destination em vez de shorthand?", "Como o <code>_dlt_loads.status</code> ajuda a filtrar cargas parciais no Redshift?"</p>
+</div>
+
+<div class="nav">
+  <a href="0003-resource-transformer.html">← Aula 3: Resource e Transformer</a>
+  <a href="0005-schema-normalizacao-incremental.html">Aula 5: Schema, normalização e incremental →</a>
+</div>
+
+<script>
+function check(btn, correct) {
+  const quiz = btn.parentElement;
+  quiz.querySelectorAll('button').forEach(b => {
+    b.classList.remove('correct', 'incorrect');
+    b.disabled = true;
+  });
+  if (correct) {
+    btn.classList.add('correct');
+    quiz.querySelector('.feedback').textContent = 'Correto!';
+  } else {
+    btn.classList.add('incorrect');
+    quiz.querySelector('.feedback').textContent = 'Incorreto. Tente revisar a seção correspondente.';
+    quiz.querySelectorAll('button').forEach(b => {
+      if (b.onclick && b.onclick.toString().includes('true')) b.classList.add('correct');
+    });
+  }
+}
+</script>
+
+</body>
+</html>

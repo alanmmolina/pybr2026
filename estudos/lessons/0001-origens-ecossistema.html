@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR" saved-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dlt: origens, ecossistema e licença</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&family=Fira+Code:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<h1>Aula 1: O que é dlt — origens, ecossistema e licença</h1>
+
+<div class="lesson-meta">
+  <strong>Objetivo:</strong> Entender quem criou o dlt, qual problema resolve, os princípios de produto, a trajetória de adoção e o estado atual do projeto e da comunidade.<br>
+  <strong>Pré-requisitos:</strong> Nenhum.<br>
+  <strong>Fonte primária:</strong> <a href="https://dlthub.com/docs/intro">dlthub.com/docs/intro</a> e o post <a href="https://dlthub.com/blog/introducing-dlthub">Introducing dltHub</a> (mai/2026).
+</div>
+
+<h2>O problema</h2>
+
+<p>Toda fonte de dados tem sua própria lógica de extração. API REST com paginação por cursor. Banco SQL legado sem chave incremental. Arquivo CSV que muda de schema a cada exportação. Cada uma dessas fontes gera um script diferente — e sem uma estrutura compartilhada, cada desenvolvedor resolve o mesmo problema de um jeito diferente.</p>
+
+<p>O resultado é o que chamamos de <strong>"dialetos paralelos"</strong>: scripts que repetem estratégias de formas incompatíveis dentro do mesmo time. Alguns times tentam resolver isso com templates e convenções internas. Mas convenções definem <em>forma</em>, não <strong>comportamento</strong>. Normalização de dados aninhados, carregamento incremental e gerenciamento de estado entre execuções exigem código que alguém precisa escrever, manter e evoluir. A convenção vira um framework caseiro — e o problema original retorna com outro nome.</p>
+
+<p>Esse problema é medido, não só anedótico. Quando a dltHub pesquisou desenvolvedores em empresas Fortune 500, <strong>95% acabavam escrevendo scripts Python customizados para ingestão de dados</strong> — não por escolha, mas porque as alternativas não serviam.</p>
+
+<h2>As duas alternativas convencionais (e por que falham)</h2>
+
+<table>
+  <tr><th>Caminho</th><th>Exemplos</th><th>Custo real</th></tr>
+  <tr><td><strong>SaaS de conectores</strong></td><td>Fivetran, Stitch</td><td>Abstrai todo o processo, mas vira um componente separado na arquitetura, com ciclo de vida e overhead operacional próprios. Fontes pouco convencionais esbarram em restrições de design.</td></tr>
+  <tr><td><strong>Frameworks OO pesados</strong></td><td>Ferramentas enterprise tradicionais</td><td>Desenhados para engenheiros de software experientes, não para o perfil Python-first (cientistas de dados, analistas, engenheiros de IA).</td></tr>
+</table>
+
+<div class="callout">
+  <div class="callout-title">O diagnóstico da dltHub</div>
+  <p>Não existia um <em>"equivalente a Jupyter Notebook, Pandas e NumPy para data loading"</em> — uma ferramenta que casasse com o workflow e o skillset de quem já trabalha em Python. A dltHub decidiu construir uma. (<a href="https://dlthub.com/blog/our-3000th-oss-customer">fonte</a>)</p>
+</div>
+
+<h2>O que é dlt</h2>
+
+<p><strong>dlt (data load tool)</strong> é uma biblioteca Python open-source que carrega dados de fontes diversas — muitas vezes bagunçadas — em datasets bem estruturados. É uma <strong>biblioteca, não uma plataforma</strong>. Você faz <code>pip install dlt</code> e a incorpora direto na sua codebase.</p>
+
+<p>O dlt oferece comportamento e consistência de framework sem sacrificar a flexibilidade do Python. Com conceitos como <code>resource</code>, <code>source</code>, <code>pipeline</code> e <code>destination</code> implementados como decorators e funções Python puras, ele resolve os problemas repetitivos de ingestão e deixa você focar na lógica específica de cada fonte. A anatomia completa fica para a <a href="0002-arquitetura-core.html">Aula 2</a>.</p>
+
+<h3>Os quatro princípios de produto (do lançamento do 1.0)</h3>
+
+<p>No anúncio do dlt 1.0.0, o CTO Marcin Rudolf explicitou os princípios que guiam o projeto desde o início (<a href="https://dlthub.com/blog/dlt-v1">fonte</a>):</p>
+
+<ul>
+  <li><strong>dlt é biblioteca, não plataforma.</strong> Você integra o dlt no seu código — não o contrário.</li>
+  <li><strong>Multiplique, não adicione.</strong> Priorizar automação para eliminar tarefas repetitivas do usuário.</li>
+  <li><strong>Sem caixas-pretas.</strong> Código aberto, limpo, intuitivo e hackeável.</li>
+  <li><strong>Nós fazemos o trabalho para você fazer menos.</strong> O "princípio da empatia": minimizar o esforço de quem usa.</li>
+</ul>
+
+<p>O corolário prático: o dlt respeita a plataforma que você já construiu, o conhecimento que seu time já tem, e promove autonomia e ownership. É por isso que ele se integra à Modern Data Stack em vez de substituí-la — detalhe na <a href="0006-schema-contracts-ecossistema.html">Aula 6</a>.</p>
+
+<h2>A história</h2>
+
+<table>
+  <tr><th>Data</th><th>Marco</th></tr>
+  <tr><td><strong>2021</strong></td><td>dltHub é fundada para ajudar empresas Fortune 500 a colocar agentes de IA em produção através de pipelines de dados modernos.</td></tr>
+  <tr><td><strong>Fev/2023</strong></td><td>Primeira versão do dlt: uma ferramenta simples para carregar e processar documentos JSON com Python.</td></tr>
+  <tr><td><strong>Set/2024</strong></td><td><strong>dlt 1.0.0</strong>: sincronização de bancos, arquivos e REST API toolkit entram na biblioteca core; destination SQLAlchemy (30+ bancos) é implementado — o ticket aberto mais antigo do projeto.</td></tr>
+  <tr><td><strong>Abr/2025</strong></td><td>3.000 empresas open-source em produção; 1,4M downloads/mês no PyPI.</td></tr>
+  <tr><td><strong>Nov/2025</strong></td><td>Seed de $8M liderado pela Bessemer Venture Partners; 3M downloads/mês; 5.000+ empresas.</td></tr>
+  <tr><td><strong>Mai/2026</strong></td><td><strong>dltHub GA</strong>: plataforma agent-native (Claude/Codex/Cursor) entra em disponibilidade geral.</td></tr>
+</table>
+
+<p>O crescimento foi de 9x só em 2024, na transição para o 1.0. E a partir de 2025, um segundo vetor acelerou tudo: <strong>coding agents escrevendo pipelines dlt</strong>.</p>
+
+<h2>Quem criou</h2>
+
+<p>O dlt foi criado pela <strong>dltHub</strong>, empresa fundada por veteranos de machine learning e dados:</p>
+
+<table>
+  <tr><th>Fundador</th><th>Cargo</th></tr>
+  <tr><td>Matthaus Krzykowski</td><td>Co-Founder &amp; CEO</td></tr>
+  <tr><td>Marcin Rudolf</td><td>Co-Founder &amp; CTO</td></tr>
+  <tr><td>Anna Hoffmann</td><td>Co-Founder &amp; COO</td></tr>
+  <tr><td>Adrian Brudaru</td><td>Co-Founder &amp; CDO</td></tr>
+</table>
+
+<p>A empresa tem sede em <strong>Berlin</strong> e <strong>San Francisco</strong>, com hubs em Montreal e Amsterdam. Recebeu investimento de <strong>$8M</strong> (seed) liderado pela <strong>Bessemer Venture Partners</strong>, com participação da Foundation Capital, Dig Ventures e investidores-anjo de empresas como MotherDuck, Hugging Face, Rasa, Miro e Matillion. (<a href="https://venturebeat.com/data-infrastructure/ai-coding-transforms-data-engineering-how-dlthubs-open-source-python-library">VentureBeat</a>)</p>
+
+<div class="callout">
+  <div class="callout-title">Missão</div>
+  <p>"Any Python developer should be able to bring their business users closer to fresh, reliable data. Our mission is to make data engineering as accessible, collaborative and as frictionless as writing Python itself." — Matthaus Krzykowski, CEO</p>
+</div>
+
+<h2>Licença</h2>
+
+<p><strong>Apache 2.0.</strong> Uso comercial permitido, com patentes protegidas. O código está em <a href="https://github.com/dlt-hub/dlt">github.com/dlt-hub/dlt</a>. A biblioteca é totalmente open-source; o que é <em>source-available</em> são features específicas da plataforma dltHub (AI workbench, MS SQL Change Tracking, destination Iceberg, transformations) — diferenciação entre biblioteca e produto pago.</p>
+
+<h2>Números da comunidade (Julho 2026)</h2>
+
+<table>
+  <tr><th>Métrica</th><th>Valor</th></tr>
+  <tr><td>Versão atual</td><td>1.30.0</td></tr>
+  <tr><td>GitHub Stars</td><td>5.700+</td></tr>
+  <tr><td>PyPI downloads/mês</td><td>6M+</td></tr>
+  <tr><td>Empresas em produção</td><td>10.000+</td></tr>
+  <tr><td>Empresas no Snowflake</td><td>1.000+</td></tr>
+  <tr><td>Fontes REST API catalogadas</td><td>10.100+ no dltHub Context</td></tr>
+  <tr><td>Suporte a Python</td><td>3.10 a 3.14</td></tr>
+</table>
+
+<h2>O vetor agent-native</h2>
+
+<p>Em janeiro de 2025, a comunidade produzia ~2.400 pipelines por mês, 5% escritos por coding agents. Em janeiro de 2026: <strong>81.000 pipelines/mês — crescimento de 34x — com 91% gerados por agentes</strong> (Claude, Codex, Cursor). Em setembro de 2025, foram 50.000 conectores customizados criados em um único mês, um aumento de 20x desde janeiro, impulsionado por desenvolvimento assistido por LLM.</p>
+
+<p>O mesmo padrão aparece no consumo local: dispositivos únicos usando DuckDB via dlt cresceram <strong>15x</strong> (de 3.923 para 58.306 por mês). O padrão "construir no laptop, rodar na cloud" virou o modo dominante de uso.</p>
+
+<div class="callout">
+  <div class="callout-title">Por que o dlt é amigável a LLMs?</div>
+  <p>A arquitetura declarativa, modular e code-first do dlt — escolhida originalmente para humanos confiarem na biblioteca — é exatamente o que permite a um agente raciocinar sobre um pipeline de ponta a ponta. A documentação é estruturada para consumo por assistentes de IA, e o time corrige issues pensando no workflow de "copiar erro e colar no editor". (<a href="https://dlthub.com/blog/introducing-dlthub">fonte</a>)</p>
+</div>
+
+<h2>dltHub: a plataforma (GA desde mai/2026)</h2>
+
+<p>Além da biblioteca open-source, a dltHub oferece uma plataforma gerenciada (<a href="https://dlthub.com">dlthub.com</a>) que pareia <strong>agentes que constroem pipelines dlt</strong> com <strong>o runtime que os coloca em produção</strong>:</p>
+
+<ul>
+  <li><strong>AI Workbench:</strong> agentes Claude/Codex/Cursor geram, depuram e fazem deploy de pipelines.</li>
+  <li><strong>Context layer:</strong> catálogo com 10.100+ fontes REST API pré-pesquisadas em <a href="https://dlthub.com/context">dlthub.com/context</a>, para o agente consumir como contexto.</li>
+  <li><strong>Managed runtime:</strong> deploy com um comando (<code>uvx dlthub-start</code>), scheduling, alerting, observabilidade OTEL.</li>
+  <li><strong>Transformations:</strong> agentes propõem transformações em Python que compilam para SQL (via Ibis) e rodam no DuckDB/Snowflake.</li>
+  <li><strong>Building blocks:</strong> dlt + DuckDB + Marimo + Ibis — modular e composível, sem monólito.</li>
+</ul>
+
+<table>
+  <tr><th>Plano</th><th>Preço</th><th>Público</th></tr>
+  <tr><td>Pro</td><td>$119/mês (50h de runtime)</td><td>1 dev + 2-5 stakeholders: o menor time que roda uma stack ponta a ponta</td></tr>
+  <tr><td>Scale (GA ago/2026)</td><td>a partir de $1k/mês</td><td>Médias empresas: catálogo AI-native, ontologias, lineage, agentes operacionais</td></tr>
+  <tr><td>Enterprise (início 2027)</td><td>customizado</td><td>Suporte dedicado, SLAs, deploy sob medida</td></tr>
+</table>
+
+<h2>Instalação</h2>
+
+<pre><code><span class="syn-cmt"># Biblioteca open-source (suficiente para as próximas aulas)</span>
+pip install <span class="syn-str">"dlt[duckdb]"</span>
+
+<span class="syn-cmt"># Com extras para destinos específicos</span>
+pip install <span class="syn-str">"dlt[bigquery]"</span>     <span class="syn-cmt"># Google BigQuery</span>
+pip install <span class="syn-str">"dlt[snowflake]"</span>    <span class="syn-cmt"># Snowflake</span>
+pip install <span class="syn-str">"dlt[postgres]"</span>     <span class="syn-cmt"># PostgreSQL</span>
+pip install <span class="syn-str">"dlt[s3]"</span>           <span class="syn-cmt"># AWS S3 (staging)</span>
+
+<span class="syn-cmt"># Ou com uv</span>
+uv add <span class="syn-str">"dlt[duckdb]"</span>
+
+<span class="syn-cmt"># Plataforma dltHub (separada da biblioteca)</span>
+uvx dlthub-start
+</code></pre>
+
+<div class="callout">
+  <div class="callout-title">Biblioteca vs plataforma — não confundir</div>
+  <p><strong>dlt</strong> (a biblioteca): open-source, Apache 2.0, grátis, roda em qualquer lugar que rode Python. <strong>dltHub</strong> (a plataforma): produto comercial para deploy, observabilidade e workflows agentic. A palestra foca na biblioteca; a plataforma é opcional.</p>
+</div>
+
+<h2>Quiz rápido</h2>
+
+<div class="quiz" id="q1">
+  <h4>Pergunta 1: Qual a licença da biblioteca dlt?</h4>
+  <button onclick="check(this, false)">MIT</button>
+  <button onclick="check(this, false)">GPL v3</button>
+  <button onclick="check(this, true)">Apache 2.0</button>
+  <button onclick="check(this, false)">BSL (Business Source License)</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <h4>Pergunta 2: O dlt é uma plataforma ou uma biblioteca?</h4>
+  <button onclick="check(this, false)">Plataforma SaaS (como Fivetran)</button>
+  <button onclick="check(this, false)">Ferramenta CLI independente</button>
+  <button onclick="check(this, true)">Biblioteca Python (pip install)</button>
+  <button onclick="check(this, false)">Plugin de Airflow</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <h4>Pergunta 3: Onde ficam as sedes da dltHub?</h4>
+  <button onclick="check(this, false)">Nova York e Londres</button>
+  <button onclick="check(this, false)">São Paulo e Lisboa</button>
+  <button onclick="check(this, true)">Berlin e San Francisco</button>
+  <button onclick="check(this, false)">Bangalore e Toronto</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <h4>Pergunta 4: Quantos pipelines por mês a comunidade produzia em janeiro de 2026?</h4>
+  <button onclick="check(this, false)">2.400</button>
+  <button onclick="check(this, false)">24.000</button>
+  <button onclick="check(this, true)">81.000</button>
+  <button onclick="check(this, false)">810.000</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <h4>Pergunta 5: Qual VC liderou o seed de $8M da dltHub?</h4>
+  <button onclick="check(this, false)">Sequoia Capital</button>
+  <button onclick="check(this, false)">Andreessen Horowitz</button>
+  <button onclick="check(this, true)">Bessemer Venture Partners</button>
+  <button onclick="check(this, false)">Y Combinator</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="ask-followup">
+  <h4>Dúvidas?</h4>
+  <p>Pergunte ao agente sobre qualquer ponto que não ficou claro. Exemplos: "Qual a diferença entre dlt e dltHub?", "Quem mais investiu na dltHub além da Bessemer?", "O que significa Apache 2.0 na prática para uso comercial?", "O que é 'source-available' e como difere de open-source?"</p>
+</div>
+
+<div class="nav">
+  <span></span>
+  <a href="0002-arquitetura-core.html">Aula 2: Arquitetura central →</a>
+</div>
+
+<script>
+function check(btn, correct) {
+  const quiz = btn.parentElement;
+  quiz.querySelectorAll('button').forEach(b => {
+    b.classList.remove('correct', 'incorrect');
+    b.disabled = true;
+  });
+  if (correct) {
+    btn.classList.add('correct');
+    quiz.querySelector('.feedback').textContent = 'Correto!';
+  } else {
+    btn.classList.add('incorrect');
+    quiz.querySelector('.feedback').textContent = 'Incorreto. Tente revisar a seção correspondente.';
+    quiz.querySelectorAll('button').forEach(b => {
+      if (b.onclick && b.onclick.toString().includes('true')) b.classList.add('correct');
+    });
+  }
+}
+</script>
+
+</body>
+</html>

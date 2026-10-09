@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR" saved-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dlt: integração na stack moderna</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&family=Fira+Code:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<h1>Aula 7: Integração na stack moderna — onde o dlt roda e com o que ele conversa</h1>
+
+<div class="lesson-meta">
+  <strong>Objetivo:</strong> Mapear a superfície de integração do dlt: os orquestradores e plataformas de execução suportados, e as tecnologias (especialmente open source) com integração nativa — como source, destination ou auxiliar de pipeline.<br>
+  <strong>Requer:</strong> <a href="0006-schema-contracts-ecossistema.html">Aula 6</a> (que já cobre a narrativa dlt+dbt/Ibis/DuckDB/marimo).<br>
+  <strong>Fonte primária:</strong> <a href="https://dlthub.com/docs/walkthroughs/deploy-a-pipeline">Deploy a pipeline</a>, <a href="https://dlthub.com/docs/dlt-ecosystem/destinations">Destinations</a>, <a href="https://dlthub.com/docs/dlt-ecosystem/verified-sources">Verified sources</a> e <a href="https://dlthub.com/docs/running-in-production/running">Running in production</a> (docs oficiais).
+</div>
+
+<h2>O princípio: biblioteca, não runtime</h2>
+
+<p>O slogan oficial do deploy é direto: <strong>"dlt runs anywhere Python runs"</strong>. O dlt não tem runtime próprio, agente, nem serviço que você precise hospedar — é <code>pip install dlt</code> dentro da sua codebase. Consequência direta: a <em>orquestração</em> é uma decisão <strong>sua</strong>, e o dlt se adapta a qualquer uma.</p>
+
+<p>O que torna isso tecnicamente possível é o que vimos na <a href="0005-schema-normalizacao-incremental.html">Aula 5</a>: o <strong>estado vive no destino</strong>. Cada invocação do pipeline é stateless — o orquestrador só precisa disparar <code>pipeline.run()</code> no horário certo, e o dlt retoma de onde parou (inclusive de outra máquina). É exatamente o que diz o callout do slide de orquestradores da palestra.</p>
+
+<h2>Orquestradores e plataformas de execução</h2>
+
+<p>O guia oficial de deploy documenta <strong>dez</strong> orquestradores/plataformas, além do Snowflake e do caso genérico:</p>
+
+<table>
+  <tr><th>Plataforma</th><th>Como o dlt encaixa</th></tr>
+  <tr><td><strong>Dagster</strong></td><td>Integração <strong>nativa</strong> via pacote <code>dagster-dlt</code> — o source vira software-defined assets</td></tr>
+  <tr><td>Airflow</td><td>Cada <code>pipeline.run()</code> é uma task (Astronomer, Cloud Composer, MWAA)</td></tr>
+  <tr><td>Prefect</td><td><code>@task</code>/<code>@flow</code> + <code>.serve(cron=...)</code> cria o deployment</td></tr>
+  <tr><td>dltHub</td><td>Managed: decorators <code>@dlt.hub.run</code> + <code>trigger.schedule("0 * * * *")</code></td></tr>
+  <tr><td>Kestra</td><td>Workflow YAML declarativo, 400+ plugins, blueprints dlt→Weaviate/DuckDB/BigQuery</td></tr>
+  <tr><td>Modal</td><td>Serverless: <code>modal deploy</code>, volumes persistentes para o DuckDB</td></tr>
+  <tr><td>Orchestra</td><td>Control plane que também roda dbt core — EL + T no mesmo lugar</td></tr>
+  <tr><td>GitHub Actions</td><td>Cron com free tier generoso — o jeito mais barato de começar</td></tr>
+  <tr><td>Cloud Functions / Run</td><td>Serverless no GCP; estado no destino torna cada execução stateless</td></tr>
+  <tr><td>Snowflake</td><td>Native App / run-in-Snowflake — roda o pipeline dentro do warehouse</td></tr>
+  <tr><td><em>Qualquer lugar</em></td><td>Lambda, cron, Kubernetes, Docker — onde rodar Python</td></tr>
+</table>
+
+<div class="callout">
+  <div class="callout-title">Dagster: a integração mais "nativa" de todas</div>
+  <p>Diferente dos demais (onde o dlt é só uma função Python agendada), o Dagster mantém um pacote próprio — <code>dagster-dlt</code> — com o decorator <code>@dlt_assets</code> que transforma um <code>@dlt.source</code> em assets materializáveis no Dagster:</p>
+</div>
+
+<pre><code><span class="syn-cmt"># dagster-dlt: o source do dlt vira software-defined assets</span>
+<span class="syn-kw">from</span> dagster <span class="syn-kw">import</span> AssetExecutionContext, Definitions, load_assets_from_modules
+<span class="syn-kw">from</span> dagster_dlt <span class="syn-kw">import</span> DagsterDltResource, dlt_assets
+
+@dlt_assets(
+    dlt_source=github_source(),
+    dlt_pipeline=dlt.pipeline(pipeline_name=<span class="syn-str">"github_issues"</span>,
+                              destination=<span class="syn-str">"duckdb"</span>, dataset_name=<span class="syn-str">"github"</span>),
+    name=<span class="syn-str">"github"</span>, group_name=<span class="syn-str">"github"</span>,
+)
+<span class="syn-kw">def</span> <span class="syn-fn">github_assets</span>(context: AssetExecutionContext, dlt: DagsterDltResource):
+    <span class="syn-kw">yield from</span> dlt.run(context=context)
+
+defs = Definitions(assets=load_assets_from_modules([assets]), resources={<span class="syn-str">"dlt"</span>: DagsterDltResource()})</code></pre>
+
+<p>Fonte: <a href="https://dlthub.com/docs/walkthroughs/deploy-a-pipeline/deploy-with-dagster">Deploy with Dagster</a> e a <a href="https://docs.dagster.io/integrations/embedded-elt/dlt">doc do Dagster sobre dlt</a>.</p>
+
+<h2>Sources: o que o dlt já traz pronto</h2>
+
+<p>As fontes se dividem em duas categorias, e a diferença é de <strong>distribuição</strong>, não de qualidade:</p>
+
+<h3>Core sources — dentro da biblioteca</h3>
+
+<ul>
+  <li><strong>REST API</strong> — o <code>RESTClient</code> com paginação declarativa (o que usamos no exemplo RAWG, <a href="0003-resource-transformer.html">Aula 3</a>).</li>
+  <li><strong>SQL database</strong> — 30+ bancos via SQLAlchemy.</li>
+  <li><strong>Object store &amp; filesystem</strong> — S3, GCS, Azure Blob, arquivos locais.</li>
+  <li><strong>Dataframe</strong> — pandas, PyArrow e Polars como fonte.</li>
+</ul>
+
+<h3>Verified sources — via <code>dlt init</code></h3>
+
+<p>29 conectores mantidos pelo time e pela comunidade, distribuídos como código Python em repositório separado (<code>dlt init &lt;fonte&gt;</code> baixa para o seu projeto):</p>
+
+<pre><code>GitHub · Stripe · Shopify · Salesforce · HubSpot · Notion · Jira · Slack ·
+Zendesk · MongoDB · Kafka · Postgres replication · Google Sheets/Ads/Analytics ·
+Pipedrive · Facebook Ads · Airtable · Amazon Kinesis · Asana · Chess · Freshdesk ·
+Inbox · Matomo · Mux · Personio · Scrapy · Strapi · Workable</code></pre>
+
+<div class="callout">
+  <div class="callout-title">Core vs verified</div>
+  <p>Core sources são genéricos e vêm integrados no <code>dlt</code> (por isso são os mais usados, segundo a telemetria oficial). Verified sources são específicos de uma API e ficam num <a href="https://github.com/dlt-hub/verified-sources">repo separado</a> — o <code>dlt init</code> traz o código para você customizar. E se nada servir, qualquer função que yielda dados é um source válido (<a href="0006-schema-contracts-ecossistema.html">Aula 6</a>).</p>
+</div>
+
+<h2>Destinations: o mapa completo</h2>
+
+<table>
+  <tr><th>Categoria</th><th>Destinos (open source em <strong>negrito</strong>)</th></tr>
+  <tr><td>Object store / filesystem</td><td>AWS S3, Google Cloud Storage, Azure Blob</td></tr>
+  <tr><td>SQL local / analítico</td><td><strong>DuckDB</strong>, <strong>ClickHouse</strong>, <strong>Postgres</strong>, MotherDuck, DuckLake, MS SQL</td></tr>
+  <tr><td>SQL via SQLAlchemy</td><td>Qualquer banco com driver SQLAlchemy</td></tr>
+  <tr><td>Data warehouses</td><td>Snowflake, BigQuery, Redshift, Databricks, Fabric, Synapse, Athena, Dremio</td></tr>
+  <tr><td>Formatos abertos &amp; AI</td><td><strong>Iceberg</strong>, <strong>Delta Lake</strong>, <strong>Lance</strong>, <strong>LanceDB</strong>, <strong>Hugging Face Datasets</strong>, <strong>Qdrant</strong>, <strong>Weaviate</strong></td></tr>
+  <tr><td>Extensível</td><td>Reverse ETL (sink custom via <code>@dlt.destination</code>) + community destinations</td></tr>
+</table>
+
+<p>Dois destaques que importam para a stack moderna:</p>
+
+<ul>
+  <li><strong>Formatos abertos + AI:</strong> o dlt escreve Parquet/Iceberg/Delta/Lance diretamente — e carrega para vector DBs (Qdrant, Weaviate) e Hugging Face Datasets, o que o coloca no caminho de dados para RAG e ML.</li>
+  <li><strong>Trocar destino = mudar uma string</strong> (já visto na <a href="0004-pipeline-destination.html">Aula 4</a>): o mesmo source que alimenta DuckDB no laptop alimenta Snowflake em produção.</li>
+</ul>
+
+<div class="callout">
+  <div class="callout-title">Nuance de licença (reforço da Aula 1)</div>
+  <p>A biblioteca é Apache-2.0, mas nem todo destino é open source: o Iceberg e o MS SQL Change Tracking são <em>source-available</em> (features da plataforma dltHub), e alguns destinos são serviços gerenciados (Snowflake, BigQuery...). Para a palestra, mantenha o foco no que é 100% open source.</p>
+</div>
+
+<h2>Auxiliares: as peças open source que encaixam</h2>
+
+<p>Além de source e destination, o dlt integra nativamente com tecnologias que ajudam <em>depois</em> (transformação) e <em>em volta</em> (observabilidade) do pipeline:</p>
+
+<ul>
+  <li><strong>Transformação — dbt:</strong> dlt faz EL, dbt faz T; o <code>load_info</code> dispara o job dbt após a carga (detalhado na <a href="0006-schema-contracts-ecossistema.html">Aula 6</a>).</li>
+  <li><strong>Transformação — Ibis + sqlglot:</strong> transformações Python que compilam para SQL e rodam no destino, zero-copy (Aula 6).</li>
+  <li><strong>Intercâmbio in-memory — Arrow/Pandas/Polars:</strong> <code>dataset.games.df()</code>, <code>.arrow()</code>, <code>.to_ibis()</code> — o dlt respeita o padrão de composição do Arrow de ponta a ponta.</li>
+  <li><strong>Notebooks/data apps — marimo:</strong> widgets nativos (<code>schema_viewer</code>, <code>pipeline_selector</code>) para exploração interativa (Aula 6 e o hands-on do exemplo).</li>
+  <li><strong>Observabilidade:</strong> <code>send_slack_message</code> para alertas; Sentry (DSN em <code>config.toml</code>); traces OpenTelemetry via <code>pipeline.last_trace</code>; e os <a href="https://dlthub.com/docs/running-in-production/running#retry-helpers-and-tenacity">retry helpers</a> que compõem com <code>tenacity</code> para retry com backoff exponencial.</li>
+</ul>
+
+<h2>O mapa mental para montar a stack</h2>
+
+<p>Tudo isso compõe um único padrão (o mesmo do diagrama final da Aula 6):</p>
+
+<pre><code>Orquestrador ──► dlt (EL) ──► destination ──► [dbt | Ibis] (T) ──► marimo/BI
+(Airflow/Dagster/    │           (DuckDB/          │
+ Prefect/... )       │            Snowflake/       │
+                     │            Iceberg/...)     │
+                     └──────────── estado vive aqui ┘</code></pre>
+
+<p>E uma última decisão de arquitetura, com a qual os docs são explícitos: o dlt suporta <strong>ETL e ELT</strong>, juntos. ETL = transformar antes de carregar (via <code>add_map</code>, <code>@dlt.transformer</code> — Aula 3); ELT = carregar cru e transformar no destino (dbt/Ibis). O padrão EL(T) da palestra é o mais comum: dlt extrai e carrega, e o "T" vira responsabilidade da ferramenta certa, com o compute do warehouse.</p>
+
+<p>Fonte: <a href="https://dlthub.com/docs/dlt-ecosystem/transformations">Transformations (docs oficiais)</a>.</p>
+
+<h2>Quiz rápido</h2>
+
+<div class="quiz" id="q1">
+  <h4>Pergunta 1: Qual pacote dá a integração NATIVA entre dlt e Dagster?</h4>
+  <button onclick="check(this, false)">airflow-dlt</button>
+  <button onclick="check(this, false)">prefect-dlt</button>
+  <button onclick="check(this, true)">dagster-dlt</button>
+  <button onclick="check(this, false)">dlt-dagster-plugin</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <h4>Pergunta 2: Qual a diferença entre core sources e verified sources?</h4>
+  <button onclick="check(this, false)">Verified são pagos; core são gratuitos</button>
+  <button onclick="check(this, false)">Core são REST; verified são SQL</button>
+  <button onclick="check(this, true)">Core vêm na biblioteca; verified baixam via dlt init de outro repo</button>
+  <button onclick="check(this, false)">Não há diferença prática</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <h4>Pergunta 3: Qual destes é um destino open source do dlt?</h4>
+  <button onclick="check(this, false)">Fivetran</button>
+  <button onclick="check(this, false)">Airbyte</button>
+  <button onclick="check(this, true)">DuckDB</button>
+  <button onclick="check(this, false)">Salesforce</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <h4>Pergunta 4: Por que o dlt roda em qualquer orquestrador sem runtime próprio?</h4>
+  <button onclick="check(this, false)">Precisa de um agente dlt instalado no cluster</button>
+  <button onclick="check(this, false)">Precisa de um plugin específico por orquestrador</button>
+  <button onclick="check(this, true)">O estado vive no destino, então cada invocação é stateless</button>
+  <button onclick="check(this, false)">Só roda dentro de containers Docker</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <h4>Pergunta 5: Qual tecnologia open source o dlt usa para transformações Python→SQL no destino?</h4>
+  <button onclick="check(this, false)">Pandas</button>
+  <button onclick="check(this, false)">Spark</button>
+  <button onclick="check(this, false)">SQLAlchemy</button>
+  <button onclick="check(this, true)">Ibis</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="ask-followup">
+  <h4>Dúvidas?</h4>
+  <p>Pergunte ao agente. Exemplos: "Como o <code>@dlt_assets</code> do Dagster difere de rodar <code>pipeline.run()</code> numa task Airflow?", "Quais destinos suportam <code>merge</code> e quais fazem fallback para append?", "Como o dlt carrega para vector DBs (Qdrant/Weaviate) e o que isso muda no schema?", "Quando escolher ETL (transformer) vs ELT (dbt/Ibis)?", "Como configurar o retry com <code>tenacity</code> e os <code>retry_load</code> helpers?"</p>
+</div>
+
+<div class="nav">
+  <a href="0006-schema-contracts-ecossistema.html">← Aula 6: Schema contracts e ecossistema</a>
+  <span></span>
+</div>
+
+<script>
+function check(btn, correct) {
+  const quiz = btn.parentElement;
+  quiz.querySelectorAll('button').forEach(b => {
+    b.classList.remove('correct', 'incorrect');
+    b.disabled = true;
+  });
+  if (correct) {
+    btn.classList.add('correct');
+    quiz.querySelector('.feedback').textContent = 'Correto!';
+  } else {
+    btn.classList.add('incorrect');
+    quiz.querySelector('.feedback').textContent = 'Incorreto. Tente revisar a seção correspondente.';
+    quiz.querySelectorAll('button').forEach(b => {
+      if (b.onclick && b.onclick.toString().includes('true')) b.classList.add('correct');
+    });
+  }
+}
+</script>
+
+</body>
+</html>

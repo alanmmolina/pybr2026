@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR" saved-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dlt: schema contracts, extensibilidade e ecossistema</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&family=Fira+Code:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<h1>Aula 6: Schema contracts, extensibilidade e o ecossistema moderno</h1>
+
+<div class="lesson-meta">
+  <strong>Objetivo:</strong> Proteger schemas em produção com contracts (4 modos), estender o dlt com Python puro (destinations, sources, normalizers) e entender como ele se encaixa na stack de dados moderna.<br>
+  <strong>Requer:</strong> <a href="0005-schema-normalizacao-incremental.html">Aula 5</a>.<br>
+  <strong>Fonte primária:</strong> <a href="https://dlthub.com/docs/general-usage/schema-contracts">Schema contract</a> (docs oficiais).
+</div>
+
+<h2>Schema contracts: controle do que entra</h2>
+
+<p>Por padrão, o dlt opera em modo <code>evolve</code>: novas colunas, tabelas e tipos são aceitos e o schema se expande. Ótimo para exploração — mas em produção você quer saber quando a fonte mudou. Os <strong>schema contracts</strong> definem o que fazer com dados inesperados, em três dimensões (<code>tables</code>, <code>columns</code>, <code>data_type</code>), cada uma com <strong>quatro modos</strong>:</p>
+
+<table>
+  <tr><th>Modo</th><th>Efeito</th><th>Quando usar</th></tr>
+  <tr><td><code>evolve</code></td><td>Aceita e adapta: novas colunas, tabelas e tipos são bem-vindos</td><td>Desenvolvimento, exploração de APIs novas</td></tr>
+  <tr><td><code>freeze</code></td><td>Lança exceção se dados não batem com o schema — nada é carregado</td><td>Produção, pipelines críticos</td></tr>
+  <tr><td><code>discard_row</code></td><td>Descarta a linha inteira que viola o schema</td><td>Streams com lixo ocasional; manter tabela limpa</td></tr>
+  <tr><td><code>discard_value</code></td><td>Carrega a linha, mas descarta só o valor que não se encaixa</td><td>Campos novos irrelevantes; prioridade é não perder a linha</td></tr>
+</table>
+
+<pre><code>@dlt.resource(
+    schema_contract={
+        <span class="syn-str">"tables"</span>: <span class="syn-str">"evolve"</span>,        <span class="syn-cmt"># permite novas tabelas</span>
+        <span class="syn-str">"columns"</span>: <span class="syn-str">"freeze"</span>,       <span class="syn-cmt"># rejeita colunas inesperadas</span>
+        <span class="syn-str">"data_type"</span>: <span class="syn-str">"discard_row"</span>, <span class="syn-cmt"># descarta linhas com tipo divergente</span>
+    }
+)
+<span class="syn-kw">def</span> <span class="syn-fn">games</span>(): ...
+
+<span class="syn-cmt"># Shorthand: "freeze" vira {"tables": "freeze", "columns": "freeze", "data_type": "freeze"}</span>
+pipeline.run(data=my_source, schema_contract=<span class="syn-str">"freeze"</span>)</code></pre>
+
+<div class="callout">
+  <div class="callout-title">Hierarquia do contrato: source → resource → run</div>
+  <p>O contrato definido no <code>@dlt.source</code> vale como default para todos os resources; o do <code>@dlt.resource</code> sobrescreve para aquele resource; e o passado em <code>pipeline.run()</code> sobrescreve tudo naquela execução. Precisão na medida certa: fonte congelada, com uma tabela específica evoluindo.</p>
+</div>
+
+<h3>Nuances que evitam sustos</h3>
+
+<ul>
+  <li><strong>Tabelas novas são sempre permitidas na primeira vez:</strong> na primeira carga de uma tabela, o modo de colunas vira <code>evolve</code> internamente (para permitir a inferência inicial) e volta ao original depois.</li>
+  <li><strong>Contratos aplicam após normalização de nomes:</strong> <code>createdAt</code> já é <code>created_at</code> quando o contrato avalia.</li>
+  <li><strong><code>discard_row</code> é por tabela:</strong> se a violação é numa nested table (<code>users__addresses</code>), a linha da tabela filha cai, mas a linha pai em <code>users</code> é carregada.</li>
+  <li><strong>Em <code>freeze</code>, o dlt lança <code>DataValidationError</code></strong> com contexto completo: <code>schema_name</code>, <code>table_name</code>, <code>column_name</code>, o dado que causou a violação e o contrato expandido. Você captura com <code>PipelineStepFailed</code> e sabe exatamente o que a fonte mudou.</li>
+</ul>
+
+<h2>Pydantic + schema contracts</h2>
+
+<p>Você pode usar modelos Pydantic como schema via <code>columns=MeuModelo</code>. O Pydantic valida tipos antes do dlt aplicar o contrato — duas camadas de proteção. O dlt mapeia os modos do contrato para o <code>extra</code> do Pydantic:</p>
+
+<table>
+  <tr><th>Modo de colunas</th><th>Pydantic extra</th></tr>
+  <tr><td><code>evolve</code></td><td><code>allow</code></td></tr>
+  <tr><td><code>freeze</code></td><td><code>forbid</code></td></tr>
+  <tr><td><code>discard_value</code></td><td><code>ignore</code></td></tr>
+  <tr><td><code>discard_row</code></td><td><code>forbid</code> + tratamento da <code>ValidationError</code></td></tr>
+</table>
+
+<pre><code><span class="syn-kw">from</span> pydantic <span class="syn-kw">import</span> BaseModel
+
+<span class="syn-kw">class</span> <span class="syn-dec">Game</span>(BaseModel):
+    model_config = {<span class="syn-str">"extra"</span>: <span class="syn-str">"forbid"</span>}   <span class="syn-cmt"># ⇒ columns="freeze"</span>
+    id: <span class="syn-kw">int</span>
+    slug: <span class="syn-kw">str</span>
+    name: <span class="syn-kw">str</span>
+
+@dlt.resource(columns=Game)
+<span class="syn-kw">def</span> <span class="syn-fn">games</span>():
+    ...</code></pre>
+
+<h2>Extensibilidade: Python puro é a vantagem</h2>
+
+<p>O dlt foi desenhado para ser estendido em Python — não há DSL proprietária, YAML complexo ou plugin system fechado. Quando você precisa de algo que o dlt não faz out-of-the-box, você escreve Python:</p>
+
+<h3>Custom destination</h3>
+
+<pre><code><span class="syn-cmt"># Implemente a interface de destination para qualquer sistema</span>
+<span class="syn-kw">from</span> dlt.destinations <span class="syn-kw">import</span> Destination
+
+<span class="syn-cmt"># Weaviate, Qdrant e outros destinos "não-SQL" são implementados assim</span></code></pre>
+
+<h3>Custom source</h3>
+
+<pre><code><span class="syn-cmt"># Qualquer fonte que yielda dados é um source válido</span>
+@dlt.source
+<span class="syn-kw">def</span> <span class="syn-fn">minha_fonte_exotica</span>(config=dlt.secrets.value):
+    <span class="syn-kw">for</span> batch <span class="syn-kw">in</span> protocolo_maluco.fetch():
+        <span class="syn-kw">yield</span> dlt.resource(batch, name=<span class="syn-str">"dados"</span>)</code></pre>
+
+<h3>Custom incremental strategy</h3>
+
+<pre><code><span class="syn-cmt"># incremental() aceita funções lambda para lógica customizada</span>
+incremental(
+    <span class="syn-str">"updated_at"</span>,
+    initial_value=<span class="syn-num">0</span>,
+    transformer=<span class="syn-kw">lambda</span> x: x.isoformat()  <span class="syn-cmt"># transforma antes de comparar</span>
+)</code></pre>
+
+<h3>Custom normalizer</h3>
+
+<p>O próprio normalizer é plugável: você pode trocar a forma como listas aninhadas são ligadas às tabelas pai, ou gerar estruturas estilo parquet. Isso é profundo — mas existe, documentado, para quem precisar.</p>
+
+<p>Essa extensibilidade é o argumento central para equipes que cresceram além de scripts caseiros mas não querem as amarras de plataformas de conectores. O Python é a linguagem de extensão — e é a mesma linguagem do resto da codebase.</p>
+
+<h2>dlt + DuckDB: o "data lake on a laptop"</h2>
+
+<p>DuckDB é o destino mais comum em desenvolvimento. Com ele, você tem um ciclo de feedback ultra-rápido: extrai, carrega, inspeciona com SQL ou DataFrame — tudo local, sem servidor. E como vimos na <a href="0001-origens-ecossistema.html">Aula 1</a>, esse padrão explodiu: dispositivos únicos usando DuckDB via dlt cresceram 15x em um ano.</p>
+
+<pre><code>pipeline = dlt.pipeline(destination=<span class="syn-str">"duckdb"</span>, dataset_name=<span class="syn-str">"rawg_data"</span>)
+pipeline.run(data=rawg().add_limit(max_items=<span class="syn-num">100</span>))
+
+<span class="syn-cmt"># Inspeciona no próprio Python</span>
+df = pipeline.dataset().games.df()
+
+<span class="syn-cmt"># Ou conecta com DBeaver, MotherDuck, etc.</span></code></pre>
+
+<h2>dlt + dbt: ingestão + transformação</h2>
+
+<p>dlt lida com <strong>EL</strong> (Extract e Load); dbt lida com <strong>T</strong> (Transform). O dlt gera schemas limpos e tipados que o dbt consome diretamente. O <code>load_info</code> do dlt pode disparar jobs dbt após a carga:</p>
+
+<pre><code><span class="syn-cmt"># Exemplo de integração dlt → dbt em Airflow</span>
+load_info = pipeline.run(data=source)
+<span class="syn-kw">if</span> load_info.loads_ids:
+    dbt_run()  <span class="syn-cmt"># transforma os dados recém-carregados</span></code></pre>
+
+<h2>dlt + orquestradores (Airflow, Dagster, Prefect)</h2>
+
+<p>O dlt roda em <strong>qualquer lugar que rode Python</strong>. Não precisa de runtime especial:</p>
+
+<ul>
+  <li><strong>Airflow:</strong> cada <code>pipeline.run()</code> vira uma task no DAG. O dlt gerencia estado entre execuções — o Airflow só precisa disparar na schedule certa.</li>
+  <li><strong>Dagster:</strong> resources do dlt podem ser expostos como Dagster ops/assets.</li>
+  <li><strong>Prefect:</strong> similar. O <code>pipeline.run()</code> é uma Python function que o Prefect gerencia.</li>
+  <li><strong>Serverless:</strong> Lambda, Cloud Functions, Cloud Run — <code>pip install dlt</code> e pronto. O estado no destino torna cada invocação stateless.</li>
+</ul>
+
+<h2>dlt + Ibis: transformações Python-para-SQL</h2>
+
+<p>O <strong>Ibis</strong> permite escrever transformações em Python que são <strong>compiladas para SQL</strong> e executadas diretamente no destino (DuckDB, Snowflake, BigQuery...). O dlt integra nativamente:</p>
+
+<pre><code><span class="syn-kw">import</span> ibis
+
+dataset = pipeline.dataset()
+games = dataset.games.to_ibis()   <span class="syn-cmt"># lazy Ibis expression</span>
+
+<span class="syn-cmt"># Agregação em Python, execução em SQL no destino</span>
+<span class="syn-cmt"># (esrb_rating__name é a coluna achatada de esrb_rating.name)</span>
+jogos_por_classificacao = (
+    games
+    .group_by(<span class="syn-str">"esrb_rating__name"</span>)
+    .aggregate(total=ibis._.id.count())
+)
+
+<span class="syn-cmt"># Só aqui o SQL roda</span>
+<span class="syn-fn">print</span>(jogos_por_classificacao.to_pyarrow())</code></pre>
+
+<div class="callout">
+  <div class="callout-title">Zero-copy</div>
+  <p>Os dados não passam pela memória do Python: Ibis compila para SQL, o destino executa. É o mesmo padrão de composição que Arrow e Ibis foram desenhados para suportar — e que o dlt respeita de ponta a ponta.</p>
+</div>
+
+<h2>dlt + Marimo: notebooks interativos</h2>
+
+<p><strong>Marimo</strong> é um notebook reativo onde células reexecutam automaticamente quando dependências mudam. O dlt tem integração direta para visualização e exploração dos datasets carregados.</p>
+
+<h2>dltHub Platform + agentic workflows</h2>
+
+<p>Além da biblioteca open-source, a <strong>dltHub</strong> (GA desde mai/2026, <a href="0001-origens-ecossistema.html">Aula 1</a>) transforma pipelines dlt em produção com agentes:</p>
+
+<ul>
+  <li><strong>AI Workbench:</strong> coding agents (Claude, Codex, Cursor) geram, depuram e fazem deploy de pipelines.</li>
+  <li><strong>dltHub Context:</strong> catálogo com 10.100+ fontes REST API pré-pesquisadas para os agentes consumirem.</li>
+  <li><strong>Managed runtime:</strong> deploy com um comando. Scheduling, alerting, observabilidade, transform-aware triggers.</li>
+  <li><strong>Ibis-powered transformations:</strong> agentes propõem transformações em Python → compilam para SQL → executam no DuckDB/Snowflake.</li>
+</ul>
+
+<p>Em 2026, <strong>91% dos pipelines dlt são gerados por coding agents</strong> — o dlt virou, nas palavras da própria empresa, "o runtime de ingestão de dados".</p>
+
+<h2>Resumo: a stack com dlt</h2>
+
+<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="stack-title stack-desc" style="width:100%;height:auto;display:block;margin:1.2rem 0;">
+  <title id="stack-title">A stack de dados moderna com dlt como componente</title>
+  <desc id="stack-desc">Cinco camadas empilhadas: orquestração, dlt (EL, em destaque), destino, transformação e consumo — o dlt integra a stack em vez de substituí-la.</desc>
+
+  <rect x="40" y="40" width="720" height="320" rx="8" fill="none" stroke="#3A3A3A" stroke-width="1"/>
+  <line x1="40" y1="104" x2="760" y2="104" stroke="#3A3A3A" stroke-width="1"/>
+  <line x1="40" y1="168" x2="760" y2="168" stroke="#3A3A3A" stroke-width="1"/>
+  <line x1="40" y1="232" x2="760" y2="232" stroke="#3A3A3A" stroke-width="1"/>
+  <line x1="40" y1="296" x2="760" y2="296" stroke="#3A3A3A" stroke-width="1"/>
+
+  <rect x="40" y="40" width="720" height="64" fill="transparent"/>
+  <text x="56" y="80" fill="#8a8a8a" font-size="8" font-family="'Fira Code',monospace" letter-spacing="0.08em">01</text>
+  <text x="96" y="80" fill="#eaeaea" font-size="12" font-weight="600" font-family="'Roboto',sans-serif">orquestração</text>
+  <text x="744" y="80" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">Airflow · Dagster · Prefect</text>
+
+  <rect x="40" y="104" width="720" height="64" fill="rgba(183,255,6,0.10)" stroke="#B7FF06" stroke-width="1"/>
+  <text x="56" y="144" fill="#B7FF06" font-size="8" font-family="'Fira Code',monospace" letter-spacing="0.08em">02</text>
+  <text x="96" y="144" fill="#B7FF06" font-size="12" font-weight="600" font-family="'Roboto',sans-serif">dlt (EL)</text>
+  <text x="744" y="144" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">extract · normalize · load</text>
+
+  <rect x="40" y="168" width="720" height="64" fill="transparent"/>
+  <text x="56" y="208" fill="#8a8a8a" font-size="8" font-family="'Fira Code',monospace" letter-spacing="0.08em">03</text>
+  <text x="96" y="208" fill="#eaeaea" font-size="12" font-weight="600" font-family="'Roboto',sans-serif">destino</text>
+  <text x="744" y="208" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">DuckDB · Snowflake · Iceberg</text>
+
+  <rect x="40" y="232" width="720" height="64" fill="transparent"/>
+  <text x="56" y="272" fill="#8a8a8a" font-size="8" font-family="'Fira Code',monospace" letter-spacing="0.08em">04</text>
+  <text x="96" y="272" fill="#eaeaea" font-size="12" font-weight="600" font-family="'Roboto',sans-serif">transformação</text>
+  <text x="744" y="272" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">dbt · Ibis (SQL)</text>
+
+  <rect x="40" y="296" width="720" height="64" fill="transparent"/>
+  <text x="56" y="336" fill="#8a8a8a" font-size="8" font-family="'Fira Code',monospace" letter-spacing="0.08em">05</text>
+  <text x="96" y="336" fill="#eaeaea" font-size="12" font-weight="600" font-family="'Roboto',sans-serif">consumo</text>
+  <text x="744" y="336" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="end">marimo · BI · dashboards</text>
+</svg>
+
+<h2>Quiz rápido</h2>
+
+<div class="quiz" id="q1">
+  <h4>Pergunta 1: O que acontece com schema_contract={"columns": "freeze"}?</h4>
+  <button onclick="check(this, false)">Novas colunas são aceitas e adicionadas ao schema</button>
+  <button onclick="check(this, true)">O pipeline lança exceção se encontrar colunas não declaradas</button>
+  <button onclick="check(this, false)">Colunas não declaradas são ignoradas silenciosamente</button>
+  <button onclick="check(this, false)">O schema é congelado como arquivo .sql</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <h4>Pergunta 2: Qual a diferença entre discard_row e discard_value?</h4>
+  <button onclick="check(this, false)">Nenhuma; são sinônimos</button>
+  <button onclick="check(this, true)">discard_row descarta a linha toda; discard_value descarta só o valor divergente</button>
+  <button onclick="check(this, false)">discard_value descarta a tabela; discard_row descarta a coluna</button>
+  <button onclick="check(this, false)">discard_row é para tabelas; discard_value é para data_type</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <h4>Pergunta 3: Qual a relação entre dlt e dbt?</h4>
+  <button onclick="check(this, false)">dlt substitui dbt (faz extração, carga e transformação)</button>
+  <button onclick="check(this, true)">dlt faz EL (Extract+Load), dbt faz T (Transform) — são complementares</button>
+  <button onclick="check(this, false)">dbt é um destino do dlt (como Snowflake ou DuckDB)</button>
+  <button onclick="check(this, false)">São concorrentes diretos que resolvem o mesmo problema</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <h4>Pergunta 4: O que o Ibis permite fazer com dados carregados pelo dlt?</h4>
+  <button onclick="check(this, false)">Exportar para Excel</button>
+  <button onclick="check(this, false)">Criar dashboards no Power BI</button>
+  <button onclick="check(this, true)">Escrever transformações em Python que compilam para SQL no destino</button>
+  <button onclick="check(this, false)">Substituir o DuckDB como engine de execução</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <h4>Pergunta 5: Onde o contrato definido no pipeline.run() se encaixa na hierarquia?</h4>
+  <button onclick="check(this, false)">Abaixo do resource: só vale se o resource não definir contrato</button>
+  <button onclick="check(this, false)">Igual ao source: conflitos geram erro</button>
+  <button onclick="check(this, true)">Acima de tudo: sobrescreve source e resources naquela execução</button>
+  <button onclick="check(this, false)">Não existe contrato no run(); só em decorators</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="ask-followup">
+  <h4>Dúvidas?</h4>
+  <p>Pergunte ao agente. Exemplos: "Como criar um destination customizado?", "Como capturar e tratar <code>DataValidationError</code>?", "Como funciona a integração dlt + Airflow na prática de deploy?", "O que são os agentic workflows da dltHub?"</p>
+</div>
+
+<div class="nav">
+  <a href="0005-schema-normalizacao-incremental.html">← Aula 5: Schema e incremental</a>
+  <a href="0007-integracao-stack-moderna.html">Aula 7: Integração na stack moderna →</a>
+</div>
+
+<script>
+function check(btn, correct) {
+  const quiz = btn.parentElement;
+  quiz.querySelectorAll('button').forEach(b => {
+    b.classList.remove('correct', 'incorrect');
+    b.disabled = true;
+  });
+  if (correct) {
+    btn.classList.add('correct');
+    quiz.querySelector('.feedback').textContent = 'Correto!';
+  } else {
+    btn.classList.add('incorrect');
+    quiz.querySelector('.feedback').textContent = 'Incorreto. Tente revisar a seção correspondente.';
+    quiz.querySelectorAll('button').forEach(b => {
+      if (b.onclick && b.onclick.toString().includes('true')) b.classList.add('correct');
+    });
+  }
+}
+</script>
+
+</body>
+</html>

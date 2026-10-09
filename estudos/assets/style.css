@@ -1,0 +1,181 @@
+/* Identidade dos estudos. Segue o DESIGN.md da raiz: paleta da Python Brasil
+   2026 (preto, hairline, cinza), Roboto + Fira Code no chrome, syntax
+   custom-dark, raio 5px. Cor de marca não entra aqui; as cores abaixo são as
+   exceções semânticas de callout e o syntax. */
+:root {
+  --canvas: #0F0F0F;
+  --hairline: #3A3A3A;
+  --gray: #ABABAB;
+  --secondary: #eaeaea;
+  --ink: #fafafa;
+  --whisper: rgba(100, 100, 100, 0.1);
+  --note: #448aff;
+  --warn: #dba642;
+  --kw: #ff7878;
+  --fn: #9696ff;
+  --str: #9ecbff;
+  --num: #f8f8f8;
+  --cmt: #6b737c;
+  --plain: #cccccc;
+  /* sintaxe custom-dark alem dos seis acima: parenteses/colchetes e
+     argumentos nomeados. o deck usa os dois; as lessons ainda nao, mas o
+     token fica declarado para quem escrever codigo novo. */
+  --brk: #fed85b;
+  --param: #ff9933;
+  /* escala de cinza da camada de anotacao (DESIGN.md §2). a anotacao some
+     dentro do cinza de texto, e um traço SVG no hairline some de vez. */
+  --annotation: #b0b0b0;
+  --annotation-dim: #8a8a8a;
+  --label: #b8b8b8;
+  --drawn-stroke: #4c4c55;
+  /* raio segue a superficie, nao um valor so (DESIGN.md §4). */
+  --radius: 5px;
+  --radius-drawn: 10px;
+  --radius-chip: 3px;
+  --radius-photo: 2px;
+  /* cor de marca: SO na camada desenhada (os diagramas inline), nunca no
+     chrome. regra do DESIGN.md §1 — chrome never takes color. o lima é o da
+     Python Brasil 2026 no lugar do #c5d200 do dlt; o teal continua sendo o
+     dltHub. */
+  --lime: #B7FF06;
+  --teal: #57c1d4;
+  --font-body: 'Roboto', system-ui, sans-serif;
+  --font-mono: 'Fira Code', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-hand: 'Excalifont', 'Comic Sans MS', cursive;
+  --font-brand: 'Fragment Mono', ui-monospace, monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--canvas);
+  color: var(--secondary);
+  line-height: 1.7;
+  padding: 2.5rem 2rem;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+h1, h2, h3, h4 { font-family: var(--font-body); line-height: 1.25; color: var(--ink); }
+h1 { font-size: 1.9rem; font-weight: 700; margin: 0 0 1.25rem; }
+h2 { font-size: 1.35rem; font-weight: 600; margin: 2.4rem 0 0.85rem; padding-bottom: 0.45rem; border-bottom: 1px solid var(--hairline); }
+h3 { font-size: 1.12rem; font-weight: 600; margin: 1.8rem 0 0.55rem; }
+h4 { font-size: 1rem; font-weight: 600; margin: 1.3rem 0 0.45rem; color: var(--gray); }
+
+p { margin: 0.85rem 0; }
+
+a { color: var(--ink); text-decoration: none; border-bottom: 1px dotted var(--gray); }
+a:hover { border-bottom-style: solid; border-bottom-color: var(--ink); }
+
+code {
+  font-family: var(--font-mono);
+  background: var(--whisper);
+  padding: 0.12em 0.4em;
+  border-radius: var(--radius);
+  font-size: 0.88em;
+  color: var(--ink);
+}
+
+pre {
+  background: transparent;
+  border: 1px solid var(--hairline);
+  padding: 1.15rem 1.4rem;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--plain);
+}
+
+pre code { background: none; padding: 0; font-size: inherit; border-radius: 0; color: inherit; }
+
+ul, ol { margin: 0.85rem 0; padding-left: 1.5rem; }
+li { margin: 0.32rem 0; }
+
+blockquote {
+  border-left: 2px solid var(--hairline);
+  margin: 1.25rem 0;
+  padding: 0.25rem 0 0.25rem 1.15rem;
+  color: var(--gray);
+}
+
+.callout {
+  border: 1px solid color-mix(in srgb, var(--note) 27%, transparent);
+  background: color-mix(in srgb, var(--note) 6%, var(--canvas));
+  border-radius: var(--radius);
+  padding: 1.15rem 1.35rem;
+  margin: 1.35rem 0;
+}
+.callout .callout-title {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--note);
+  margin-bottom: 0.45rem;
+}
+.callout.warn {
+  border-color: color-mix(in srgb, var(--warn) 27%, transparent);
+  background: color-mix(in srgb, var(--warn) 6%, var(--canvas));
+}
+.callout.warn .callout-title { color: var(--warn); }
+
+hr { border: none; border-top: 1px solid var(--hairline); margin: 2.25rem 0; }
+
+table { width: 100%; border-collapse: collapse; margin: 1.15rem 0; font-size: 0.95rem; }
+th, td { padding: 0.55rem 0.8rem; text-align: left; border-bottom: 1px solid var(--hairline); }
+th { font-family: var(--font-mono); font-weight: 600; font-size: 0.82rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.04em; }
+td { color: var(--secondary); }
+
+.nav { display: flex; justify-content: space-between; gap: 1.5rem; margin: 3.25rem 0 1.5rem; font-size: 0.9rem; }
+.nav a { border-bottom: none; color: var(--gray); }
+.nav a:hover { color: var(--ink); }
+
+.lesson-meta {
+  color: var(--gray);
+  font-size: 0.86rem;
+  margin-bottom: 2.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--font-mono);
+  line-height: 1.55;
+}
+
+.quiz { border: 1px solid var(--hairline); border-radius: var(--radius); padding: 1.4rem 1.5rem; margin: 1.5rem 0; }
+.quiz h4 { margin-top: 0; color: var(--ink); }
+.quiz button {
+  display: block; width: 100%; text-align: left;
+  margin: 0.45rem 0; padding: 0.65rem 1rem;
+  background: transparent; border: 1px solid var(--hairline);
+  border-radius: var(--radius); cursor: pointer;
+  font-family: var(--font-body); font-size: 0.95rem; color: var(--secondary);
+}
+.quiz button:hover { border-color: var(--gray); color: var(--ink); }
+.quiz button.correct { border-color: var(--note); background: color-mix(in srgb, var(--note) 10%, var(--canvas)); color: var(--ink); }
+.quiz button.incorrect { border-color: var(--warn); }
+.quiz .feedback { margin-top: 0.85rem; font-style: italic; color: var(--gray); }
+
+.syn-kw  { color: var(--kw); }
+.syn-fn  { color: var(--fn); }
+.syn-str { color: var(--str); }
+.syn-num { color: var(--num); }
+.syn-cmt { color: var(--cmt); }
+.syn-dec { color: var(--fn); }
+.syn-brk { color: var(--brk); }
+.syn-param { color: var(--param); }
+
+.ask-followup {
+  margin-top: 3.25rem;
+  padding: 1.35rem 1.5rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+}
+.ask-followup h4 { margin-top: 0; color: var(--ink); }
+
+@media (max-width: 640px) {
+  body { padding: 1.25rem 1rem; }
+  h1 { font-size: 1.45rem; }
+  pre { padding: 0.85rem 1rem; font-size: 0.8rem; }
+}
