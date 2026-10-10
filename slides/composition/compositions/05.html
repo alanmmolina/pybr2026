@@ -66,22 +66,20 @@ function prepSrc() {
   var scene = document.getElementById("scene-problem-sources");
   if (!scene) return;
   var SVGN = "http://www.w3.org/2000/svg";
-  /* Cada tipo de fonte ganha uma cor própria: azul, verde e amarelo são três
-     coisas que não se confundem, e é isso que a lâmina está dizendo. Os
-     rótulos ficam brancos; a cor mora só no ícone. */
-  var SRC_HUES = ["#448aff", "#46a758", "#dba642"];
+  /* Cor de marca só no elemento desenhado à mão: os ícones são traçados na
+     camada sloppy, então levam o lima do tema. Os rótulos ficam brancos. */
+  var SRC_COLOR = "#B7FF06";
   var cols = scene.querySelectorAll(".src-col");
   for (var ci = 0; ci < cols.length; ci++) {
     var hub = cols[ci].querySelector(".src-hub");
     var ic = cols[ci].querySelector(".src-ic");
-    var hue = SRC_HUES[ci] || "#fafafa";
     var shapes = pmapIconPaths(ic.getAttribute("data-icon"), 21 + ci * 13);
     for (var s = 0; s < shapes.length; s++) {
       var sh = shapes[s];
       var el = document.createElementNS(SVGN, "path");
       el.setAttribute("d", sh.d);
       el.setAttribute("fill", "none");
-      el.setAttribute("stroke", hue);
+      el.setAttribute("stroke", SRC_COLOR);
       el.setAttribute("stroke-width", sh.sw ? String(sh.sw) : "7");
       el.setAttribute("stroke-linecap", "round");
       el.setAttribute("stroke-linejoin", "round");
