@@ -342,13 +342,16 @@
   .ht-arrow { position: absolute; top: 188px; left: 1640px; width: 24px; height: 32px; display: block; }
 
   /* ---- pessoal photo mural ---- */
-  .pf-strip { margin-top: auto; margin-bottom: auto; display: flex; gap: 32px; flex-shrink: 0; }
+  .pf-strip { position: relative; margin-top: auto; margin-bottom: auto; display: flex; gap: 32px; flex-shrink: 0; }
   .pf-item { position: relative; width: 302px; height: 450px; flex-shrink: 0; }
   .pf-frame { position: absolute; left: 0; top: 0; width: 302px; height: 374px; overflow: visible; }
   .pf-border { fill: none; stroke: #fafafa; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-  .pf-photo { position: absolute; left: 8px; top: 8px; width: 286px; height: 358px; object-fit: cover; filter: grayscale(1) contrast(1.08) brightness(0.94); border-radius: 2px; }
-  .pf-cap { position: absolute; top: 390px; left: 0; width: 100%; text-align: center; font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 28px; line-height: 1; color: #fafafa; }
-  .pf-file { position: absolute; top: 432px; left: 0; width: 100%; text-align: center; font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 22px; line-height: 1; color: #ABABAB; }
+  .pf-photo { position: absolute; left: 8px; top: 8px; width: 286px; height: 358px; object-fit: cover; filter: contrast(1.08) brightness(0.94); border-radius: 2px; }
+  .pf-cap { position: absolute; top: 390px; left: 0; width: 100%; text-align: center; font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 28px; line-height: 1; color: #fafafa; white-space: nowrap; }
+  /* legenda única sob o trio da direita, na grade das fotos: 302px de coluna e
+     32px de vão (3 * 302 + 2 * 32 = 970), para cada palavra cair sobre a sua
+     foto. sem barras: a separação é o vão. */
+  .pf-group { left: 668px; width: 970px; display: grid; grid-template-columns: repeat(3, 302px); column-gap: 32px; }
 
   /* ---- dlt brand layer ---- */
   /* Premissa: cor de marca só na camada desenhada à mão (Excalifont/sloppy).
