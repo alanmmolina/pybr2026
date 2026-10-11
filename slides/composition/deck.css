@@ -593,10 +593,11 @@
   .res-json { position: relative; display: flex; min-width: 0; }
   .res-json .code-box { flex: 1; margin-right: 20px; }
   .res-notes-r { position: relative; flex: 0 0 190px; }
-  .res-note-r { position: absolute; left: 0; max-width: 190px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 15px; line-height: 1.2; color: #b0b0b0; white-space: nowrap; }
+  /* nomes e ícones em lima, a mesma caneta das anotações da esquerda. a
+     hierarquia raiz/filha/coluna continua no glifo do ícone e no corpo. */
+  .res-note-r { position: absolute; left: 0; max-width: 190px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 15px; line-height: 1.2; color: #B7FF06; white-space: nowrap; }
   .res-note-r .ri { width: 16px; height: 16px; display: block; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-  .res-note-r.root { font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; font-size: 18px; letter-spacing: -0.02em; color: #eaeaea; }
-  .res-note-r.col { color: #8a8a8a; }
+  .res-note-r.root { font-family: "Fragment Mono", "Fira Code", ui-monospace, monospace; font-size: 18px; letter-spacing: -0.02em; }
   .res-json pre { font-size: 16px; line-height: 1.22; }
   #scene-resource-games .res-notes { flex: 0 0 200px; }
   #scene-resource-games .res-note { max-width: 200px; }
@@ -855,7 +856,9 @@
     font-size: 24px; line-height: 1.25; color: #b0b0b0;
   }
   /* ---- fluxos com seta sloppy + chip (16 transformer · 17 destination) ---- */
-  #scene-transformer { --tf: #dba642; --tf-soft: #dba64244; --tf-tint: rgba(219, 166, 66, 0.12); }
+  /* lima no 16: o mesmo verde dos slides 13–15. o token anda junto do chip e
+     da seta, para a marca não brigar com o próprio percurso do id. */
+  #scene-transformer { --tf: #B7FF06; --tf-soft: #B7FF0644; --tf-tint: rgba(183, 255, 6, 0.12); }
   #scene-pipeline { --tf: #57c1d4; --tf-soft: #57c1d444; --tf-tint: rgba(87, 193, 212, 0.12); }
   /* trigger: [RAWG] ⇢ código do pipeline ⇢ [🦆 rawg.duckdb] = fonte e destino
      em caixas iguais, ligadas por conector de fluxo (tracejado marchando);
@@ -972,8 +975,9 @@
   .stack-cap { margin: 0 0 2px 4px; line-height: 1.15; }
   .stack-cap.file { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 19px; color: #b0b0b0; }
   .stack-cap.hand { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 21px; line-height: 1.25; color: #b0b0b0; }
-  /* anotação em lima no 13: a caneta marca a mesma cor do trecho destacado. */
-  #scene-source .stack-cap.hand { color: #B7FF06; }
+  /* anotação em lima: a caneta marca a mesma cor do trecho destacado. */
+  #scene-source .stack-cap.hand,
+  #scene-transformer .stack-cap.hand { color: #B7FF06; }
   /* as anotações sobre as caixas do 18 pedem mais corpo que as dos 13/16 */
   #scene-pipeline-destination .stack-cap.hand { font-size: 23px; }
 
