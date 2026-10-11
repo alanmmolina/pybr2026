@@ -261,6 +261,18 @@
     justify-content: space-between;
   }
   .site { display: inline-flex; align-items: center; gap: 14px; color: #fafafa; text-decoration: none; }
+
+  /* crédito da fonte dos dados: a RAWG exige atribuição com backlink nas
+     páginas que usam seus dados. fica logo abaixo das caixas de código,
+     alinhado à direita delas; a posição vem inline, por slide. */
+  .data-credit {
+    position: absolute;
+    font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 17px;
+    line-height: 1;
+    color: #ABABAB;
+    text-decoration: none;
+  }
   .logo { width: 48px; height: 48px; color: #fafafa; display: block; }
   /* capa: site centralizado por cima, nome e cargo centralizados embaixo */
   .cover-footer {

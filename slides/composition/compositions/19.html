@@ -62,6 +62,7 @@ info = pipeline.<span class="syn-fn">run</span><span class="syn-brk">(</span><sp
           <div class="stack-cap hand flow-phase">load</div>
         </div>
       </div>
+      <a class="data-credit" style="right: 140px; top: 963px" href="https://rawg.io" target="_blank" rel="noopener">rawg.io</a>
     </div>
   </div>
   <script>
@@ -97,6 +98,10 @@ function firePipeline() {
   tl.to(stations[1], { opacity: 1, y: 0, duration: 0.42, ease: "power2.out", overwrite: "auto" }, 0.66);
   tl.to(arrs[1], { opacity: 1, y: 0, strokeDashoffset: 0, duration: 0.42, ease: "power2.out", overwrite: "auto" }, 0.82);
   tl.to(stations[2], { opacity: 1, y: 0, duration: 0.42, ease: "power2.out", overwrite: "auto" }, 0.82);
+
+  /* o crédito da RAWG entra depois das três estações, como o fecho do fluxo */
+  var cred = scene.querySelector(".data-credit");
+  if (cred) tl.fromTo(cred, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power2.out" }, 1.24);
 
   /* o dado segue fluindo: tracejado marchando nos conectores */
   if (flowDash.length) {
