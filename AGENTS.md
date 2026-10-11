@@ -24,9 +24,8 @@ HyperFrames (HTML, CSS, JS, GSAP) for the deck. Python 3.14 with uv, dlt, DuckDB
 |---|---|
 | `slides/` | the HyperFrames deck |
 | `estudos/` | course generated with the `teach` skill |
-| `exemplos/` | the RAWG example and the hands-on |
+| `exemplos/` | the runnable RAWG example |
 | `DESIGN.md` | visual identity |
-| `proposta.md` | proposal accepted at the CFP |
 | `.github/workflows/deploy.yml` | publishes `slides/composition` to GitHub Pages |
 
 ## Care
@@ -39,9 +38,7 @@ The repository is git. Before any destructive edit, check `git status` and keep 
 
 **Before any task, identify which document below is relevant and read it first.**
 
+- [`README.md`](README.md): what each part is, and the commands to run it
 - [`DESIGN.md`](DESIGN.md): visual identity of the deck and the course
-- [`slides/README.md`](slides/README.md): deck structure and commands
-- [`estudos/README.md`](estudos/README.md): how the course was generated
 - [`estudos/MISSION.md`](estudos/MISSION.md): why this topic was studied
 - [`estudos/RESOURCES.md`](estudos/RESOURCES.md): sources behind the lessons
-- [`proposta.md`](proposta.md): what was promised to the audience
