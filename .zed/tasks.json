@@ -1,0 +1,16 @@
+[
+  {
+    "label": "slides: restart",
+    "command": "lsof -ti:3004 | xargs kill -9 2>/dev/null; sleep 1; cd slides && npm run dev",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always"
+  },
+  {
+    "label": "slides: stop",
+    "command": "lsof -ti:3004 | xargs kill -9 2>/dev/null",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": true,
+    "reveal": "never"
+  }
+]
