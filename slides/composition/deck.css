@@ -746,13 +746,14 @@
   /* o par de marca é o LIMA, e o marcado é o próprio trecho de código
      anotado: mesma mecânica do hl-shape/hl-policy aqui embaixo. o fundo
      tingido é o marca-texto; .hl-green * herda a cor para os tokens de
-     sintaxe não brigarem com ela. vale para todo .res-code (14, 15, 16). */
-  .res-code .hl-green {
+     sintaxe não brigarem com ela. vale para todo .res-code (14, 15, 16)
+     e para os arquivos laterais do .res-stacks (13). */
+  .res-code .hl-green, .res-stacks .hl-green {
     color: #B7FF06;
     background: rgba(183, 255, 6, 0.10);
     border-radius: 3px;
   }
-  .res-code .hl-green * { color: inherit; }
+  .res-code .hl-green *, .res-stacks .hl-green * { color: inherit; }
   .res-code .res-note.n-green { color: #B7FF06; }
 
   #scene-schema-contracts .contract-code .res-note.n-shape   { color: #B7FF06; }
@@ -971,6 +972,8 @@
   .stack-cap { margin: 0 0 2px 4px; line-height: 1.15; }
   .stack-cap.file { font-family: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace; font-size: 19px; color: #b0b0b0; }
   .stack-cap.hand { font-family: "Excalifont", "Comic Sans MS", cursive; font-size: 21px; line-height: 1.25; color: #b0b0b0; }
+  /* anotação em lima no 13: a caneta marca a mesma cor do trecho destacado. */
+  #scene-source .stack-cap.hand { color: #B7FF06; }
   /* as anotações sobre as caixas do 18 pedem mais corpo que as dos 13/16 */
   #scene-pipeline-destination .stack-cap.hand { font-size: 23px; }
 
