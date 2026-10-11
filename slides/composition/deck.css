@@ -260,7 +260,7 @@
     display: flex;
     justify-content: space-between;
   }
-  .site { display: inline-flex; align-items: center; gap: 14px; color: #fafafa; }
+  .site { display: inline-flex; align-items: center; gap: 14px; color: #fafafa; text-decoration: none; }
   .logo { width: 48px; height: 48px; color: #fafafa; display: block; }
   /* capa: site centralizado por cima, nome e cargo centralizados embaixo */
   .cover-footer {
