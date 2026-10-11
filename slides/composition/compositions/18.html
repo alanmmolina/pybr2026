@@ -8,13 +8,13 @@
           <div class="stack" data-anim="">
             <div class="stack-cap hand">utilizar as definições padrão do destino</div>
             <div class="code-box">
-              <pre>pipeline = dlt.<span class="syn-fn">pipeline</span><span class="syn-brk">(</span><span class="syn-str">"rawg"</span>, destination=<span class="syn-str">"duckdb"</span><span class="syn-brk">)</span></pre>
+              <pre>pipeline = dlt.<span class="syn-fn">pipeline</span><span class="syn-brk">(</span><span class="syn-str">"rawg"</span>, <span class="hl-green">destination=<span class="syn-str">"duckdb"</span></span><span class="syn-brk">)</span></pre>
             </div>
           </div>
           <div class="stack" data-anim="">
             <div class="stack-cap hand">configurar o destino com os argumentos da factory</div>
             <div class="code-box">
-              <pre>datalake = <span class="syn-fn">filesystem</span><span class="syn-brk">(</span>
+              <pre><span class="hl-green">datalake = <span class="syn-fn">filesystem</span><span class="syn-brk">(</span></span>
       <span class="syn-str">"s3://dlt-datalake"</span>,
       destination_name=<span class="syn-str">"datalake"</span>,
       naming_convention=<span class="syn-str">"sql_cs_v1"</span>,
@@ -26,7 +26,7 @@
             <div class="stack-cap hand">criar um destino customizado com uma função</div>
             <div class="code-box">
               <pre>@dlt.<span class="syn-fn">destination</span>
-<span class="syn-kw">def</span> <span class="syn-fn">destino</span><span class="syn-brk">(</span><span class="syn-param">items</span>,<span class="syn-param">table</span><span class="syn-brk">)</span>:
+<span class="syn-kw">def</span> <span class="hl-green"><span class="syn-fn">destino</span></span><span class="syn-brk">(</span><span class="syn-param">items</span>, <span class="syn-param">table</span><span class="syn-brk">)</span>:
     ...</pre>
             </div>
           </div>
@@ -41,7 +41,7 @@
             <div class="logo-cell" style="background:#FFCC01;"><img class="black" src="vendor/logos/dest-clickhouse.svg" alt="ClickHouse"></div>
             <div class="logo-cell" style="background:#DC244C;"><img src="vendor/logos/dest-qdrant.svg" alt="Qdrant"></div>
             <div class="logo-cell" style="background:#292929;"><span class="logo-name hand">+16 outros</span></div>
-            <div class="logo-cell" style="background:#1e1e22;"><span class="logo-name">custom</span><span class="wall-code">destino(<span class="tf-hl">items, table</span>)</span></div>
+            <div class="logo-cell" style="background:#1e1e22;"><span class="logo-name">custom</span><span class="wall-code"><span class="hl-green">destino</span>(items, table)</span></div>
           </div>
         </div>
       </div>

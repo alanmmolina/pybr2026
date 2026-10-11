@@ -6,7 +6,7 @@
         <div class="flow-end trig-side"><span class="ra-logo" style="font-size: 40px;">RAWG</span><span class="flow-file" style="font-size: 17px;">api.rawg.io/api</span></div>
         <svg class="trig-flow" aria-hidden="true"></svg>
         <div class="code-box trig-box">
-          <pre style="font-size: 22px; line-height: 1.5;">pipeline = dlt.<span class="syn-fn">pipeline</span><span class="syn-brk">(</span><span class="tf-hl">"rawg"</span>, destination=<span class="syn-str">"duckdb"</span><span class="syn-brk">)</span>
+          <pre style="font-size: 22px; line-height: 1.5;">pipeline = dlt.<span class="syn-fn">pipeline</span><span class="syn-brk">(</span><span class="hl-green">"rawg"</span>, destination=<span class="syn-str">"duckdb"</span><span class="syn-brk">)</span>
 info = pipeline.<span class="syn-fn">run</span><span class="syn-brk">(</span><span class="syn-fn">rawg_source</span><span class="syn-brk">(</span><span class="syn-brk">)</span></pre>
           <div class="trig-ret">
             <div class="trig-ret-label"><span class="repl-ps">&gt;&gt;&gt;</span> info.load_packages[0].load_id</div>
@@ -14,11 +14,11 @@ info = pipeline.<span class="syn-fn">run</span><span class="syn-brk">(</span><sp
           </div>
         </div>
         <svg class="trig-flow" aria-hidden="true"></svg>
-        <div class="flow-end trig-side"><img class="raw" src="vendor/logos/duckdb-white.svg" alt="DuckDB" style="height: 72px;"><span class="flow-file" style="font-size: 17px;"><span class="tf-hl">rawg</span>.duckdb</span></div>
+        <div class="flow-end trig-side"><img class="raw" src="vendor/logos/duckdb-white.svg" alt="DuckDB" style="height: 72px;"><span class="flow-file" style="font-size: 17px;">rawg.duckdb</span></div>
       </div>
       <div class="flow-row">
         <div class="flow-station">
-          <div class="flow-file flow-title"><span class="flow-path">~/.dlt/pipelines/<span class="tf-hl">rawg</span>/</span><br><span class="flow-path">normalize/extracted/<span class="id-hl">1790731675.145563</span>/new_jobs/</span><br><span class="res-hl">games</span>.014597893b.0.typed-jsonl.gz</div>
+          <div class="flow-file flow-title"><span class="flow-path">~/.dlt/pipelines/<span class="hl-green">rawg</span>/</span><br><span class="flow-path">normalize/extracted/<span class="id-hl">1790731675.145563</span>/new_jobs/</span><br><span class="res-hl">games</span>.014597893b.0.typed-jsonl.gz</div>
           <div class="code-box flow-box">
             <pre class="flow-code"><span class="syn-brk">{</span> <span class="syn-str">"id"</span>: <span class="syn-num">3498</span>,
     <span class="syn-str">"slug"</span>: <span class="syn-str">"grand-theft-auto-v"</span>,
@@ -33,9 +33,9 @@ info = pipeline.<span class="syn-fn">run</span><span class="syn-brk">(</span><sp
         </div>
         <svg class="flow-arr" aria-hidden="true"></svg>
         <div class="flow-station">
-          <div class="flow-file flow-title"><span class="flow-path">~/.dlt/pipelines/<span class="tf-hl">rawg</span>/</span><br><span class="flow-path">schemas/</span><br><span class="tf-hl">rawg</span>.schema.json</div>
+          <div class="flow-file flow-title"><span class="flow-path">~/.dlt/pipelines/<span class="hl-green">rawg</span>/</span><br><span class="flow-path">schemas/</span><br><span class="hl-green">rawg</span>.schema.json</div>
           <div class="code-box flow-box">
-            <pre class="flow-code"><span class="syn-str">"name"</span>: <span class="tf-hl">"rawg"</span>,
+            <pre class="flow-code"><span class="syn-str">"name"</span>: <span class="hl-green">"rawg"</span>,
   <span class="syn-str">"tables"</span>: <span class="syn-brk">{</span> <span class="res-hl">"games"</span>: <span class="syn-brk">{</span>
     <span class="syn-str">"columns"</span>: <span class="syn-brk">{</span>
       <span class="syn-str">"id"</span>: <span class="syn-brk">{</span> <span class="syn-str">"data_type"</span>: <span class="syn-str">"bigint"</span>,
@@ -48,7 +48,7 @@ info = pipeline.<span class="syn-fn">run</span><span class="syn-brk">(</span><sp
         </div>
         <svg class="flow-arr" aria-hidden="true"></svg>
         <div class="flow-station">
-          <div class="flow-file flow-title"><span class="flow-path">~/.dlt/pipelines/<span class="tf-hl">rawg</span>/</span><br><span class="flow-path">load/loaded/<span class="id-hl">1790731675.145563</span>/completed_jobs/</span><br><span class="res-hl">games</span>.5c5a686297.0.insert_values.gz</div>
+          <div class="flow-file flow-title"><span class="flow-path">~/.dlt/pipelines/<span class="hl-green">rawg</span>/</span><br><span class="flow-path">load/loaded/<span class="id-hl">1790731675.145563</span>/completed_jobs/</span><br><span class="res-hl">games</span>.5c5a686297.0.insert_values.gz</div>
           <div class="code-box flow-box">
             <pre class="flow-code"><span class="syn-kw">INSERT INTO</span> <span class="syn-brk">{</span><span class="syn-brk">}</span><span class="syn-brk">(</span><span class="syn-str">"id"</span>,<span class="syn-str">"slug"</span>,<span class="syn-str">"name"</span>,
     <span class="syn-str">"released"</span>,<span class="syn-str">"tba"</span>,<span class="syn-str">"background_image"</span>,
