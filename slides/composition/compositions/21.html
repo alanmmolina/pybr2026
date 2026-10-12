@@ -69,7 +69,8 @@ _dlt_pipeline_state.….jsonl.gz
       var scene = document.getElementById("scene-dlt-state");
       if (!scene) return;
       stateCyclePrepped = true;
-
+      /* medir antes das fontes assentarem desenha moldura mais alta que a caixa */
+      aposFontes(function () {
       /* as três caixas ficam com a altura do conteúdo mais alto — senão a
          do dict (8 linhas) deixa as legendas em alturas diferentes */
       var boxes = scene.querySelectorAll(".sc-box");
@@ -136,9 +137,14 @@ _dlt_pipeline_state.….jsonl.gz
           makeStrokedPath(cf, hwWobbleRect(cw, ch, 12, 90, 3), 3, "#448aff");
         }
       }
+      });
     }
 
     function fireStateCycle() {
+      aposFontes(fireStateCycleAgora);
+    }
+
+    function fireStateCycleAgora() {
       var scene = document.getElementById("scene-dlt-state");
       if (!scene) return;
       var nodes = scene.querySelectorAll(".sc-node");

@@ -40,6 +40,10 @@
   <script>
     var phasesPrepped = false;
 function firePhases() {
+  aposFontes(firePhasesAgora);
+}
+
+function firePhasesAgora() {
   var scene = document.getElementById("scene-phases");
   if (!scene) return;
   var pipeFrame = scene.querySelector(".phases-pipe-frame path");
@@ -80,7 +84,8 @@ function prepPhases() {
   var scene = document.getElementById("scene-phases");
   if (!scene) return;
   phasesPrepped = true;
-
+  /* medir antes das fontes assentarem desenha moldura mais alta que a caixa */
+  aposFontes(function () {
   var pipe = scene.querySelector(".phases-pipe");
   var pw = pipe.offsetWidth, ph = pipe.offsetHeight;
   var pfsvg = scene.querySelector(".phases-pipe-frame");
@@ -109,6 +114,7 @@ function prepPhases() {
     cfsvg.setAttribute("viewBox", "0 0 " + cw + " " + ch);
     makeStrokedPath(cfsvg, hwWobbleRect(cw, ch, 10, 150, 3), 2.5, "#448aff");
   }
+  });
 }
 
     HW.scene("phases", {

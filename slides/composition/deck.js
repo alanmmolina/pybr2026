@@ -6,6 +6,19 @@
 window.HW = window.HW || {};
 
 /* shared toolbox — global on purpose: slide scripts call these by name */
+
+/* Medir caixas só depois das fontes assentarem. As fontes são vendadas com
+   font-display:swap, e o fallback muda a altura da caixa: medir cedo desenha
+   a moldura ~5px mais alta que o conteúdo (o título em Excalifont é o que
+   mais pesa). Roda síncrono quando as fontes já estão prontas. */
+function aposFontes(fn) {
+  if (document.fonts && document.fonts.ready && document.fonts.status !== "loaded") {
+    document.fonts.ready.then(fn);
+  } else {
+    fn();
+  }
+}
+
 function hwHash(n, seed) {
   var x = Math.sin(n * 127.1 + (seed || 1) * 311.7) * 43758.5453;
   return (x - Math.floor(x)) * 2 - 1;
