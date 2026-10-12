@@ -16,7 +16,7 @@ After touching the deck, run `npm run check` and walk the 23 slides with the arr
 
 ## Stack
 
-HyperFrames (HTML, CSS, JS, GSAP) for the deck. Python 3.14 with uv, dlt, DuckDB and marimo for the example. Static HTML for the course.
+HyperFrames (HTML, CSS, JS, GSAP) for the deck. Python 3.14 with uv, dlt and DuckDB for the example. Static HTML for the course.
 
 ## Layout
 

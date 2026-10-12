@@ -35,8 +35,6 @@
   The managed platform (separate from the library). Use for: Lesson 1 platform section, agentic workflows.
 - [Pipeline dashboard local](https://dlthub.com/docs/hub/ingestion/dashboard)
   `dlthub local pipeline show {nome}` — webapp marimo com Schema Explorer, SQL, Pipeline State (cursor incremental), traces e histórico. Checklist oficial de validação em 5 passos. Use for: demo ao vivo / hands-on.
-- [dlt + marimo](https://dlthub.com/docs/general-usage/dataset-access/marimo)
-  Widgets `dlt.helpers.marimo` (`pipeline_selector`, `load_package_viewer`, `schema_viewer`), Datasources panel, data apps. Use for: notebook hands-on.
 - [AI Harness: rest-api-pipeline toolkit](https://dlthub.com/docs/hub/ingestion/rest-api-source)
   Workflow de skills (`/find-source`, `/debug-pipeline`, `/validate-data`) + MCP server para Claude Code/Cursor/Codex; `data-exploration` gera dashboards marimo+Altair. Use for: narrativa agent-native, fecho da palestra.
 
