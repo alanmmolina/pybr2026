@@ -32,7 +32,7 @@ HyperFrames (HTML, CSS, JS, GSAP) for the deck. Python 3.14 with uv, dlt and Duc
 
 The repository is git. Before any destructive edit, check `git status` and keep a copy. Local copies go to `.backup/`, which sits in `.gitignore` and never enters a commit.
 
-`exemplos/rawg/.dlt/secrets.toml` holds a real API key: never print its contents and never force it into a commit. Whoever clones the repo copies `.dlt/secrets.toml.example` and puts their key there.
+`exemplos/rawg/.dlt/secrets.toml` holds a real API key: never print its contents and never force it into a commit. Whoever clones the repo copies `.dlt/secrets.example.toml` and puts their key there.
 
 ## Further reading
 
