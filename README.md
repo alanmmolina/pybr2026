@@ -4,7 +4,7 @@ Material da palestra **[dlt](https://github.com/dlt-hub/dlt) (data load tool): i
 
 ## `slides`
 
-Deck de 23 slides em HTML, feito com
+Deck de slides feito com
 [HyperFrames](https://github.com/heygen-com/hyperframes).
 
 ```bash
@@ -14,16 +14,15 @@ npm run lint   # erros de estrutura
 npm run check  # layout, movimento e contraste WCAG AA
 ```
 
-Para apresentar, rode o `dev` e navegue pelas setas. Depois de alterar o HTML
-ou o CSS, reinicie o servidor e execute os outros dois comandos: o `lint`
+Para apresentar, execute o `dev` e navegue pelas setas. Depois de alterar o HTML ou o CSS, reinicie o servidor e execute os outros dois comandos: o `lint`
 encontra erros de estrutura, e o `check` confere layout, movimento e contraste.
 
 | Caminho | O que é |
 |---|---|
-| `presenter/index.html` | o shell que se publica: monta os custom elements em volta da composition |
+| `presenter/index.html` | monta os custom elements em volta da composition |
 | `presenter/player.js`, `presenter/slideshow.js` | bundles do HyperFrames que trazem fullscreen e next/previous |
 | `composition/index.html` | slots dos slides e a timeline do deck |
-| `composition/compositions/NN.html` | um slide por arquivo, com markup e coreografia |
+| `composition/compositions/NN.html` | um slide por arquivo |
 | `composition/deck.css` | identidade visual, especificada em [`DESIGN.md`](DESIGN.md) |
 | `composition/deck.js` | helpers compartilhados e o registry `HW.scene` |
 | `composition/vendor/` | gsap, runtime, fontes, logos, fotos e os assets da Python Brasil |
@@ -50,8 +49,7 @@ de **[Matt Pocock](https://github.com/mattpocock)**. Cada pasta tem uma função
 | `learning-records/` | o que foi aprendido, no formato de ADR: `0001-<nome>.md` |
 | `assets/` | o `style.css` compartilhado pelas lessons |
 
-As lessons são HTML estático: abra qualquer `lessons/0001-*.html` no navegador.
-O visual segue o [`DESIGN.md`](DESIGN.md) da raiz.
+As lessons são HTML estático: abra qualquer `lessons/0001-*.html` no navegador. O visual segue o [`DESIGN.md`](DESIGN.md) da raiz.
 
 ## `exemplos`
 
@@ -63,10 +61,9 @@ O exemplo da palestra: ingerir dados da **RAWG** com **dlt**, para **DuckDB** ou
 > dados. Vale para este exemplo e para os slides que exibem registros reais da
 > API, que trazem o crédito `dados: rawg.io` no rodapé.
 >
-> O exemplo segura a amostra em `LIMIT` jogos por causa do free tier de 20
+> O exemplo limita a amostra em `LIMIT` por causa do free tier de 20
 > mil requisições/mês. Sem esse limite, a primeira execução percorreria os ~500
-> mil jogos da API, com uma chamada de detalhe por jogo. As seguintes param no
-> cursor incremental e custam poucas requisições.
+> mil jogos da API.
 
 ```bash
 cd exemplos/rawg
@@ -91,5 +88,4 @@ Os comandos abaixo são executados pelo
 
 ## Licença
 
-[MIT](LICENSE). As fontes, logos e assets de marca embutidos no deck têm licenças
-próprias, registradas em [`THIRD-PARTY.md`](THIRD-PARTY.md).
+[MIT](LICENSE). As fontes, logos e assets de marca embutidos no deck têm licenças próprias, registradas em [`THIRD-PARTY.md`](THIRD-PARTY.md).
