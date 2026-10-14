@@ -62,6 +62,11 @@ O exemplo da palestra: ingerir dados da **RAWG** com **dlt**, para **DuckDB** ou
 > **não comercial** e exige atribuição com backlink nas páginas que usam seus
 > dados. Vale para este exemplo e para os slides que exibem registros reais da
 > API, que trazem o crédito `dados: rawg.io` no rodapé.
+>
+> O exemplo segura a amostra em `LIMIT` jogos por causa do free tier de 20
+> mil requisições/mês. Sem esse limite, a primeira execução percorreria os ~500
+> mil jogos da API, com uma chamada de detalhe por jogo. As seguintes param no
+> cursor incremental e custam poucas requisições.
 
 ```bash
 cd exemplos/rawg
@@ -73,10 +78,6 @@ uv sync
 
 O `secrets.toml` está no `.gitignore`, então a chave real fica só na sua
 máquina.
-
-Carga completa: a primeira execução percorre os ~500 mil jogos da API, com uma
-chamada de detalhe por jogo, bem acima do free tier. As seguintes param no
-cursor incremental e custam poucas requisições.
 
 Os comandos abaixo são executados pelo
 [`taskipy`](https://github.com/taskipy/taskipy), definido no `pyproject.toml`:

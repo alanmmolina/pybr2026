@@ -9,9 +9,7 @@ Uso:
     python rawg.py                 # RAWG → DuckDB
     python rawg.py filesystem      # RAWG → Parquet em ./datalake/
 
-Sem limite de amostra: a primeira execução percorre os ~500 mil jogos da API,
-com uma chamada de detalhe por jogo, bem acima do free tier. As seguintes param
-no cursor incremental e custam poucas requisições.
+A amostra fica em LIMIT jogos para não estourar o free tier da API.
 
 Pré-requisito: chave da RAWG em .dlt/secrets.toml
 (https://rawg.io/apidocs → Get API Key; free tier: 20k requests/mês)
@@ -34,6 +32,7 @@ from dlt.sources.helpers.rest_client.auth import APIKeyAuth
 from dlt.sources.helpers.rest_client.paginators import JSONLinkPaginator
 
 PAGE_SIZE = 40  # maior página aceita pelos endpoints de lista
+LIMIT = 100  # amostra do exemplo: ~104 requests, dentro do free tier
 
 
 @dlt.source(name="rawg")
@@ -129,7 +128,7 @@ def main(destination: str) -> None:
         dataset_name="rawg_data",
         dev_mode=True,  # dataset com sufixo de timestamp a cada execução
     )
-    source = rawg()
+    source = rawg().add_limit(max_items=LIMIT)
 
     if destination == "filesystem":
         click.echo(pipeline.run(data=source, loader_file_format="parquet"))
