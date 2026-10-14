@@ -9,7 +9,7 @@ Deck de 23 slides em HTML, feito com
 
 ```bash
 cd slides
-npm run dev    # apresenta em http://localhost:3004
+npm run dev    # http://localhost:3004
 npm run lint   # erros de estrutura
 npm run check  # layout, movimento e contraste WCAG AA
 ```
@@ -26,7 +26,8 @@ encontra erros de estrutura, e o `check` confere layout, movimento e contraste.
 | `composition/compositions/NN.html` | um slide por arquivo, com markup e coreografia |
 | `composition/deck.css` | identidade visual, especificada em [`DESIGN.md`](DESIGN.md) |
 | `composition/deck.js` | helpers compartilhados e o registry `HW.scene` |
-| `composition/vendor/` | gsap, runtime, fontes, logos e fotos |
+| `composition/vendor/` | gsap, runtime, fontes, logos, fotos e os assets da Python Brasil |
+| `export/pybr2026.pdf` | o deck exportado em PDF |
 
 O push na `main` publica o deck no GitHub Pages
 ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)), em
@@ -35,13 +36,9 @@ O push na `main` publica o deck no GitHub Pages
 ## `estudos`
 
 Aprofundamento de estudo sobre **dlt**, feito antes de escrever o material da
-palestra para entender os conceitos e solidificá-los.
-
-Os diagramas das aulas foram criados com a skill
+palestra para entender os conceitos e solidificá-los. Os diagramas das aulas foram criados com a skill
 [`diagram-design`](https://github.com/cathrynlavery/diagram-design) de
-**[Cathryn Lavery](https://github.com/cathrynlavery)**.
-
-O workspace segue a skill
+**[Cathryn Lavery](https://github.com/cathrynlavery)**. O workspace segue a skill
 [`teach`](https://github.com/mattpocock/skills/tree/main/skills/productivity/teach)
 de **[Matt Pocock](https://github.com/mattpocock)**. Cada pasta tem uma função:
 
@@ -51,30 +48,35 @@ de **[Matt Pocock](https://github.com/mattpocock)**. Cada pasta tem uma função
 | `RESOURCES.md` | fontes confiáveis usadas nas lessons |
 | `lessons/` | uma lesson por arquivo: `0001-<nome>.html` |
 | `learning-records/` | o que foi aprendido, no formato de ADR: `0001-<nome>.md` |
-| `assets/` | componentes reutilizados entre as lessons, incluindo o `style.css` |
+| `assets/` | o `style.css` compartilhado pelas lessons |
 
+As lessons são HTML estático: abra qualquer `lessons/0001-*.html` no navegador.
 O visual segue o [`DESIGN.md`](DESIGN.md) da raiz.
 
 ## `exemplos`
 
 O exemplo da palestra: ingerir dados da **RAWG** com **dlt**, para **DuckDB** ou para um Data Lake `.parquet`. Ele mostra `resources` e `transformers`, troca de destino, normalização e carga incremental.
 
-> **Uso da RAWG.** O uso da
-> [RAWG Video Games Database](https://rawg.io/apidocs) é **não comercial** e
-> exige atribuição com backlink nas páginas que usam seus dados. Vale para este
-> exemplo e para os slides que exibem registros reais da API, que trazem o
-> crédito `dados: rawg.io` no rodapé.
+> [!WARNING]
+> **Uso da RAWG.** A [RAWG Video Games Database](https://rawg.io/apidocs) é
+> **não comercial** e exige atribuição com backlink nas páginas que usam seus
+> dados. Vale para este exemplo e para os slides que exibem registros reais da
+> API, que trazem o crédito `dados: rawg.io` no rodapé.
 
 ```bash
 cd exemplos/rawg
 uv sync
 
 # 1. Crie uma chave gratuita em https://rawg.io/apidocs (20 mil requisições/mês)
-# 2. Copie .dlt/secrets.toml.example para .dlt/secrets.toml e cole a chave nele
+# 2. Copie .dlt/secrets.example.toml para .dlt/secrets.toml e cole a chave nele
 ```
 
 O `secrets.toml` está no `.gitignore`, então a chave real fica só na sua
 máquina.
+
+Carga completa: a primeira execução percorre os ~500 mil jogos da API, com uma
+chamada de detalhe por jogo, bem acima do free tier. As seguintes param no
+cursor incremental e custam poucas requisições.
 
 Os comandos abaixo são executados pelo
 [`taskipy`](https://github.com/taskipy/taskipy), definido no `pyproject.toml`:
@@ -83,5 +85,10 @@ Os comandos abaixo são executados pelo
 |---|---|
 | `uv run task check` | Lint + formatação + tipos (**ruff**, **ty**) |
 | `uv run task demo` | RAWG → **DuckDB** local |
-| `uv run task lake` | RAWG → `.parquet` em `./lake_local/` |
-| `uv run task clean` | Remove artefatos gerados (duckdb, lake, caches) |
+| `uv run task lake` | RAWG → `.parquet` em `./datalake/` |
+| `uv run task clean` | Remove artefatos gerados (duckdb, datalake, caches) |
+
+## Licença
+
+[MIT](LICENSE). As fontes, logos e assets de marca embutidos no deck têm licenças
+próprias, registradas em [`THIRD-PARTY.md`](THIRD-PARTY.md).
