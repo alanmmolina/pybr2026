@@ -1,16 +1,12 @@
-"""dlt source para a RAWG Video Games Database API, com um runner de demonstração.
-
-Mostra autenticação e paginação declaradas no client, carregamento incremental
-por cursor, merge por primary_key, um transformer ligado por pipe que enriquece
-cada item em paralelo, e a normalização automática de dados aninhados. O mesmo
-source carrega para DuckDB ou para um data lake Parquet.
+"""
+dlt pipeline: RAWG Video Games Database API → DuckDB
+(+ runner de demonstração)
 
 Uso:
     python rawg.py                 # RAWG → DuckDB
     python rawg.py filesystem      # RAWG → Parquet em ./datalake/
 
-A amostra fica em LIMIT jogos para não estourar o free tier da API.
-
+A amostra fica em LIMIT para não estourar o free tier da API.
 Pré-requisito: chave da RAWG em .dlt/secrets.toml
 (https://rawg.io/apidocs → Get API Key; free tier: 20k requests/mês)
 
@@ -37,7 +33,8 @@ LIMIT = 100  # amostra do exemplo: ~104 requests, dentro do free tier
 
 @dlt.source(name="rawg")
 def rawg(api_key: str = dlt.secrets.value) -> list[dlt.sources.DltResource]:
-    """Fonte RAWG: gêneros, jogos e os detalhes de cada jogo.
+    """
+    RAWG API: gêneros, jogos e os detalhes de cada jogo.
 
     Autenticação e paginação ficam no client, compartilhado por todos os
     resources. `APIKeyAuth` leva a api_key para o query param `?key=`;
@@ -52,7 +49,7 @@ def rawg(api_key: str = dlt.secrets.value) -> list[dlt.sources.DltResource]:
     return [
         genres(client=client),
         games_resource,
-        games_resource | game_details(client=client),  # o client vai por keyword
+        games_resource | game_details(client=client),
     ]
 
 
@@ -68,7 +65,8 @@ def games(
         row_order="desc",
     ),
 ) -> Iterator[dict[str, Any]]:
-    """Jogos, do mais recentemente atualizado para o mais antigo.
+    """
+    Jogos, do mais recentemente atualizado para o mais antigo.
 
     O cursor `updated_at` é o default do parâmetro: o dlt descarta o que já
     foi carregado e, com `row_order="desc"`, encerra o generator ao encontrar um
@@ -87,8 +85,8 @@ def games(
 
 @dlt.resource(write_disposition="replace")
 def genres(client: RESTClient) -> Iterator[dict[str, Any]]:
-    """Gêneros (id, name, slug, games_count, image_background).
-
+    """
+    Gêneros (id, name, slug, games_count, image_background).
     Tabela pequena e mutável: replace a cada execução.
     """
     for page in client.paginate(
@@ -105,7 +103,8 @@ def genres(client: RESTClient) -> Iterator[dict[str, Any]]:
     parallelized=True,
 )
 def game_details(game_item: dict[str, Any], client: RESTClient) -> dict[str, Any]:
-    """Detalhes de um jogo, de /games/{id}.
+    """
+    Detalhes de um jogo.
 
     A resposta é um objeto único, não uma lista, e traz description, website,
     alternative_names, metacritic_platforms e platforms, que viram colunas e
@@ -121,12 +120,14 @@ def game_details(game_item: dict[str, Any], client: RESTClient) -> dict[str, Any
 @click.command()
 @click.argument("destination", type=click.Choice(["duckdb", "filesystem"]), default="duckdb")
 def main(destination: str) -> None:
-    """Carrega a RAWG para DuckDB ou para um data lake Parquet."""
+    """
+    Carrega a RAWG para DuckDB ou para um Data Lake em .parquet.
+    """
     pipeline = dlt.pipeline(
         pipeline_name="rawg",
         destination=destination,
         dataset_name="rawg_data",
-        dev_mode=True,  # dataset com sufixo de timestamp a cada execução
+        dev_mode=True,
     )
     source = rawg().add_limit(max_items=LIMIT)
 
