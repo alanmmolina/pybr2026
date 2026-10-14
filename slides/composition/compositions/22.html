@@ -130,7 +130,7 @@ var conns = scene.querySelectorAll(".pmap-conn");
         f.setAttribute("viewBox", "0 0 " + w + " " + h);
         makeStrokedPath(f, hwWobbleRect(w, h, 10, 61, 3), 2.5, "#4c4c55");
       }
-/* molduras sloppy das caixas grandes — o herói em lima, o resto branco */
+/* molduras sloppy das caixas grandes: o herói em lima, o resto branco */
       var nodes = scene.querySelectorAll(".pmap-node");
       for (var n = 0; n < nodes.length; n++) {
         var node = nodes[n];
@@ -151,7 +151,7 @@ var conns = scene.querySelectorAll(".pmap-conn");
         svg2.appendChild(b);
         node.appendChild(svg2);
       }
-/* molduras sloppy das células — o idioma do slide 18 */
+/* molduras sloppy das células: o idioma do slide 18 */
       var cells = scene.querySelectorAll(".cell");
       for (var c2 = 0; c2 < cells.length; c2++) {
         var cellEl = cells[c2];
@@ -275,7 +275,7 @@ function fireClosingStack() {
         if (stageCaps[e]) tl.to(stageCaps[e], { opacity: 1, duration: 0.28, ease: "power2.out" }, t - PASSO);
       }
 
-      /* 3. a branch por baixo — desenhada, e começando junto da última célula */
+      /* 3. a branch por baixo, desenhada, e começando junto da última célula */
       if (bRev) tl.to(bRev, { strokeDashoffset: 0, duration: 0.8, ease: "power1.inOut" }, t - PASSO * 1.2);
       if (bHead) tl.to(bHead, { opacity: 1, strokeDashoffset: 0, duration: 0.3, ease: "power2.out" }, t - PASSO * 1.2 + 0.55);
 

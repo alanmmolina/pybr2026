@@ -9,21 +9,21 @@
 </head>
 <body>
 
-<h1>Aula 2: Arquitetura central — as três fases e os quatro conceitos</h1>
+<h1>Aula 2: Arquitetura central (as três fases e os quatro conceitos)</h1>
 
 <div class="lesson-meta">
-  <strong>Objetivo:</strong> Compreender a anatomia do dlt — resource, source, pipeline e destination — e o ciclo extract → normalize → load que acontece em cada execução.<br>
+  <strong>Objetivo:</strong> Compreender a anatomia do dlt (resource, source, pipeline e destination) e o ciclo extract → normalize → load que acontece em cada execução.<br>
   <strong>Requer:</strong> <a href="0001-origens-ecossistema.html">Aula 1</a>.<br>
   <strong>Fonte primária:</strong> <a href="https://dlthub.com/docs/reference/explainers/how-dlt-works">How dlt works</a> (docs oficiais).
 </div>
 
 <h2>Visão panorâmica</h2>
 
-<p>O dlt organiza a ingestão de dados em <strong>quatro conceitos fundamentais</strong>. Entender como eles se relacionam é meio caminho andado:</p>
+<p>O dlt organiza a ingestão de dados em quatro conceitos. Entender como eles se relacionam é meio caminho andado:</p>
 
 <svg viewBox="0 0 768 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="anat-title anat-desc" style="width:100%;height:auto;display:block;margin:1.2rem 0;">
   <title id="anat-title">Anatomia do dlt: source, pipeline e destination</title>
-  <desc id="anat-desc">Três blocos em sequência — source (agrupa resources), pipeline (extract, normalize, load) e destination — com setas rotuladas EXTRACT e LOAD indicando a extração da fonte e a carga no destino.</desc>
+  <desc id="anat-desc">Três blocos em sequência: source (agrupa resources), pipeline (extract, normalize, load) e destination, com setas rotuladas EXTRACT e LOAD indicando a extração da fonte e a carga no destino.</desc>
   <defs>
     <marker id="anat-arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#ABABAB"/></marker>
   </defs>
@@ -51,13 +51,13 @@
   <text x="632" y="184" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="middle">snowflake · bigquery · S3</text>
 </svg>
 
-<p>O <strong>Pipeline</strong> é o orquestrador. Ele recebe um <strong>Source</strong> (ou um Resource avulso), extrai os dados, normaliza (inferência de schema, flattening de estruturas aninhadas) e carrega no <strong>Destination</strong>. Tudo isso com estado persistido entre execuções para viabilizar carregamento incremental.</p>
+<p>O Pipeline é o orquestrador. Ele recebe um Source (ou um Resource avulso), extrai os dados, normaliza (inferência de schema, flattening de estruturas aninhadas) e carrega no Destination. O estado fica persistido entre execuções, o que permite carregamento incremental.</p>
 
 <h2>As três fases: o que acontece dentro de pipeline.run()</h2>
 
-<p>Chamar <code>pipeline.run()</code> dispara três fases discretas. Cada uma pode ser executada isoladamente — e entender essa separação explica muita coisa sobre como o dlt é tolerante a falhas.</p>
+<p>Chamar <code>pipeline.run()</code> dispara três fases discretas. Cada uma pode ser executada isoladamente. Entender essa separação explica muita coisa sobre como o dlt é tolerante a falhas.</p>
 
-<pre><code><span class="syn-cmt"># O menor pipeline possível — o exemplo canônico dos docs</span>
+<pre><code><span class="syn-cmt"># O menor pipeline possível: o exemplo canônico dos docs</span>
 <span class="syn-kw">import</span> dlt
 
 pipeline = dlt.pipeline(pipeline_name=<span class="syn-str">"my_pipeline"</span>, destination=<span class="syn-str">"duckdb"</span>)
@@ -74,7 +74,7 @@ pipeline.run(
 
 <svg viewBox="0 0 920 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="phases-title phases-desc" style="width:100%;height:auto;display:block;margin:1.2rem 0;">
   <title id="phases-title">As três fases do pipeline.run(): extract, normalize, load</title>
-  <desc id="phases-desc">Fluxo da fonte ao destino passando por três fases numeradas — extract (gera load package no disco), normalize (infere schema e achata dados aninhados) e load (executa load jobs no destino).</desc>
+  <desc id="phases-desc">Fluxo da fonte ao destino passando por três fases numeradas: extract (gera load package no disco), normalize (infere schema e achata dados aninhados) e load (executa load jobs no destino).</desc>
   <defs>
     <marker id="phases-arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#ABABAB"/></marker>
   </defs>
@@ -110,38 +110,38 @@ pipeline.run(
   <text x="828" y="144" fill="#ABABAB" font-size="9" font-family="'Fira Code',monospace" text-anchor="middle">duckdb · snowflake</text>
 </svg>
 
-<h3>1. Extract — extrai tudo para o disco</h3>
+<h3>1. Extract: extrai tudo para o disco</h3>
 
-<p>O dlt extrai os dados da fonte <strong>integralmente para o disco rígido</strong>, em um <strong>load package</strong>: um diretório com ID único que contém os dados crus exatamente como vieram da fonte. No exemplo acima, um source implícito com um resource de 3 itens é criado e extraído.</p>
+<p>O dlt extrai os dados da fonte integralmente para o disco rígido, em um <strong>load package</strong>: um diretório com ID único que contém os dados crus exatamente como vieram da fonte. No exemplo acima, um source implícito com um resource de 3 itens é criado e extraído.</p>
 
 <p>Você pode rodar só a extração:</p>
 
 <pre><code>pipeline.extract(data)   <span class="syn-cmt"># só extrai; nada vai para o destino</span></code></pre>
 
-<p>Nesta fase você controla: <a href="0003-resource-transformer.html">limites e amostragem</a>, <a href="0005-schema-normalizacao-incremental.html">cursores incrementais</a>, paralelização, e pode aplicar filtros/maps para <a href="0006-schema-contracts-ecossistema.html">pseudonimizar ou remover dados pessoais</a>.</p>
+<p>Nesta fase você controla <a href="0003-resource-transformer.html">limites e amostragem</a>, <a href="0005-schema-normalizacao-incremental.html">cursores incrementais</a> e paralelização, e pode aplicar filtros/maps para <a href="0006-schema-contracts-ecossistema.html">pseudonimizar ou remover dados pessoais</a>.</p>
 
-<h3>2. Normalize — inspeciona e computa o schema</h3>
+<h3>2. Normalize: inspeciona e computa o schema</h3>
 
-<p>O dlt inspeciona e normaliza os dados, computando um <strong>schema compatível com o destino</strong>. Para o exemplo: detecta uma coluna <code>id</code> do tipo <code>int</code> na tabela <code>items</code>, detecta a lista aninhada em <code>nested</code> e a transforma em uma tabela filha <strong><code>items__nested</code></strong>. O schema evolui automaticamente quando a fonte muda (colunas/tabelas novas).</p>
+<p>O dlt inspeciona e normaliza os dados e computa um schema compatível com o destino. No exemplo, detecta uma coluna <code>id</code> do tipo <code>int</code> na tabela <code>items</code>, detecta a lista aninhada em <code>nested</code> e a transforma em uma tabela filha <code>items__nested</code>. O schema evolui automaticamente quando a fonte muda (colunas/tabelas novas).</p>
 
-<p>O resultado é um load package atualizado com os dados em formato que o destino entende + o schema completo. Você controla: nível máximo de aninhamento, <a href="0006-schema-contracts-ecossistema.html">schema contracts</a>, e performance.</p>
+<p>O resultado é um load package atualizado com os dados em formato que o destino entende + o schema completo. Você controla o nível máximo de aninhamento, <a href="0006-schema-contracts-ecossistema.html">schema contracts</a> e performance.</p>
 
 <pre><code>pipeline.normalize()   <span class="syn-cmt"># só normaliza; exige extract concluído</span></code></pre>
 
-<h3>3. Load — migra schema e carrega em chunks</h3>
+<h3>3. Load: migra schema e carrega em chunks</h3>
 
-<p>O dlt roda as <strong>migrações de schema necessárias no destino</strong> e então carrega os dados em pedaços menores chamados <strong>load jobs</strong> (permite paralelizar cargas grandes). Se a conexão com o destino cair, é seguro reexecutar o pipeline: o dlt continua de onde parou, load job por load job.</p>
+<p>O dlt roda as migrações de schema necessárias no destino e então carrega os dados em pedaços menores chamados <strong>load jobs</strong> (permite paralelizar cargas grandes). Se a conexão com o destino cair, é seguro reexecutar o pipeline: o dlt continua de onde parou, load job por load job.</p>
 
 <pre><code>pipeline.load()   <span class="syn-cmt"># só carrega; exige normalize concluído</span></code></pre>
 
 <div class="callout">
   <div class="callout-title">Por que a separação em fases importa</div>
-  <p>Extract é a única fase que conversa com a fonte; Load é a única que conversa com o destino. Entre elas, tudo é persistido em disco. Isso significa: fonte lenta não trava o destino, falha de rede no meio do load não perde o que já foi extraído, e cada fase pode ser reprocessada independentemente.</p>
+  <p>Extract é a única fase que conversa com a fonte; Load é a única que conversa com o destino. Entre elas, tudo é persistido em disco. Isso significa que fonte lenta não trava o destino, falha de rede no meio do load não perde o que já foi extraído e cada fase pode ser reprocessada independentemente.</p>
 </div>
 
 <h2>Resource</h2>
 
-<p>Um <strong>resource</strong> é a unidade fundamental de extração. No código, é uma função Python decorada com <code>@dlt.resource</code> que <strong>yielda dados</strong>. Pode ser um generator síncrono, async generator, ou retornar listas, DataFrames, Arrow tables.</p>
+<p>Um <strong>resource</strong> é a unidade de extração. No código, é uma função Python decorada com <code>@dlt.resource</code> que yielda dados. Pode ser um generator síncrono, async generator, ou retornar listas, DataFrames, Arrow tables.</p>
 
 <pre><code><span class="syn-kw">import</span> dlt
 
@@ -153,7 +153,7 @@ pipeline.run(
            <span class="syn-str">"released"</span>: <span class="syn-str">"2013-09-17"</span>, <span class="syn-str">"rating"</span>: <span class="syn-num">4.47</span>,
            <span class="syn-str">"metacritic"</span>: <span class="syn-num">96</span>}</code></pre>
 
-<p>Na analogia: se o Source é uma <strong>API REST</strong>, cada Resource é um <strong>endpoint</strong>. Se o Source é um <strong>banco SQL</strong>, cada Resource é uma <strong>tabela</strong>. Se é uma <strong>planilha</strong>, cada Resource é uma <strong>aba</strong>. O Resource completo (hints, transformers, filtros) fica na <a href="0003-resource-transformer.html">Aula 3</a>.</p>
+<p>Na analogia, se o Source é uma API REST, cada Resource é um endpoint. Se o Source é um banco SQL, cada Resource é uma tabela. Se é uma planilha, cada Resource é uma aba. O Resource completo (hints, transformers, filtros) fica na <a href="0003-resource-transformer.html">Aula 3</a>.</p>
 
 <h2>Source</h2>
 
@@ -171,9 +171,9 @@ pipeline.run(
 
 <h2>Source em profundidade: eager, seleção e customização</h2>
 
-<p>Um detalhe de arquitetura que muita gente erra: a função do source é <strong>eager</strong> — executa no instante em que você a chama — enquanto os resources são <strong>lazy</strong>, como generators, adiando a extração para o <code>pipeline.run()</code>. Por isso os docs recomendam: <strong>não extraia dados dentro da função do source</strong>; deixe isso para os resources (você ganha error handling, métricas de execução e paralelismo).</p>
+<p>Um detalhe de arquitetura que muita gente erra: a função do source é <strong>eager</strong> (executa no instante em que você a chama), enquanto os resources são <strong>lazy</strong>, como generators, adiando a extração para o <code>pipeline.run()</code>. Por isso os docs recomendam: <strong>não extraia dados dentro da função do source</strong>. Deixe isso para os resources, que já trazem error handling, métricas de execução e paralelismo.</p>
 
-<p>O source expõe os resources num dicionário <code>.resources</code>, e você pode <strong>selecionar</strong> o que carregar sem tocar no código do source:</p>
+<p>O source expõe os resources num dicionário <code>.resources</code>, e você pode selecionar o que carregar sem tocar no código do source:</p>
 
 <pre><code><span class="syn-kw">from</span> rawg <span class="syn-kw">import</span> rawg
 source = rawg()
@@ -190,9 +190,9 @@ source.games.selected = <span class="syn-num">False</span>   <span class="syn-cm
 <p>Outros mecanismos de customização pós-criação:</p>
 
 <ul>
-  <li><code>clone(name=..., section=...)</code> — renomeia o source (muda o namespace de config para <code>[sources.&lt;novo&gt;]</code>) e permite várias instâncias lado a lado.</li>
-  <li><code>source.resources.add(source.deals | deal_scores)</code> — adiciona um transformer novo a um source existente (o dlt clona o resource; sua instância original não é afetada).</li>
-  <li><code>source.schema</code> — acesso ao schema para ajustá-lo antes da carga; <code>source.root_key</code> propaga o <code>_dlt_id</code> da raiz para as nested tables.</li>
+  <li><code>clone(name=..., section=...)</code> renomeia o source (muda o namespace de config para <code>[sources.&lt;novo&gt;]</code>) e permite várias instâncias lado a lado.</li>
+  <li><code>source.resources.add(source.deals | deal_scores)</code> adiciona um transformer novo a um source existente (o dlt clona o resource; sua instância original não é afetada).</li>
+  <li><code>source.schema</code> dá acesso ao schema para ajustá-lo antes da carga; <code>source.root_key</code> propaga o <code>_dlt_id</code> da raiz para as nested tables.</li>
 </ul>
 
 <div class="callout">
@@ -216,11 +216,11 @@ pipeline = dlt.pipeline(
 load_info = pipeline.run(data=rawg())
 <span class="syn-fn">print</span>(load_info)  <span class="syn-cmt"># métricas da execução</span></code></pre>
 
-<p>O pipeline persiste tudo no diretório <code>~/.dlt/pipelines/&lt;nome&gt;/</code>: schemas, estado, traces, load packages. Você pode reconectar a um pipeline anterior com <code>dlt.attach()</code> — profundidade completa na <a href="0004-pipeline-destination.html">Aula 4</a>.</p>
+<p>O pipeline persiste tudo no diretório <code>~/.dlt/pipelines/&lt;nome&gt;/</code>: schemas, estado, traces, load packages. Você pode reconectar a um pipeline anterior com <code>dlt.attach()</code>. Profundidade completa na <a href="0004-pipeline-destination.html">Aula 4</a>.</p>
 
 <h2>Destination</h2>
 
-<p>O <strong>destination</strong> é onde os dados caem. O dlt suporta <strong>20+ destinos</strong>, trocáveis mudando <strong>uma string</strong>:</p>
+<p>O <strong>destination</strong> é onde os dados caem. O dlt suporta 20+ destinos, trocáveis mudando uma string:</p>
 
 <table>
   <tr><th>Tipo</th><th>Exemplos</th></tr>
@@ -231,20 +231,20 @@ load_info = pipeline.run(data=rawg())
   <tr><td>Vector DBs</td><td>Weaviate, Qdrant</td></tr>
 </table>
 
-<p>O mesmo código funciona em qualquer destino. O dlt cuida de: DDL no dialeto do destino, mapeamento de tipos, staging (S3/GCS para warehouses que exigem stage antes do COPY) e schema drift. Detalhes na <a href="0004-pipeline-destination.html">Aula 4</a>.</p>
+<p>O mesmo código funciona em qualquer destino. O dlt cuida do DDL no dialeto do destino, do mapeamento de tipos, do staging (S3/GCS para warehouses que exigem stage antes do COPY) e do schema drift. Detalhes na <a href="0004-pipeline-destination.html">Aula 4</a>.</p>
 
 <h2>As tabelas internas que o dlt cria no destino</h2>
 
-<p>Além das suas tabelas de dados, o dlt cria tabelas especiais no dataset — não se assuste ao vê-las; elas são a maquinaria interna:</p>
+<p>Além das suas tabelas de dados, o dlt cria tabelas especiais no dataset (não se assuste ao vê-las); elas são a maquinaria interna:</p>
 
 <table>
   <tr><th>Tabela</th><th>Função</th></tr>
   <tr><td><code>_dlt_loads</code></td><td>Registro de cada load package (load ID, status, timestamps)</td></tr>
-  <tr><td><code>_dlt_pipeline_state</code></td><td>Estado do pipeline (cursores incrementais, etc.) — permite restaurar execuções em outra máquina</td></tr>
-  <tr><td><code>_dlt_version</code></td><td>Hash/versão do schema atual — o dlt compara para saber se precisa migrar</td></tr>
+  <tr><td><code>_dlt_pipeline_state</code></td><td>Estado do pipeline (cursores incrementais, etc.): permite restaurar execuções em outra máquina</td></tr>
+  <tr><td><code>_dlt_version</code></td><td>Hash/versão do schema atual: o dlt compara para saber se precisa migrar</td></tr>
 </table>
 
-<p>E nas tabelas de dados, colunas de sistema: <code>_dlt_id</code> (identidade única da linha), <code>_dlt_load_id</code> (qual load trouxe a linha), e nas tabelas aninhadas <code>_dlt_parent_id</code> + <code>_dlt_list_idx</code>. Anatomia completa na <a href="0005-schema-normalizacao-incremental.html">Aula 5</a>.</p>
+<p>E nas tabelas de dados, as colunas de sistema: <code>_dlt_id</code> (identidade única da linha) e <code>_dlt_load_id</code> (qual load trouxe a linha). Nas tabelas aninhadas valem <code>_dlt_parent_id</code> + <code>_dlt_list_idx</code>. Anatomia completa na <a href="0005-schema-normalizacao-incremental.html">Aula 5</a>.</p>
 
 <h2>O fluxo completo</h2>
 
@@ -285,9 +285,9 @@ pipeline.run(data=rawg())
 
 <h2>Exemplo do curso: RAWG → data lake</h2>
 
-<p>Todas as aulas usam um exemplo real e funcional: ingerir a <a href="https://rawg.io/apidocs">RAWG Video Games API</a> (500k+ jogos, gratuita com API key) para um data lake. O código completo está em <a href="../../exemplos/rawg/rawg.py">exemplos/rawg/</a> e roda de verdade:</p>
+<p>Todas as aulas usam um exemplo real: ingerir a <a href="https://rawg.io/apidocs">RAWG Video Games API</a> (500k+ jogos, gratuita com API key) para um data lake. O código completo está em <a href="../../exemplos/rawg/rawg.py">exemplos/rawg/</a> e roda de verdade:</p>
 
-<pre><code><span class="syn-cmt"># exemplos/rawg/rawg.py — RAWG → DuckDB em 6 linhas</span>
+<pre><code><span class="syn-cmt"># exemplos/rawg/rawg.py: RAWG → DuckDB em 6 linhas</span>
 <span class="syn-kw">import</span> dlt
 <span class="syn-kw">from</span> rawg <span class="syn-kw">import</span> rawg
 
@@ -297,10 +297,10 @@ pipeline = dlt.pipeline(
     dataset_name=<span class="syn-str">"rawg_data"</span>,
 )
 <span class="syn-cmt"># add_limit: cada jogo custa 1 request extra de detalhe; o free tier</span>
-<span class="syn-cmt"># tem 20k requests/mês — a amostra respeita o orçamento da API</span>
+<span class="syn-cmt"># tem 20k requests/mês; a amostra respeita o orçamento da API</span>
 pipeline.run(data=rawg().add_limit(max_items=<span class="syn-num">100</span>))</code></pre>
 
-<p>O source usa um <strong>resource <code>games</code> com incremental</strong>, um <strong>resource <code>genres</code></strong> e um <strong>transformer <code>game_details</code></strong> que enriquece cada jogo com <code>/games/{id}</code> — os três conceitos desta aula em ação. Detalhes nas aulas 3-5.</p>
+<p>O source usa um resource <code>games</code> com incremental, um resource <code>genres</code> e um transformer <code>game_details</code> que enriquece cada jogo com <code>/games/{id}</code>. Os três conceitos desta aula aparecem em ação. Detalhes nas aulas 3-5.</p>
 
 <h2>Glossário rápido</h2>
 

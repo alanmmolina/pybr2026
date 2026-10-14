@@ -112,10 +112,10 @@ valor não é carregado</div>
       if (!scene) return;
       contractsPrepped = true;
 
-      /* notas do slice de código — mesma mecânica dos slides de componente */
+      /* notas do slice de código: mesma mecânica dos slides de componente */
       HW.prepResNotes(scene);
 
-      /* molduras sloppy dos dois painéis — mesmo idioma do .callout.sloppy */
+      /* molduras sloppy dos dois painéis: mesmo idioma do .callout.sloppy */
       var panels = scene.querySelectorAll(".role-panel");
       for (var i = 0; i < panels.length; i++) {
         var p = panels[i];
@@ -127,7 +127,7 @@ valor não é carregado</div>
         makeStrokedPath(f, hwWobbleRect(w, h, 12, 200 + i * 23, 3), 3, stroke);
       }
 
-      /* as 8 caixas internas também sloppy — em cinza, subordinadas às molduras
+      /* as 8 caixas internas também sloppy, em cinza, subordinadas às molduras
          de cor dos painéis (amplitude menor: 2, contra 3 lá). */
       var iboxes = scene.querySelectorAll(".role-box");
       for (var b = 0; b < iboxes.length; b++) {
@@ -165,7 +165,7 @@ valor não é carregado</div>
       if (where) tl.to(where, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 0);
       /* 2. as duas anotações apontam as duas linhas */
       if (notes.length) tl.to(notes, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out", stagger: 0.18 }, 0.35);
-      /* 3. os dois blocos — forma primeiro, política depois */
+      /* 3. os dois blocos: forma primeiro, política depois */
       if (blocks.length) tl.to(blocks, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.18 }, 0.6);
       /* 4. as molduras sloppy se desenham */
       if (frames.length) tl.to(frames, { strokeDashoffset: 0, duration: 0.55, ease: "power2.out", stagger: 0.18 }, 0.7);

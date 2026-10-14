@@ -91,7 +91,7 @@ function firePipeline() {
   tl.to(trigSides, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.1, overwrite: "auto" }, 0.18);
   tl.to(endFrames, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out", stagger: 0.1, overwrite: "auto" }, 0.22);
   tl.to(flowSvg, { opacity: 1, duration: 0.35, ease: "power2.out", stagger: 0.08, overwrite: "auto" }, 0.3);
-  /* 3) steps da esquerda para a direita — cada seta acompanha o movimento
+  /* 3) steps da esquerda para a direita; cada seta acompanha o movimento
         da estação que ela liga (slide + draw-in juntos) */
   tl.to(stations[0], { opacity: 1, y: 0, duration: 0.42, ease: "power2.out", overwrite: "auto" }, 0.5);
   tl.to(arrs[0], { opacity: 1, y: 0, strokeDashoffset: 0, duration: 0.42, ease: "power2.out", overwrite: "auto" }, 0.66);
@@ -136,7 +136,7 @@ function prepPipelineFlow() {
   }
 
   /* conectores de fluxo entre RAWG → código → DuckDB: linha tracejada que
-     marcha continuamente + ponteiro sólido na ponta (direção do dado) —
+     marcha continuamente + ponteiro sólido na ponta (direção do dado);
      verde do dlt porque é o dlt quem faz o dado fluir */
   var flows = scene.querySelectorAll(".trig-flow");
   for (var f = 0; f < flows.length; f++) {

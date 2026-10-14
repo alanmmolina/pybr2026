@@ -110,7 +110,7 @@
   <script>
     var realExamplePrepped = false;
 
-    /* cotovelo ortogonal com canto arredondado — grammar do tipo database-schema */
+    /* cotovelo ortogonal com canto arredondado: grammar do tipo database-schema */
     function hwElbow(x1, y1, x2, y2, xm, r) {
       r = r || 8;
       if (Math.abs(y2 - y1) < 1) return "M " + x1 + " " + y1 + " L " + x2 + " " + y2;
@@ -191,7 +191,7 @@
         wire(hwElbow(gamesLoad.l, gamesLoad.cy, loads.r, loads.cy, (gamesLoad.l + loads.r) / 2, 8), AMBER, 1.4);
       }
       /* linhagem: _dlt_pipeline_state._dlt_load_id → _dlt_loads.load_id
-         (pela calha esquerda — ir direto à borda direita atravessava as caixas) */
+         (pela calha esquerda, ir direto à borda direita atravessava as caixas) */
       if (stateLoad && loads) {
         var laneL = Math.min(stateLoad.l, loads.l) - 20;
         wire(hwElbow(stateLoad.l, stateLoad.cy, loads.l, loads.cy + 10, laneL, 8), AMBER, 1.4);
@@ -224,7 +224,7 @@
         }
       }
 
-      /* rótulos das relações — máscara opaca, folga da linha */
+      /* rótulos das relações: máscara opaca, folga da linha */
       function label(text, x, y, mode) {
         var d = document.createElement("div");
         d.className = "erd-link-label";

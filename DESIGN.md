@@ -262,7 +262,7 @@ Canvas 1920×1080. `.slide-inner` uses padding `100px 140px 120px`; per-scene
 exceptions adjust only what they need to.
 
 No header and no eyebrow: the headline opens the slide. The cover is the one
-exception — the event lockup sits above the headline, centred. Every scene runs
+exception: the event lockup sits above the headline, centred. Every scene runs
 10s.
 
 Entrance is `data-anim`. `fireEntrance` in `deck.js` runs `gsap.fromTo` from

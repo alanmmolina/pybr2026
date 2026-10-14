@@ -9,17 +9,17 @@
 </head>
 <body>
 
-<h1>Aula 3: Resource e Transformer — a extração em profundidade</h1>
+<h1>Aula 3: Resource e Transformer, a extração em profundidade</h1>
 
 <div class="lesson-meta">
-  <strong>Objetivo:</strong> Dominar o <code>@dlt.resource</code> — hints de schema, parametrização com secrets, dispatch para múltiplas tabelas, transformers, pipe operator e paralelismo.<br>
+  <strong>Objetivo:</strong> Dominar o <code>@dlt.resource</code>: hints de schema, parametrização com secrets, dispatch para múltiplas tabelas, transformers, pipe operator e paralelismo.<br>
   <strong>Requer:</strong> <a href="0002-arquitetura-core.html">Aula 2</a>.<br>
   <strong>Fonte primária:</strong> <a href="https://dlthub.com/docs/general-usage/resource">Resource</a> e <a href="https://dlthub.com/docs/general-usage/source">Source</a> (docs oficiais).
 </div>
 
 <h2>O Resource despido</h2>
 
-<p>Na essência, um resource é <strong>qualquer função que yielda dados</strong>. O decorator <code>@dlt.resource</code> transforma essa função em um objeto que o pipeline sabe extrair:</p>
+<p>Um resource é <strong>qualquer função que yielda dados</strong>. O decorator <code>@dlt.resource</code> transforma essa função em um objeto que o pipeline sabe extrair:</p>
 
 <pre><code><span class="syn-kw">import</span> dlt
 
@@ -32,13 +32,13 @@
 <span class="syn-cmt"># O resource é lazy: só executa quando o pipeline rodar</span>
 pipeline.run(data=genres(client=client))</code></pre>
 
-<p>Um resource pode yieldar <strong>dicts, listas, DataFrames, Arrow tables ou objetos Pydantic</strong> — o dlt normaliza tudo. Ele também é <strong>reutilizável</strong>: o mesmo resource pode rodar em pipelines diferentes, com parâmetros diferentes.</p>
+<p>Um resource pode yieldar dicts, listas, DataFrames, Arrow tables ou objetos Pydantic. O dlt normaliza tudo. Ele também é <strong>reutilizável</strong>: o mesmo resource pode rodar em pipelines diferentes, com parâmetros diferentes.</p>
 
 <h3>Standalone resources: sem decorator</h3>
 
 <p>Para dados que já estão em memória, não precisa de função: <code>dlt.resource()</code> aceita o iterável diretamente:</p>
 
-<pre><code><span class="syn-cmt"># Lista direta — sem função, sem decorator</span>
+<pre><code><span class="syn-cmt"># Lista direta: sem função, sem decorator</span>
 <span class="syn-cmt"># (campos do endpoint /genres conforme a spec Swagger da RAWG)</span>
 data = [
     {<span class="syn-str">"id"</span>: <span class="syn-num">4</span>, <span class="syn-str">"name"</span>: <span class="syn-str">"Action"</span>, <span class="syn-str">"slug"</span>: <span class="syn-str">"action"</span>, <span class="syn-str">"games_count"</span>: <span class="syn-num">190000</span>},
@@ -50,7 +50,7 @@ pipeline.run(data=dlt.resource(data, name=<span class="syn-str">"genres"</span>)
 
 <h3>dlt.resource como função e nomes dinâmicos</h3>
 
-<p>Você não precisa do decorator. <code>dlt.resource</code> também é uma <strong>função</strong> que embrulha um iterável — e o nome da tabela pode ser <strong>dinâmico</strong>, resolvido a partir dos argumentos da chamada:</p>
+<p>Você não precisa do decorator. <code>dlt.resource</code> também é uma função que embrulha um iterável. O nome da tabela pode ser dinâmico, resolvido a partir dos argumentos da chamada:</p>
 
 <pre><code><span class="syn-cmt"># nome dinâmico: o resource assume o nome do stream</span>
 @dlt.resource(name=<span class="syn-kw">lambda</span> args: args[<span class="syn-str">"stream_name"</span>])
@@ -60,7 +60,7 @@ telemetry = kinesis(<span class="syn-str">"telemetry_stream"</span>)  <span clas
 
 <h3>Função decorada: chame o wrapper antes de usar</h3>
 
-<p>Quando o <code>@dlt.resource</code> decora uma função top-level de módulo, ele só embrulha a função — e você precisa <strong>chamá-la</strong> para obter o resource de verdade (a doc chama isso de "standalone resource"). É isso que permite parametrizar por chamada:</p>
+<p>Quando o <code>@dlt.resource</code> decora uma função top-level de módulo, ele só embrulha a função. Você precisa <strong>chamá-la</strong> para obter o resource de verdade (a doc chama isso de "standalone resource"). É isso que permite parametrizar por chamada:</p>
 
 <pre><code><span class="syn-cmt"># fs_resource existe como função; chamar é obrigatório antes de extrair</span>
 pipeline.run(data=fs_resource(<span class="syn-str">"s3://my-bucket/reports"</span>), table_name=<span class="syn-str">"reports"</span>)</code></pre>
@@ -71,7 +71,7 @@ pipeline.run(data=fs_resource(<span class="syn-str">"s3://my-bucket/reports"</sp
 
 <pre><code>games().compute_table_schema()   <span class="syn-cmt"># o schema que o resource geraria, sem rodar pipeline</span></code></pre>
 
-<p>O <code>with_name()</code> retorna uma <strong>deep copy renomeada</strong> do resource — ideal para reusar um resource genérico (ex.: leitor de CSV) em várias tabelas:</p>
+<p>O <code>with_name()</code> retorna uma <strong>deep copy renomeada</strong> do resource. Serve para reusar um resource genérico (ex.: leitor de CSV) em várias tabelas:</p>
 
 <pre><code><span class="syn-cmt"># mesmo leitor, duas pastas → duas tabelas independentes</span>
 reports_pipe = fs_resource(<span class="syn-str">"s3://.../reports"</span>) | csv_reader()
@@ -83,7 +83,7 @@ pipeline.run([reports_pipe.with_name(<span class="syn-str">"reports"</span>),
 
 <h2>Ajustando schema em runtime: dlt.mark</h2>
 
-<p>Há casos em que o schema só é conhecido quando os dados chegam — ex.: refletir uma tabela de banco dentro do DAG do Airflow. Para isso você emite hints <strong>junto com o primeiro item</strong>; o dlt os mescla no schema antes de aplicar contratos e persistir o load package:</p>
+<p>Há casos em que o schema só é conhecido quando os dados chegam (ex.: refletir uma tabela de banco dentro do DAG do Airflow). Para isso você emite hints <strong>junto com o primeiro item</strong>; o dlt os mescla no schema antes de aplicar contratos e persistir o load package:</p>
 
 <pre><code>@dlt.resource
 <span class="syn-kw">def</span> <span class="syn-fn">sql_table</span>(credentials, schema, table):
@@ -100,8 +100,8 @@ pipeline.run([reports_pipe.with_name(<span class="syn-str">"reports"</span>),
 <p>Dois utilitários relacionados no mesmo <code>dlt.mark</code>:</p>
 
 <ul>
-  <li><code>dlt.mark.materialize_table_schema()</code> — cria a tabela <strong>sem linhas</strong> (útil para publicar schema antes dos dados chegarem).</li>
-  <li><code>dlt.mark.with_file_import(path, "csv")</code> — importa CSV/Parquet/JSONL <strong>sem ler nem parsear</strong>; o dlt copia o arquivo como está para o destino.</li>
+  <li><code>dlt.mark.materialize_table_schema()</code>: cria a tabela <strong>sem linhas</strong> (útil para publicar schema antes dos dados chegarem).</li>
+  <li><code>dlt.mark.with_file_import(path, "csv")</code>: importa CSV/Parquet/JSONL <strong>sem ler nem parsear</strong>; o dlt copia o arquivo como está para o destino.</li>
 </ul>
 
 <h2>add_limit com precisão: yields vs linhas</h2>
@@ -114,7 +114,7 @@ my_resource().add_limit(max_time=<span class="syn-num">10</span>)            <sp
 
 <div class="callout">
   <div class="callout-title">Limites que você não pode impor</div>
-  <p><strong>Você não pode limitar um transformer</strong> — ele processa tudo que recebe para não deixar o dataset inconsistente. E <code>add_limit</code> substitui limites anteriores (não acumula); <code>None</code>/<code>-1</code> desativa, <code>0</code> zera o resource.</p>
+  <p><strong>Você não pode limitar um transformer</strong>: ele processa tudo que recebe para não deixar o dataset inconsistente. E <code>add_limit</code> substitui limites anteriores (não acumula); <code>None</code>/<code>-1</code> desativa, <code>0</code> zera o resource.</p>
 </div>
 
 <h2>Schema com Pydantic</h2>
@@ -147,7 +147,7 @@ my_resource().add_limit(max_time=<span class="syn-num">10</span>)            <sp
 
 <h2>Hints: declarando intenção</h2>
 
-<p>Os argumentos do decorator não são apenas configuração — são <strong>declarações de intenção</strong> que o dlt usa para gerar schema, controlar comportamento de escrita e validar dados:</p>
+<p>Os argumentos do decorator servem como declarações de intenção: o dlt os usa para gerar schema, controlar comportamento de escrita e validar dados:</p>
 
 <pre><code>@dlt.resource(
     name=<span class="syn-str">"game_details"</span>,                 <span class="syn-cmt"># nome da tabela</span>
@@ -164,7 +164,7 @@ my_resource().add_limit(max_time=<span class="syn-num">10</span>)            <sp
 
 <div class="callout">
   <div class="callout-title">apply_hints: mudando hints em runtime</div>
-  <p>Resources que já existem podem receber novos hints com <code>.apply_hints()</code> — útil para sources de terceiros e para ajustes programáticos:</p>
+  <p>Resources que já existem podem receber novos hints com <code>.apply_hints()</code>. É útil para sources de terceiros e para ajustes programáticos:</p>
 </div>
 
 <pre><code><span class="syn-cmt"># Exemplo dos docs: forçar data_type json em coleções MongoDB</span>
@@ -176,20 +176,20 @@ source_data = mongodb().with_resources(<span class="syn-str">"collection1"</span
 
 <table>
   <tr><th>Disposition</th><th>Comportamento</th><th>Quando usar</th></tr>
-  <tr><td><code>append</code></td><td>Adiciona ao final da tabela</td><td>Dados imutáveis (eventos, logs) — <em>stateless</em></td></tr>
+  <tr><td><code>append</code></td><td>Adiciona ao final da tabela</td><td>Dados imutáveis (eventos, logs), <em>stateless</em></td></tr>
   <tr><td><code>replace</code></td><td>Substitui toda a tabela</td><td>Full refresh, datasets pequenos</td></tr>
-  <tr><td><code>merge</code></td><td>Deduplica/upsert com base em <code>primary_key</code></td><td>Dados mutáveis com chave (CRM, catálogos) — <em>stateful</em></td></tr>
+  <tr><td><code>merge</code></td><td>Deduplica/upsert com base em <code>primary_key</code></td><td>Dados mutáveis com chave (CRM, catálogos), <em>stateful</em></td></tr>
 </table>
 
 <p>O fluxograma completo de decisão (stateful vs stateless → histórico vs atual) está na <a href="0005-schema-normalizacao-incremental.html">Aula 5</a>.</p>
 
 <h2>Parametrização e secrets</h2>
 
-<p>Sources e resources aceitam argumentos como qualquer função Python. Argumentos marcados com <code>dlt.secrets.value</code> ou <code>dlt.config.value</code> são injetados automaticamente do <code>secrets.toml</code> ou de variáveis de ambiente — <strong>zero <code>if/else</code> para ambiente no código</strong>:</p>
+<p>Sources e resources aceitam argumentos como qualquer função Python. Argumentos marcados com <code>dlt.secrets.value</code> ou <code>dlt.config.value</code> são injetados automaticamente do <code>secrets.toml</code> ou de variáveis de ambiente: <strong>zero <code>if/else</code> para ambiente no código</strong>.</p>
 
 <pre><code>@dlt.source
 <span class="syn-kw">def</span> <span class="syn-fn">rawg</span>(api_key=dlt.secrets.value):
-    <span class="syn-cmt"># RAWG autentica pelo query param `key` — o client leva a chave</span>
+    <span class="syn-cmt"># RAWG autentica pelo query param `key`; o client leva a chave</span>
     client = RESTClient(base_url=API_URL,
         auth=APIKeyAuth(name=<span class="syn-str">"key"</span>, location=<span class="syn-str">"query"</span>, api_key=api_key))
     <span class="syn-kw">return</span> genres(client=client), games(client=client)
@@ -197,7 +197,7 @@ source_data = mongodb().with_resources(<span class="syn-str">"collection1"</span
 <span class="syn-cmt"># O dlt resolve api_key do secrets.toml ([sources.rawg]) automaticamente</span>
 pipeline.run(data=rawg())</code></pre>
 
-<p>Dica de palestra: isso é o que torna o mesmo código testável localmente (DuckDB + secrets de dev) e deployável em produção (env vars) <strong>sem mudar uma linha</strong>.</p>
+<p>Dica de palestra: assim o mesmo código fica testável localmente (DuckDB + secrets de dev) e deployável em produção (env vars), sem mudar uma linha.</p>
 
 <h2>Dispatch para múltiplas tabelas</h2>
 
@@ -214,7 +214,7 @@ pipeline.run(data=rawg())</code></pre>
 
 <h3>dlt.mark.with_table_name</h3>
 
-<pre><code><span class="syn-cmt"># Marca itens individuais com tabela explícita — útil com Pydantic</span>
+<pre><code><span class="syn-cmt"># Marca itens individuais com tabela explícita, útil com Pydantic</span>
 TABLE_MAP = {<span class="syn-str">"click"</span>: <span class="syn-str">"click_events"</span>, <span class="syn-str">"purchase"</span>: <span class="syn-str">"purchase_events"</span>}
 
 @dlt.resource(name=<span class="syn-str">"events"</span>)
@@ -224,7 +224,7 @@ TABLE_MAP = {<span class="syn-str">"click"</span>: <span class="syn-str">"click_
 
 <h2>Transformer: recursos que se alimentam de recursos</h2>
 
-<p>Um <strong>transformer</strong> é um resource que recebe dados de outro resource. O caso clássico: uma API que lista IDs em um endpoint e detalhes em outro. A ligação se declara com <code>data_from</code> (instância padrão do pai) ou com o <strong>pipe <code>|</code></strong> (instância configurada — o que o exemplo do curso usa):</p>
+<p>Um <strong>transformer</strong> é um resource que recebe dados de outro resource. O caso clássico: uma API que lista IDs em um endpoint e detalhes em outro. A ligação se declara com <code>data_from</code> (instância padrão do pai) ou com o <strong>pipe <code>|</code></strong> (instância configurada, o que o exemplo do curso usa):</p>
 
 <pre><code><span class="syn-cmt"># Resource "pai": lista jogos do endpoint /games</span>
 @dlt.resource
@@ -242,7 +242,7 @@ pipeline.run(data=games(client=client) | game_details(client=client))</code></pr
 
 <div class="callout">
   <div class="callout-title">Transformer é lazy e econômico</div>
-  <p>O transformer processa <strong>um item por vez</strong> (não espera o resource pai terminar). Em APIs com paginação, isso permite começar a enriquecer dados enquanto o pai ainda está extraindo — e evita carregar tudo em memória.</p>
+  <p>O transformer processa <strong>um item por vez</strong> (não espera o resource pai terminar). Em APIs com paginação, isso permite começar a enriquecer dados enquanto o pai ainda está extraindo e evita carregar tudo em memória.</p>
 </div>
 
 <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="transformer-title transformer-desc" style="width:100%;height:auto;display:block;margin:1.2rem 0;">
@@ -269,7 +269,7 @@ pipeline.run(data=games(client=client) | game_details(client=client))</code></pr
 
 <h3>Transformer: return, async e a instância padrão</h3>
 
-<p>Um transformer pode <strong>retornar</strong> (não só yieldar) e pode ser <strong>async</strong> — inclusive um async generator, o que paraleliza os HTTP calls dos detalhes:</p>
+<p>Um transformer pode <strong>retornar</strong> em vez de só yieldar e pode ser <strong>async</strong>, inclusive um async generator, o que paraleliza os HTTP calls dos detalhes:</p>
 
 <pre><code>@dlt.transformer
 <span class="syn-kw">async def</span> <span class="syn-fn">pokemon</span>(id):
@@ -281,7 +281,7 @@ pipeline.run(data=games(client=client) | game_details(client=client))</code></pr
 
 <div class="callout">
   <div class="callout-title">data_from=funcao usa a "instância padrão"</div>
-  <p>Quando o transformer declara <code>data_from=games</code> (a função nua), o dlt conecta à <strong>instância padrão</strong> do pai — criada só com os argumentos default. Se o pai precisa de um <code>client</code> injetado (ou de qualquer argumento explícito), isso falha. É exatamente por isso que o exemplo do curso vincula com pipe no source (veja o callout lá embaixo): <code>(games_resource := games(client=client))</code> (walrus no próprio <code>return</code>) e <code>games_resource | game_details(client=client)</code> — em keyword, porque o pipe entrega o <code>game_item</code> no primeiro argumento.</p>
+  <p>Quando o transformer declara <code>data_from=games</code> (a função nua), o dlt conecta à <strong>instância padrão</strong> do pai, criada só com os argumentos default. Se o pai precisa de um <code>client</code> injetado (ou de qualquer argumento explícito), isso falha. É por isso que o exemplo do curso vincula com pipe no source (veja o callout lá embaixo): <code>(games_resource := games(client=client))</code> (walrus no próprio <code>return</code>) e <code>games_resource | game_details(client=client)</code>, em keyword, porque o pipe entrega o <code>game_item</code> no primeiro argumento.</p>
 </div>
 
 <h2>Pipe operator (|)</h2>
@@ -291,7 +291,7 @@ pipeline.run(data=games(client=client) | game_details(client=client))</code></pr
 <pre><code><span class="syn-cmt"># Carrega só 100 jogos, com seus detalhes</span>
 pipeline.run(data=games(client=client).add_limit(max_items=<span class="syn-num">100</span>) | game_details(client=client))
 
-<span class="syn-cmt"># Funciona com listas também — o dlt cria um resource implícito</span>
+<span class="syn-cmt"># Funciona com listas também; o dlt cria um resource implícito</span>
 <span class="syn-fn">print</span>(<span class="syn-fn">list</span>([{<span class="syn-str">"id"</span>: <span class="syn-num">3498</span>}, {<span class="syn-str">"id"</span>: <span class="syn-num">3328</span>}] | game_details(client=client)))  <span class="syn-cmt"># GTA V e The Witcher 3</span></code></pre>
 
 <h2>Transformações inline: filter, map, yield_map</h2>
@@ -313,7 +313,7 @@ pipeline.run(data=games(client=client).add_limit(max_items=<span class="syn-num"
   <tr><td><code>add_yield_map</code></td><td>1 → N</td><td>Explodir arrays, gerar registros derivados</td></tr>
 </table>
 
-<p>As transformações rodam na fase de <strong>extract</strong> — antes do schema ser computado. Use isso para pseudonimizar dados pessoais ou descartar colunas antes de qualquer coisa tocar o disco.</p>
+<p>As transformações rodam na fase de <strong>extract</strong>, antes do schema ser computado. Use isso para pseudonimizar dados pessoais ou descartar colunas antes de qualquer coisa tocar o disco.</p>
 
 <h2>Paralelismo</h2>
 
@@ -330,7 +330,7 @@ pipeline.run([genres(), platforms()])</code></pre>
 
 <h2>Nested hints: controlando tabelas aninhadas</h2>
 
-<p>Quando um resource tem dados aninhados, <code>nested_hints</code> permite definir chaves e referências nas tabelas filhas — transformando uma nested table em uma tabela de primeira classe com FK:</p>
+<p>Quando um resource tem dados aninhados, <code>nested_hints</code> permite definir chaves e referências nas tabelas filhas. A nested table vira uma tabela de primeira classe com FK:</p>
 
 <pre><code>@dlt.resource(
     primary_key=<span class="syn-str">"id"</span>,
@@ -366,14 +366,14 @@ pipeline.run([genres(), platforms()])</code></pre>
         (games_resource := games(client=client)),
         games_resource | game_details(client=client)]
 
-<span class="syn-cmt"># resource: o cursor é dele — inline, como default do parâmetro</span>
+<span class="syn-cmt"># resource: o cursor é dele, inline, como default do parâmetro</span>
 @dlt.resource(write_disposition=<span class="syn-str">"merge"</span>, primary_key=<span class="syn-str">"id"</span>)
 <span class="syn-kw">def</span> <span class="syn-fn">games</span>(client, updated_at=dlt.sources.incremental(
         cursor_path=<span class="syn-str">"updated"</span>, initial_value=<span class="syn-str">"1970-01-01T00:00:00"</span>, row_order=<span class="syn-str">"desc"</span>)):
     <span class="syn-kw">for</span> page <span class="syn-kw">in</span> client.paginate(path=<span class="syn-str">"games"</span>, params={
         <span class="syn-str">"ordering"</span>: <span class="syn-str">"-updated"</span>, <span class="syn-str">"page_size"</span>: <span class="syn-num">40</span>,
     }, data_selector=<span class="syn-str">"results"</span>):
-        <span class="syn-kw">yield from</span> page  <span class="syn-cmt"># item a item — o pipe não achata batches</span>
+        <span class="syn-kw">yield from</span> page  <span class="syn-cmt"># item a item; o pipe não achata batches</span>
 
 <span class="syn-cmt"># transformer: o pipe entrega cada jogo em game_item</span>
 @dlt.transformer(write_disposition=<span class="syn-str">"merge"</span>, primary_key=<span class="syn-str">"id"</span>)
@@ -382,7 +382,7 @@ pipeline.run([genres(), platforms()])</code></pre>
 
 <div class="callout">
   <div class="callout-title">Detalhes que só aparecem rodando (ou lendo a spec)</div>
-  <p><strong>1. O pipe não achata batches:</strong> o transformer recebe exatamente o valor yieldado pelo pai — se o pai yielda a página inteira (lista), o transformer recebe uma lista, não um item. Por isso <code>games</code> yielda item a item (<code>for page ...: yield from page</code>). <strong>2. O pipe importa no source:</strong> sem ele, o dlt instancia o pai com os argumentos padrão — que aqui não existem (o <code>client</code> é injetado). <strong>3. Endpoint certo para o transformer:</strong> o <code>/genres/{id}</code> retorna só o gênero com <code>description</code> (a lista <code>/genres</code> até traz um <code>games</code> resumido — vira a nested table <code>genres__games</code>); o endpoint rico em aninhados é o <code>/games/{id}</code> (developers, publishers, ratings, stores...). <strong>4. Objeto único ≠ lista:</strong> <code>/games/{id}</code> devolve um objeto (GameSingle), não uma lista paginada — por isso <code>client.get().json()</code>, não <code>paginate</code>. O <code>smoke_test.py</code> valida tudo sem chave de API.</p>
+  <p><strong>1. O pipe não achata batches:</strong> o transformer recebe exatamente o valor yieldado pelo pai. Se o pai yielda a página inteira (lista), o transformer recebe uma lista, não um item. Por isso <code>games</code> yielda item a item (<code>for page ...: yield from page</code>). <strong>2. O pipe importa no source:</strong> sem ele, o dlt instancia o pai com os argumentos padrão, que aqui não existem (o <code>client</code> é injetado). <strong>3. Endpoint certo para o transformer:</strong> o <code>/genres/{id}</code> retorna só o gênero com <code>description</code> (a lista <code>/genres</code> até traz um <code>games</code> resumido, que vira a nested table <code>genres__games</code>); o endpoint rico em aninhados é o <code>/games/{id}</code> (developers, publishers, ratings, stores...). <strong>4. Objeto único ≠ lista:</strong> <code>/games/{id}</code> devolve um objeto (GameSingle), não uma lista paginada. Por isso <code>client.get().json()</code>, não <code>paginate</code>.</p>
 </div>
 
 <h2>Quiz rápido</h2>
@@ -399,7 +399,7 @@ pipeline.run([genres(), platforms()])</code></pre>
 <div class="quiz" id="q2">
   <h4>Pergunta 2: Qual a diferença entre @dlt.resource e @dlt.transformer?</h4>
   <button onclick="check(this, false)">Nenhuma, são a mesma coisa</button>
-  <button onclick="check(this, true)">Recebe dados de outro resource — via data_from ou pipe |</button>
+  <button onclick="check(this, true)">Recebe dados de outro resource, via data_from ou pipe |</button>
   <button onclick="check(this, false)">Transformer escreve em JSON, resource escreve em Parquet</button>
   <button onclick="check(this, false)">Transformer só funciona com APIs REST</button>
   <div class="feedback"></div>

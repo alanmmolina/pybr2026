@@ -19,7 +19,7 @@
 
 <h2>Schema inference: como o dlt "entende" seus dados</h2>
 
-<p>Quando um resource yielda dados, o dlt <strong>infere o schema automaticamente</strong> na fase de normalize. Ele observa os registros, detecta tipos, e gera a estrutura da tabela:</p>
+<p>Quando um resource yielda dados, o dlt infere o schema automaticamente na fase de normalize. Ele observa os registros, detecta tipos e gera a estrutura da tabela:</p>
 
 <pre><code><span class="syn-cmt"># Exemplo: o dlt infere "id" como bigint, "name" como text,</span>
 <span class="syn-cmt"># "rating" como double precision, "metacritic" como bigint e</span>
@@ -30,7 +30,7 @@
            <span class="syn-str">"rating"</span>: <span class="syn-num">4.47</span>, <span class="syn-str">"metacritic"</span>: <span class="syn-num">96</span>,
            <span class="syn-str">"updated"</span>: <span class="syn-str">"2026-06-03T12:00:00"</span>}</code></pre>
 
-<p>A inferência usa <strong>detectors configuráveis</strong> — o detector de ISO 8601 (string de data vira <code>timestamp</code>) vem habilitado por padrão. Você pode adicionar/remover detectors, definir <em>preferred types</em> por regex (ex.: toda coluna <code>*_at</code> vira <code>timestamp</code>) e regras de hints globais:</p>
+<p>A inferência usa detectors configuráveis. O detector de ISO 8601 (string de data vira <code>timestamp</code>) vem habilitado por padrão. Você pode adicionar/remover detectors, definir <em>preferred types</em> por regex (ex.: toda coluna <code>*_at</code> vira <code>timestamp</code>) e regras de hints globais:</p>
 
 <pre><code><span class="syn-cmt"># preferred types: colunas que casam o padrão ganham o tipo</span>
 settings:
@@ -39,22 +39,22 @@ settings:
     created_at: timestamp
     updated_at: timestamp</code></pre>
 
-<p>Se registros posteriores trazem colunas novas, o dlt evolui o schema automaticamente (modo <code>evolve</code>). Isso é controlável com schema contracts — <a href="0006-schema-contracts-ecossistema.html">Aula 6</a>.</p>
+<p>Se registros posteriores trazem colunas novas, o dlt evolui o schema automaticamente (modo <code>evolve</code>). Isso é controlável com schema contracts (<a href="0006-schema-contracts-ecossistema.html">Aula 6</a>).</p>
 
 <h2>Naming conventions</h2>
 
-<p>O dlt traduz identificadores para o namespace que o destino aceita. O padrão: <strong>snake_case minúsculo</strong>, só alfanuméricos e underscore, e <strong>aninhamento expresso com <code>__</code> duplo</strong>:</p>
+<p>O dlt traduz identificadores para o namespace que o destino aceita. O padrão: snake_case minúsculo, só alfanuméricos e underscore, e aninhamento expresso com <code>__</code> duplo:</p>
 
 <pre><code><span class="syn-cmt"># "createdAt" → created_at; "CamelCase" → camel_case</span>
 <span class="syn-cmt"># chave "esrb_rating" { "name" } → coluna esrb_rating__name</span></code></pre>
 
-<p>A mesma convenção vale para <strong>todos os destinos</strong> — você vê os mesmos nomes de tabelas e colunas em DuckDB, Snowflake ou Postgres. (Se quiser manter <code>camelCase</code> literal, existe a convenção <code>direct</code> — mas os docs recomendam: "use nomes simples, curtos, minúsculos".)</p>
+<p>A mesma convenção vale para todos os destinos: você vê os mesmos nomes de tabelas e colunas em DuckDB, Snowflake ou Postgres. (Se quiser manter <code>camelCase</code> literal, existe a convenção <code>direct</code>, mas os docs recomendam: "use nomes simples, curtos, minúsculos".)</p>
 
 <h2>Normalização de dados aninhados</h2>
 
-<p>Este é um dos recursos mais poderosos do dlt. Dados JSON com nested lists e dicts são automaticamente "achatados" em tabelas relacionais:</p>
+<p>Dados JSON com nested lists e dicts são automaticamente achatados em tabelas relacionais:</p>
 
-<pre><code><span class="syn-cmt"># Item do endpoint /games — campos e tipos conforme a spec Swagger</span>
+<pre><code><span class="syn-cmt"># Item do endpoint /games: campos e tipos conforme a spec Swagger</span>
 <span class="syn-cmt"># oficial da RAWG (api.rawg.io/docs); valores ilustrativos</span>
 {
     <span class="syn-str">"id"</span>: <span class="syn-num">3498</span>,
@@ -146,7 +146,7 @@ settings:
   <tr><td><code>_dlt_list_idx</code></td><td>—</td><td>Posição do elemento na lista aninhada original</td></tr>
 </table>
 
-<p>O conjunto <code>parent</code> + <code>row_key</code> + <code>parent_key</code> forma a <strong>nested reference</strong> — a chave estrangeira relacional que liga as tabelas. É o que permite que <code>replace</code> e <code>merge</code> funcionem corretamente em dados aninhados.</p>
+<p>O conjunto <code>parent</code> + <code>row_key</code> + <code>parent_key</code> forma a <strong>nested reference</strong>, a chave estrangeira relacional que liga as tabelas. É o que permite que <code>replace</code> e <code>merge</code> funcionem corretamente em dados aninhados.</p>
 
 <h3>max_table_nesting</h3>
 
@@ -163,7 +163,7 @@ settings:
 
 <h2>Variant columns: quando os tipos divergem</h2>
 
-<p>O normalizer padrão tenta <strong>coerção</strong> entre tipos compatíveis (<code>"123"</code> → <code>int</code>, <code>int</code> → <code>text</code>). Quando a coerção falha, o dlt cria uma <strong>variant column</strong> em vez de quebrar:</p>
+<p>O normalizer padrão tenta coerção entre tipos compatíveis (<code>"123"</code> → <code>int</code>, <code>int</code> → <code>text</code>). Quando a coerção falha, o dlt cria uma <strong>variant column</strong> em vez de quebrar:</p>
 
 <pre><code><span class="syn-cmt"># Rodada 1: metacritic é bigint</span>
 [ {<span class="syn-str">"metacritic"</span>: <span class="syn-num">96</span>} ]
@@ -176,12 +176,12 @@ settings:
 
 <div class="callout">
   <div class="callout-title">Controle fino de tipos</div>
-  <p>Existe um normalizer alternativo (<code>relational_no_coercion</code>) que <strong>nunca</strong> converte entre tipos — todo mismatch vira variant column. E se uma coluna específica deve ser tratada como JSON bruto (sem flattening), force com <code>columns={"col": {"data_type": "json"}}</code>.</p>
+  <p>Existe um normalizer alternativo (<code>relational_no_coercion</code>) que nunca converte entre tipos: todo mismatch vira variant column. E se uma coluna específica deve ser tratada como JSON bruto (sem flattening), force com <code>columns={"col": {"data_type": "json"}}</code>.</p>
 </div>
 
 <h2>Incremental loading: só o que mudou</h2>
 
-<p>Carregamento incremental significa trazer apenas dados <strong>novos ou modificados</strong> — baixa latência, baixo custo. O dlt faz isso com <code>dlt.sources.incremental</code>:</p>
+<p>Carregamento incremental traz apenas dados novos ou modificados, com baixa latência e custo. O dlt faz isso com <code>dlt.sources.incremental</code>:</p>
 
 <pre><code><span class="syn-kw">import</span> dlt
 <span class="syn-kw">from</span> dlt.sources <span class="syn-kw">import</span> incremental
@@ -197,14 +197,14 @@ settings:
     })
     <span class="syn-kw">yield from</span> dados</code></pre>
 
-<p>O dlt persiste o cursor (<code>last_value</code>) no <strong>pipeline state</strong> entre execuções. Na próxima rodada, <code>updated_at.last_value</code> automaticamente começa de onde parou. É o mecanismo que torna o pipeline <strong>resumível</strong> — inclusive de outra máquina, já que o state vive no destino.</p>
+<p>O dlt persiste o cursor (<code>last_value</code>) no pipeline state entre execuções. Na próxima rodada, <code>updated_at.last_value</code> começa de onde parou. Isso torna o pipeline resumível, inclusive de outra máquina, já que o state vive no destino.</p>
 
 <h3>Como funciona internamente</h3>
 
 <ol>
-  <li><strong>Primeira execução:</strong> carrega do <code>initial_value</code> até o presente. O dlt registra o maior valor de <code>updated_at</code> encontrado.</li>
-  <li><strong>Segunda execução:</strong> o resource começa do último <code>last_value</code> registrado. Só dados novos ou modificados são carregados.</li>
-  <li><strong>Com <code>write_disposition="merge"</code>:</strong> faz upsert com base na <code>primary_key</code>. Registros existentes são atualizados, novos são inseridos.</li>
+  <li>Na primeira execução, carrega do <code>initial_value</code> até o presente. O dlt registra o maior valor de <code>updated_at</code> encontrado.</li>
+  <li>Na segunda execução, o resource parte do último <code>last_value</code> registrado. Só dados novos ou modificados são carregados.</li>
+  <li>Com <code>write_disposition="merge"</code>, faz upsert com base na <code>primary_key</code>. Registros existentes são atualizados e novos são inseridos.</li>
 </ol>
 
 <h2>Escolhendo a write disposition: o fluxograma</h2>
@@ -234,23 +234,23 @@ Dados mutáveis (perfil de usuário, catálogo)?
 
 <h2>Pipeline state: a memória do pipeline</h2>
 
-<p>O estado é um <strong>dicionário Python que vive ao lado dos seus dados</strong>: você grava valores numa execução e os lê na próxima. Internamente, o dlt o usa para o que você já viu nesta aula:</p>
+<p>O estado é um dicionário Python que vive ao lado dos seus dados: você grava valores numa execução e os lê na próxima. O dlt o usa internamente para o que você já viu nesta aula:</p>
 
 <ul>
-  <li><strong>Cursor values</strong> — o <code>last_value</code> de cada incremental.</li>
-  <li><strong>Schema versions</strong> — o histórico de schemas por tabela.</li>
-  <li><strong>Custom state</strong> — qualquer estado que você mesmo escrever.</li>
+  <li>Cursor values: o <code>last_value</code> de cada incremental.</li>
+  <li>Schema versions: o histórico de schemas por tabela.</li>
+  <li>Custom state: qualquer estado que você mesmo escrever.</li>
 </ul>
 
-<p>No nosso exemplo, o RAWg já usa o estado <strong>sem você escrever uma linha</strong>: o cursor do <code>dlt.sources.incremental</code> é persistido ali automaticamente. Depois de rodar o pipeline, dá para inspecioná-lo em <code>pipeline.state</code> — é exatamente o que o <code>smoke_test.py</code> verifica:</p>
+<p>No nosso exemplo, o RAWg já usa o estado sem você escrever uma linha: o cursor do <code>dlt.sources.incremental</code> é persistido ali automaticamente. Depois de rodar o pipeline, dá para inspecioná-lo em <code>pipeline.state</code>:</p>
 
 <pre><code><span class="syn-cmt"># onde o cursor incremental do RAWg vive no pipeline state</span>
 state = pipeline.state
 games_state = state[<span class="syn-str">"sources"</span>][<span class="syn-str">"rawg"</span>][<span class="syn-str">"resources"</span>][<span class="syn-str">"games"</span>]
 cursor = games_state[<span class="syn-str">"incremental"</span>][<span class="syn-str">"updated"</span>][<span class="syn-str">"last_value"</span>]
-<span class="syn-cmt"># → "2026-06-03T12:00:00" — o maior `updated` já carregado</span></code></pre>
+<span class="syn-cmt"># → "2026-06-03T12:00:00", o maior `updated` já carregado</span></code></pre>
 
-<p>Isso cobre ~90% do uso de estado. Para o restante — estado customizado — o dlt expõe <strong>dois escopos de acesso</strong>:</p>
+<p>Isso cobre ~90% do uso de estado. Para o restante (estado customizado), o dlt expõe dois escopos de acesso:</p>
 
 <table>
   <tr><th>Escopo</th><th>API</th><th>Visibilidade</th></tr>
@@ -260,7 +260,7 @@ cursor = games_state[<span class="syn-str">"incremental"</span>][<span class="sy
 
 <div class="callout">
   <div class="callout-title">dlt.current.state() é source_state</div>
-  <p>O nome <code>dlt.current.state()</code> ainda existe, mas é um <strong>alias de <code>source_state()</code></strong> (source-scoped) — não um "estado global do pipeline" separado. Verificado no código 1.30.0: <code>dlt/pipeline/current.py</code> tem <code>state = source_state</code>. O estado do pipeline inteiro (todos os sources/resources) fica em <code>pipeline.state</code>.</p>
+  <p>O nome <code>dlt.current.state()</code> ainda existe, mas é um alias de <code>source_state()</code> (source-scoped), não um "estado global do pipeline" separado. Verificado no código 1.30.0: <code>dlt/pipeline/current.py</code> tem <code>state = source_state</code>. O estado do pipeline inteiro (todos os sources/resources) fica em <code>pipeline.state</code>.</p>
 </div>
 
 <svg viewBox="0 0 680 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="state-title state-desc" style="width:100%;height:auto;display:block;margin:1.2rem 0;">
@@ -296,9 +296,9 @@ cursor = games_state[<span class="syn-str">"incremental"</span>][<span class="sy
 
 <p>O estado precisa ser JSON-serializável (o dlt trata <code>DateTime</code>, <code>Decimal</code>, <code>bytes</code> e <code>UUID</code> além dos tipos padrão).</p>
 
-<h3>Onde o estado mora — e como ele viaja</h3>
+<h3>Onde o estado mora, e como ele viaja</h3>
 
-<p>O estado é salvo no working dir local e <strong>sincronizado com o destino</strong>, na tabela <code>_dlt_pipeline_state</code>. A identidade do estado remoto é: <strong>nome do pipeline + localização do destino + dataset</strong>. É isso que torna o pipeline resumível de outra máquina.</p>
+<p>O estado é salvo no working dir local e sincronizado com o destino, na tabela <code>_dlt_pipeline_state</code>. A identidade do estado remoto é: nome do pipeline + localização do destino + dataset. É isso que torna o pipeline resumível de outra máquina.</p>
 
 <ul>
   <li>Em orquestradores com filesystem limpo (Airflow), o dlt restaura o estado do destino automaticamente.</li>
@@ -308,7 +308,7 @@ cursor = games_state[<span class="syn-str">"incremental"</span>][<span class="sy
 
 <h3>Quando NÃO usar o estado</h3>
 
-<p>Não use o estado se ele pode crescer para <strong>milhões de registros</strong> (ex.: timestamp de modificação de cada usuário). Nesse caso, use os próprios dados como estado — o dlt expõe o pipeline atual para consultar o destino, com <code>first_run</code> para evitar consultar uma tabela que ainda não existe:</p>
+<p>Não use o estado se ele pode crescer para milhões de registros (ex.: timestamp de modificação de cada usuário). Nesse caso, use os próprios dados como estado. O dlt expõe o pipeline atual para consultar o destino, com <code>first_run</code> para evitar consultar uma tabela que ainda não existe:</p>
 
 <pre><code>@dlt.resource(name=<span class="syn-str">"user_comments"</span>)
 <span class="syn-kw">def</span> <span class="syn-fn">comments</span>(user_id):
@@ -323,21 +323,21 @@ cursor = games_state[<span class="syn-str">"incremental"</span>][<span class="sy
 <h3>Resetando o estado</h3>
 
 <ul>
-  <li><strong>Total:</strong> dropar o dataset do destino, <code>dev_mode=True</code>, ou <code>dlt pipeline &lt;nome&gt; drop --drop-all</code>.</li>
-  <li><strong>Parcial:</strong> <code>dlt pipeline &lt;nome&gt; drop &lt;resource&gt;</code> (estado + tabela de um resource) ou <code>--state-paths</code> (reseta um caminho específico do estado sem tocar tabelas/dados).</li>
+  <li>Total: dropar o dataset do destino, <code>dev_mode=True</code>, ou <code>dlt pipeline &lt;nome&gt; drop --drop-all</code>.</li>
+  <li>Parcial: <code>dlt pipeline &lt;nome&gt; drop &lt;resource&gt;</code> (estado + tabela de um resource) ou <code>--state-paths</code> (reseta um caminho específico do estado sem tocar tabelas/dados).</li>
 </ul>
 
 <p>Fonte: <a href="https://dlthub.com/docs/general-usage/state">State (docs oficiais)</a>.</p>
 
 <h3>Lag / attribution window</h3>
 
-<p>APIs de analytics costumam "corrigir" dados retroativamente (eventos que chegam atrasados). Para isso, o incremental aceita um <em>lag</em>: o cursor não avança até o "agora", mas até <code>agora - lag</code> — e na próxima rodada a janela é revisada. Com <code>merge</code> no lugar, dados corrigidos são atualizados em vez de duplicados.</p>
+<p>APIs de analytics costumam "corrigir" dados retroativamente (eventos que chegam atrasados). Para isso, o incremental aceita um <em>lag</em>: o cursor não avança até o "agora", mas até <code>agora - lag</code>. Na próxima rodada a janela é revisada. Com <code>merge</code> no lugar, dados corrigidos são atualizados em vez de duplicados.</p>
 
 <h2>Exemplo do curso: o que a RAWG vira no destino</h2>
 
-<p>O endpoint <code>/games</code> da RAWG é uma aula de JSON aninhado — e o <code>/games/{id}</code> (usado pelo transformer <code>game_details</code>) ainda mais. Veja o que o dlt gera a partir de cada um (código em <a href="../../exemplos/rawg/rawg.py">exemplos/rawg/</a>; o <code>smoke_test.py</code> valida exatamente estas tabelas):</p>
+<p>O endpoint <code>/games</code> da RAWG já vem com JSON aninhado; o <code>/games/{id}</code> (usado pelo transformer <code>game_details</code>) tem aninhamento ainda maior. Veja o que o dlt gera a partir de cada um (código em <a href="../../exemplos/rawg/rawg.py">exemplos/rawg/</a>):</p>
 
-<pre><code><span class="syn-cmt"># Item do /games — campos e tipos conforme a spec Swagger oficial da RAWG</span>
+<pre><code><span class="syn-cmt"># Item do /games: campos e tipos conforme a spec Swagger oficial da RAWG</span>
 {
   <span class="syn-str">"id"</span>: <span class="syn-num">3498</span>, <span class="syn-str">"name"</span>: <span class="syn-str">"Grand Theft Auto V"</span>, <span class="syn-str">"updated"</span>: <span class="syn-str">"2026-06-03T12:00:00"</span>,
   <span class="syn-str">"platforms"</span>: [{<span class="syn-str">"platform"</span>: {<span class="syn-str">"id"</span>: <span class="syn-num">4</span>, <span class="syn-str">"name"</span>: <span class="syn-str">"PC"</span>, <span class="syn-str">"slug"</span>: <span class="syn-str">"pc"</span>}, <span class="syn-str">"released_at"</span>: <span class="syn-str">"2015-04-14"</span>}, ...],
@@ -348,7 +348,7 @@ cursor = games_state[<span class="syn-str">"incremental"</span>][<span class="sy
 <span class="syn-cmt"># Tabelas geradas (verificadas contra um run real, set/2026):</span>
 <span class="syn-cmt"># games            → id, name, updated, esrb_rating__name,</span>
 <span class="syn-cmt">#                    added_by_status__owned, ... (dicts → colunas __)</span>
-<span class="syn-cmt"># games__platforms → lista aninhada (com requirements_en__* —</span>
+<span class="syn-cmt"># games__platforms → lista aninhada (com requirements_en__*,</span>
 <span class="syn-cmt">#                    a própria RAWG já nomeia requirements_en/_ru)</span>
 <span class="syn-cmt"># games__genres, games__tags, games__stores, games__ratings,</span>
 <span class="syn-cmt"># games__short_screenshots, games__parent_platforms → idem</span>
@@ -359,7 +359,7 @@ cursor = games_state[<span class="syn-str">"incremental"</span>][<span class="sy
 <span class="syn-cmt"># __developers, __publishers, __genres, __tags, __stores, __ratings,</span>
 <span class="syn-cmt"># __parent_platforms → 24 tabelas no total (genres__games inclusive)</span></code></pre>
 
-<p>O incremental do exemplo usa um recurso nativo do dlt: a RAWG aceita tanto o filtro <code>updated=DATA,DATA</code> (intervalo) quanto <code>ordering=-updated</code> (mais novos primeiro). Declarando <code>row_order="desc"</code> no cursor, o dlt <strong>para de pedir páginas sozinho</strong> quando encontra um registro mais antigo que o cursor, filtra o já carregado e deduplica pelo <code>primary_key</code> — o resource só cuida da paginação pura:</p>
+<p>O incremental do exemplo usa um recurso nativo do dlt: a RAWG aceita tanto o filtro <code>updated=DATA,DATA</code> (intervalo) quanto <code>ordering=-updated</code> (mais novos primeiro). Quando o cursor declara <code>row_order="desc"</code>, o dlt para de pedir páginas sozinho ao encontrar um registro mais antigo que o cursor, filtra o já carregado e deduplica pelo <code>primary_key</code>. O resource só cuida da paginação pura:</p>
 
 <pre><code><span class="syn-cmt"># o cursor declara a ordem dos dados; o resource só pagina</span>
 @dlt.resource(write_disposition=<span class="syn-str">"merge"</span>, primary_key=<span class="syn-str">"id"</span>)

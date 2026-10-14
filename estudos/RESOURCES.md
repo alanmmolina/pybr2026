@@ -9,7 +9,7 @@
 - [Swagger UI da RAWG](https://api.rawg.io/docs/)
   Documentação interativa dos endpoints (requer JS). Use for: conferir parâmetros e formatos de resposta.
 - [Spec OpenAPI da RAWG (machine-readable)](https://api.rawg.io/docs/?format=openapi)
-  Swagger 2.0 com os schemas exatos (`Game`, `GameSingle`, `Genre`, `GenreSingle`, `Platform`, `GamePlatformMetacritic`...). Use for: verificar nomes e tipos de campos antes de qualquer exemplo — não assuma campos da memória.
+  Swagger 2.0 com os schemas exatos (`Game`, `GameSingle`, `Genre`, `GenreSingle`, `Platform`, `GamePlatformMetacritic`...). Use for: verificar nomes e tipos de campos antes de qualquer exemplo. Não assuma campos da memória.
 - [dltHub context: RAWG.io](https://dlthub.com/context/source/rawg-io)
   Contexto oficial dltHub da fonte: endpoints, `data_selector` por endpoint (`results` nas listas; `/games/{id}` é objeto único), auth via query param `key`, exemplo RESTAPIConfig. Use for: conferir alinhamento entre o exemplo das lessons e o padrão dltHub.
 
@@ -34,7 +34,7 @@
 - [dltHub docs](https://dlthub.com/docs/hub/getting-started/introduction)
   The managed platform (separate from the library). Use for: Lesson 1 platform section, agentic workflows.
 - [Pipeline dashboard local](https://dlthub.com/docs/hub/ingestion/dashboard)
-  `dlthub local pipeline show {nome}` — webapp marimo com Schema Explorer, SQL, Pipeline State (cursor incremental), traces e histórico. Checklist oficial de validação em 5 passos. Use for: demo ao vivo / hands-on.
+  `dlthub local pipeline show {nome}`: webapp marimo com Schema Explorer, SQL, Pipeline State (cursor incremental), traces e histórico. Checklist oficial de validação em 5 passos. Use for: demo ao vivo / hands-on.
 - [AI Harness: rest-api-pipeline toolkit](https://dlthub.com/docs/hub/ingestion/rest-api-source)
   Workflow de skills (`/find-source`, `/debug-pipeline`, `/validate-data`) + MCP server para Claude Code/Cursor/Codex; `data-exploration` gera dashboards marimo+Altair. Use for: narrativa agent-native, fecho da palestra.
 
@@ -45,7 +45,7 @@
 - [Orchestrators (deploy guides)](https://dlthub.com/docs/walkthroughs/deploy-a-pipeline/orchestrate-with-dlthub)
   Lista completa: dltHub, GitHub Actions, Airflow, Cloud Functions, Cloud Run, Kestra, Dagster, Prefect, Modal, Orchestra. Use for: Lesson 7 tabela de orquestradores.
 - [Deploy with Dagster](https://dlthub.com/docs/walkthroughs/deploy-a-pipeline/deploy-with-dagster) + [Dagster: dlt embedded ELT](https://docs.dagster.io/integrations/embedded-elt/dlt)
-  Integração NATIVA via `dagster-dlt` (`@dlt_assets`, `DagsterDltResource`) — distinta dos demais orquestradores. Use for: Lesson 7 (destaque Dagster).
+  Integração NATIVA via `dagster-dlt` (`@dlt_assets`, `DagsterDltResource`), distinta dos demais orquestradores. Use for: Lesson 7 (destaque Dagster).
 - [Deploy with Prefect](https://dlthub.com/docs/walkthroughs/deploy-a-pipeline/deploy-with-prefect) / [Kestra](https://dlthub.com/docs/walkthroughs/deploy-a-pipeline/deploy-with-kestra) / [Modal](https://dlthub.com/docs/walkthroughs/deploy-a-pipeline/deploy-with-modal) / [Orchestra](https://dlthub.com/docs/walkthroughs/deploy-a-pipeline/deploy-with-orchestra)
   Mecanismo de integração de cada orquestrador (task/flow, YAML, serverless, control plane). Use for: Lesson 7.
 - [Destinations index](https://dlthub.com/docs/dlt-ecosystem/destinations)
@@ -79,5 +79,5 @@
 
 ## Gaps
 
-- No good Brazilian/Portuguese-language community resource found — the talk audience will mostly learn from the docs. Worth noting for Q&A preparation.
+- No good Brazilian/Portuguese-language community resource found. The talk audience will mostly learn from the docs. Worth noting for Q&A preparation.
 - Merge strategies (upsert/delete-insert/SCD2/insert-only) are documented across several pages; there is no single deep-dive page. Covered in Lesson 5 from the merge-loading docs.

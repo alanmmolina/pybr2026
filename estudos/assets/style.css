@@ -34,7 +34,7 @@
   --radius-chip: 3px;
   --radius-photo: 2px;
   /* cor de marca: SO na camada desenhada (os diagramas inline), nunca no
-     chrome. regra do DESIGN.md §1 — chrome never takes color. o lima é o da
+     chrome. regra do DESIGN.md §1: chrome never takes color. o lima é o da
      Python Brasil 2026 no lugar do #c5d200 do dlt; o teal continua sendo o
      dltHub. */
   --lime: #B7FF06;
