@@ -1,0 +1,23 @@
+# cópias de segurança locais
+.backup/
+
+# ambientes
+.venv/
+node_modules/
+
+# caches de ferramentas
+__pycache__/
+.ruff_cache/
+
+# chave real do exemplo RAWG (o modelo commitável é secrets.example.toml)
+exemplos/rawg/.dlt/secrets.toml
+exemplos/rawg/.dlt/tmp/
+
+# artefatos gerados pelo exemplo RAWG
+datalake/
+*.duckdb
+*.duckdb.wal
+dist/
+
+# ruído de SO
+.DS_Store
